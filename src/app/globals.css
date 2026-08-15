@@ -1,0 +1,226 @@
+@import 'tailwindcss';
+
+/* =========================================================================
+   TOKEN DESAIN
+   Satu-satunya tempat nilai visual boleh ditulis. Komponen memakai token; hex
+   liar dan ukuran ad-hoc di komponen adalah bug, bukan gaya.
+
+   Semua nilai di bawah PLACEHOLDER netral -- abu-abu tanpa karakter, skala
+   naif. Ganti nilainya, pertahankan nama tokennya, dan seluruh situs ikut.
+   ========================================================================= */
+
+/* `static` memaksa SEMUA variabel di bawah terbit ke :root, dipakai utility
+   atau tidak.
+
+   Default Tailwind v4 memangkas token yang belum tersentuh utility mana pun.
+   Efeknya: token merek yang sudah ditulis di sini tetap tidak ada di CSS
+   terkirim, dan `var(--color-secondary)` di CSS mentah -- atau di style
+   inline sebuah komponen -- diam-diam resolve ke nilai kosong. Kegagalannya
+   tidak melempar error; elemennya hanya kehilangan warna.
+
+   Ongkosnya beberapa baris custom property. Palet bawaan Tailwind tetap tidak
+   ikut, karena `--color-*: initial` di bawah sudah membuangnya dari tema. */
+@theme static {
+  /* --- Palet ------------------------------------------------------------
+     `--color-*: initial` MEMATIKAN seluruh palet bawaan Tailwind.
+
+     Perlu, karena @theme MENAMBAH ke tema default, bukan menggantinya. Tanpa
+     baris ini `bg-yellow-500` tetap merender kuning stok walau kuning tidak
+     pernah jadi bagian dari sistem desain ini -- warna asing lolos ke produksi
+     justru karena "warnanya keluar juga", tanpa satu pun error.
+
+     Dengan baris ini, kelas di luar token gagal terang-terangan: kelasnya tidak
+     ada, jadi tidak menghasilkan CSS apa pun dan langsung terlihat.
+     Hapus baris ini kalau Anda memang ingin palet bawaan Tailwind tersedia. */
+  --color-*: initial;
+
+  /* Dikembalikan secara eksplisit setelah `initial` membuangnya.
+     `bg-white` / `text-white` / `bg-black` mati tanpa dua baris ini -- itu
+     bukan palet merek melainkan dua jangkar absolut yang tetap dibutuhkan
+     (scrim di atas gambar, teks di atas overlay gelap, kartu putih di atas
+     latar berwarna). Mengembalikan keduanya TIDAK membuka lubang yang
+     `initial` tutup: `bg-yellow-500` dan kawan-kawan tetap mati. */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* --- Warna merek ---
+     Rasio kontras di bawah diukur, bukan dikira. Ulangi pengukurannya kalau
+     salah satu nilai berubah -- lihat tabel di README. */
+
+  /* 9.98:1 di atas bg. Aman untuk teks ukuran apa pun dan untuk focus ring. */
+  --color-primary: #224275;
+  --color-primary-fg: #ffffff;
+
+  /* 4.92:1 di atas bg, 4.52:1 di atas surface. LULUS AA untuk teks normal,
+     tapi marginnya tipis: menggelapkan bg atau memakainya di atas permukaan
+     yang lebih terang dari --color-surface akan menjatuhkannya di bawah 4.5.
+     Untuk teks kecil di atas latar non-putih, ukur ulang dulu. */
+  --color-secondary: #1b77aa;
+  --color-secondary-fg: #ffffff;
+
+  /* 5.60:1 di atas bg. Dinamai per komponen (bukan per peran) atas permintaan;
+     kalau warna ini nanti dipakai di luar breadcrumb, ganti namanya jadi peran
+     supaya tidak menyesatkan pembaca berikutnya. */
+  --color-breadcrumb: #6e6759;
+  --color-breadcrumb-fg: #ffffff;
+
+  /* --- Netral ---
+     TODO: ini masih placeholder; sesuaikan dengan warna merek di atas. */
+  --color-bg: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-fg: #171717;
+  --color-muted: #5c5c5c;
+  --color-border: #d4d4d4;
+
+  /* Focus ring memakai primary: 9.98:1 terhadap bg, jauh di atas syarat 3:1
+     untuk indikator non-teks (WCAG 1.4.11). */
+  --color-focus: var(--color-primary);
+
+  /* --- Tipografi --------------------------------------------------------
+     --font-app-sans di-inject next/font dari [locale]/layout.tsx. Sementara
+     Montserrat; tujuan akhirnya Proxima Nova (lihat alasan dan cara menukarnya
+     di layout.tsx). Rantai fallback SENGAJA tidak menyebut 'Proxima Nova' --
+     mesin yang memasangnya secara lokal akan merender situs yang berbeda dari
+     mesin lain. */
+  --font-sans: var(--font-app-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+
+  /* TODO: skala asli. Angka di bawah tangga 1.125 yang sengaja hambar. */
+  --text-xs: 0.79rem;
+  --text-sm: 0.889rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.266rem;
+  --text-2xl: 1.424rem;
+  --text-3xl: 1.602rem;
+  --text-4xl: 1.802rem;
+
+  /* --- Layout ----------------------------------------------------------- */
+  /* TODO: lebar konten asli. */
+  --spacing-gutter: 1.25rem;
+
+  /* Panel navigasi mengambang sebagai card, jadi ada tiga angka yang saling
+     terikat: lebar card, jaraknya dari tepi layar, dan ruang yang harus
+     disisihkan konten agar tidak tertimpa.
+
+     Yang ketiga DITURUNKAN, bukan diketik ulang. Ditulis manual sebagai
+     "21rem", ia akan diam-diam salah begitu salah satu dari dua angka di
+     atasnya berubah -- dan gejalanya konten yang tertimpa panel, yang cuma
+     terlihat di lebar layar tertentu. */
+  --spacing-panel: 14rem;
+  --spacing-panel-inset: 1.5rem;
+  --spacing-panel-gutter: calc(var(--spacing-panel) + var(--spacing-panel-inset) * 2);
+
+  /* Tinggi bilah atas versi mobile, dipakai panel dan offset konten. */
+  --spacing-topbar: 3.5rem;
+  --container-content: 46rem;
+  --container-wide: 75rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* --- Breakpoint -------------------------------------------------------
+     Dua saja, sesuai dua viewport yang benar-benar diuji Playwright (390/1440).
+     Tambah hanya kalau ada tes yang menjaganya. */
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+}
+
+/* =========================================================================
+   UTILITY
+   Hanya untuk pola yang terulang di banyak komponen. Kalau sebuah pola cuma
+   dipakai sekali, ia milik komponennya, bukan milik file ini.
+   ========================================================================= */
+
+/* Padding horizontal halaman. Berulang di header, footer, dan tiap section --
+   kalau ditulis manual, satu tempat pasti menyimpang saat gutter berubah. */
+@utility page-gutter {
+  padding-inline: var(--spacing-gutter);
+}
+
+/* Target sentuh minimum WCAG 2.5.8 (24x24 CSS px); 44px mengikuti anjuran
+   yang lebih longgar dan dipakai untuk semua kontrol ikon. */
+@utility tap-target {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.75rem;
+}
+
+/* Tersembunyi sampai difokus, lalu muncul di pojok atas.
+   Seluruh keadaan fokus ditulis DI SINI, bukan dibagi dengan kelas
+   `focus-visible:*` di komponen: keduanya akan menghasilkan specificity yang
+   sama persis, jadi yang menang ditentukan urutan sumber di dalam layer --
+   deterministik di satu build, berubah di build berikutnya. Nilai visualnya
+   tetap token, jadi ia ikut berganti saat sistem desain diisi. */
+@utility skip-link {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+
+  &:focus-visible {
+    position: fixed;
+    inset-block-start: var(--spacing-gutter);
+    inset-inline-start: var(--spacing-gutter);
+    z-index: 50;
+    inline-size: auto;
+    block-size: auto;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+    background-color: var(--color-primary);
+    color: var(--color-primary-fg);
+    border-radius: var(--radius-md);
+  }
+}
+
+/* =========================================================================
+   BASE
+   Satu-satunya aturan yang menyentuh elemen telanjang. Apa pun selain ini
+   milik komponen.
+   ========================================================================= */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* :where() menjaga specificity tetap NOL. Tanpa itu, aturan ini menang atas
+     `focus-visible:outline-none` di komponen dan setiap penyimpangan lokal
+     harus dimenangkan pakai !important. */
+  :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  /* Satu blok global, bukan diingat ulang di tiap komponen -- komponen yang
+     lupa menghormatinya adalah cacat aksesibilitas yang tidak terlihat sampai
+     ada yang mengeluh pusing. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

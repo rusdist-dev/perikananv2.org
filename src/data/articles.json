@@ -1,0 +1,29 @@
+[
+  {
+    "slug": "contoh-artikel-pertama",
+    "lang": "id",
+    "title": "Contoh artikel pertama",
+    "excerpt": "Entri contoh untuk membuktikan seam konten berjalan: dibaca source.ts, divalidasi schema.ts, dikueri index.ts.",
+    "body": "Ganti isi file ini dengan konten sungguhan. Bentuk objeknya ditegakkan src/lib/content/schema.ts, jadi field yang salah nama akan menghentikan build, bukan lolos jadi undefined di halaman.",
+    "publishedAt": "2026-01-15",
+    "tags": ["contoh"]
+  },
+  {
+    "slug": "contoh-artikel-kedua",
+    "lang": "id",
+    "title": "Contoh artikel kedua",
+    "excerpt": "Dua entri, bukan satu, supaya urutan tanggal dan render daftar benar-benar teruji.",
+    "body": "Satu entri contoh tidak pernah membuktikan pengurutan bekerja. Dua entri dengan tanggal berbeda membuktikannya.",
+    "publishedAt": "2026-02-02",
+    "tags": ["contoh"]
+  },
+  {
+    "slug": "contoh-artikel-pertama",
+    "lang": "en",
+    "title": "First sample article",
+    "excerpt": "Same slug as the Indonesian entry on purpose: it is the same article in another language, not a different one.",
+    "body": "Slug identik lintas bahasa adalah yang membuat language switcher bisa tetap di halaman yang sama. Artikel kedua sengaja TIDAK diterjemahkan supaya fallback locale di index.ts ikut terbukti.",
+    "publishedAt": "2026-01-15",
+    "tags": ["sample"]
+  }
+]
