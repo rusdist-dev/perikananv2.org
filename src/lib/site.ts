@@ -27,7 +27,7 @@ const social: OptionalString = {
 const contact: OptionalString = {
   email: null,
   phone: null,
-  address: null,
+  address: 'Jl. Sempur No.35, RT.03/RW.01, Sempur, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16129',
 };
 
 /** null = belum dipasang. Layout melewati <Script> analytics sepenuhnya saat null. */

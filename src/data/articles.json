@@ -1,29 +1,74 @@
 [
   {
-    "slug": "contoh-artikel-pertama",
+    "slug": "aligning-science-and-policy-cites-ac34",
     "lang": "id",
-    "title": "Contoh artikel pertama",
-    "excerpt": "Entri contoh untuk membuktikan seam konten berjalan: dibaca source.ts, divalidasi schema.ts, dikueri index.ts.",
-    "body": "Ganti isi file ini dengan konten sungguhan. Bentuk objeknya ditegakkan src/lib/content/schema.ts, jadi field yang salah nama akan menghentikan build, bukan lolos jadi undefined di halaman.",
-    "publishedAt": "2026-01-15",
-    "tags": ["contoh"]
+    "title": "Menyelaraskan Sains dan Kebijakan: Indonesia Perkuat Posisi untuk CITES AC34",
+    "excerpt": "FRCI mendukung persiapan teknis pemerintah menjelang sesi Animals Committee CITES.",
+    "body": "FRCI mendukung persiapan teknis pemerintah menjelang sesi Animals Committee CITES.",
+    "publishedAt": "2026-07-28",
+    "tags": [
+      "Species Conservation"
+    ],
+    "image": "kegiatan1"
   },
   {
-    "slug": "contoh-artikel-kedua",
+    "slug": "pilot-projects-to-national-policy-ocean-accounts",
     "lang": "id",
-    "title": "Contoh artikel kedua",
-    "excerpt": "Dua entri, bukan satu, supaya urutan tanggal dan render daftar benar-benar teruji.",
-    "body": "Satu entri contoh tidak pernah membuktikan pengurutan bekerja. Dua entri dengan tanggal berbeda membuktikannya.",
-    "publishedAt": "2026-02-02",
-    "tags": ["contoh"]
+    "title": "Dari Proyek Percontohan ke Kebijakan Nasional: Menyelaraskan Neraca Sumber Daya Laut untuk Masa Depan Indonesia",
+    "excerpt": "Bagaimana bertahun-tahun pengumpulan data di lokasi percontohan membentuk kerangka neraca sumber daya laut nasional.",
+    "body": "Bagaimana bertahun-tahun pengumpulan data di lokasi percontohan membentuk kerangka neraca sumber daya laut nasional.",
+    "publishedAt": "2026-07-14",
+    "tags": [
+      "Ocean Accounts"
+    ],
+    "image": "kegiatan2"
   },
   {
-    "slug": "contoh-artikel-pertama",
+    "slug": "beyond-borders-high-seas-conservation",
+    "lang": "id",
+    "title": "Melampaui Batas: Membangun Kesiapan Indonesia untuk Konservasi Laut Lepas",
+    "excerpt": "FRCI mengkaji apa yang dibutuhkan Indonesia untuk terlibat secara efektif dalam tata kelola laut lepas.",
+    "body": "FRCI mengkaji apa yang dibutuhkan Indonesia untuk terlibat secara efektif dalam tata kelola laut lepas.",
+    "publishedAt": "2026-07-10",
+    "tags": [
+      "Marine Conservation"
+    ],
+    "image": "kegiatan3"
+  },
+  {
+    "slug": "aligning-science-and-policy-cites-ac34",
     "lang": "en",
-    "title": "First sample article",
-    "excerpt": "Same slug as the Indonesian entry on purpose: it is the same article in another language, not a different one.",
-    "body": "Slug identik lintas bahasa adalah yang membuat language switcher bisa tetap di halaman yang sama. Artikel kedua sengaja TIDAK diterjemahkan supaya fallback locale di index.ts ikut terbukti.",
-    "publishedAt": "2026-01-15",
-    "tags": ["sample"]
+    "title": "Aligning Science and Policy: Indonesia Strengthens Its Position for CITES AC34",
+    "excerpt": "FRCI supports the government's technical preparation ahead of the CITES Animals Committee session.",
+    "body": "FRCI supports the government's technical preparation ahead of the CITES Animals Committee session.",
+    "publishedAt": "2026-07-28",
+    "tags": [
+      "Species Conservation"
+    ],
+    "image": "kegiatan1"
+  },
+  {
+    "slug": "pilot-projects-to-national-policy-ocean-accounts",
+    "lang": "en",
+    "title": "From Pilot Projects to National Policy: Aligning Ocean Accounts for Indonesia's Future",
+    "excerpt": "How years of pilot-site data collection are shaping a national ocean accounting framework.",
+    "body": "How years of pilot-site data collection are shaping a national ocean accounting framework.",
+    "publishedAt": "2026-07-14",
+    "tags": [
+      "Ocean Accounts"
+    ],
+    "image": "kegiatan2"
+  },
+  {
+    "slug": "beyond-borders-high-seas-conservation",
+    "lang": "en",
+    "title": "Beyond Borders: Building Indonesia's Readiness for High Seas Conservation",
+    "excerpt": "FRCI examines what it will take for Indonesia to engage effectively in high seas governance.",
+    "body": "FRCI examines what it will take for Indonesia to engage effectively in high seas governance.",
+    "publishedAt": "2026-07-10",
+    "tags": [
+      "Marine Conservation"
+    ],
+    "image": "kegiatan3"
   }
 ]

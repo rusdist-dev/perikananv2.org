@@ -3,7 +3,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import logoFrci from '@/assets/logo-frci.png';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
@@ -66,7 +66,7 @@ function NavList({
       >
         {section.heading}
       </h2>
-      <ul className="mt-1 flex flex-col">
+      <ul className="mt-1 flex flex-col ps-2">
         {section.items.map((item) => {
           const isCurrent = current === item.href;
           return (
@@ -204,12 +204,33 @@ export function SiteNav({
   sections: ResolvedSection[];
   labels: NavLabels;
 }) {
-  const [minimized, setMinimized] = useState(false);
-  const [open, setOpen] = useState(false);
   const current = stripLocale(usePathname());
+  // Di /program/* apa pun, sidebar mulai terkecilkan sehingga hanya seksi
+  // Program yang tampil -- tapi tombol di bawah tetap membukanya. `rest` tetap
+  // dirender (lihat PanelBody), jadi ini murni keadaan awal, bukan menyembunyikan
+  // rute dari crawler.
+  const isProgramRoute = current === '/program' || current.startsWith('/program/');
 
-  // Default expanded, jadi HTML hasil server memuat seluruh menu -- crawler dan
-  // pembaca tanpa JavaScript tetap mendapat peta situs yang lengkap.
+  const [minimized, setMinimized] = useState(isProgramRoute);
+  const [open, setOpen] = useState(false);
+
+  // useState hanya membaca pathname sekali, saat mount. Navigasi client-side
+  // ke/keluar dari /program/* setelahnya tidak memicu re-render lain yang
+  // menyentuh initializer itu, jadi keadaan awal harus disinkronkan ulang di
+  // sini setiap kali "masuk/keluar seksi program" berubah. Toggle manual
+  // pengguna di dalam seksi yang sama tetap dihormati -- efek ini hanya
+  // berjalan lagi saat batasnya dilewati, bukan di tiap navigasi.
+  const wasProgramRoute = useRef(isProgramRoute);
+  useEffect(() => {
+    if (wasProgramRoute.current !== isProgramRoute) {
+      wasProgramRoute.current = isProgramRoute;
+      setMinimized(isProgramRoute);
+    }
+  }, [isProgramRoute]);
+
+  // Default expanded di luar /program/*, jadi HTML hasil server memuat seluruh
+  // menu -- crawler dan pembaca tanpa JavaScript tetap mendapat peta situs
+  // yang lengkap.
   const minimizeToggle = (
     <button
       type="button"

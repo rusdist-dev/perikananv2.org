@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
-import { Montserrat } from 'next/font/google';
+import { Nunito_Sans } from 'next/font/google';
 import '../globals.css';
 import { SiteShell } from '@/components/chrome/SiteShell';
 import { buildMetadata } from '@/i18n/metadata';
@@ -37,7 +37,7 @@ import { locales, htmlLang, isLocale, type Locale } from '@/i18n/config';
  * next/font mengunduh dan menyajikan font dari domain sendiri saat build, jadi
  * tidak ada permintaan ke Google saat runtime dan tidak perlu preconnect.
  */
-const sans = Montserrat({
+const sans = Nunito_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-app-sans',
@@ -71,7 +71,7 @@ export default async function LocaleLayout({
 
   return (
     <html lang={htmlLang[typed]} className={sans.variable}>
-      <body>
+      <body className="overflow-x-clip">
         <SiteShell locale={typed}>{children}</SiteShell>
       </body>
     </html>

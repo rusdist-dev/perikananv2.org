@@ -30,6 +30,12 @@ export const articleSchema = z.object({
   body: z.string().min(1),
   publishedAt: z.iso.date(),
   tags: z.array(z.string()).default([]),
+  /** Kunci ke ARTICLE_IMAGES (src/data/article-images.ts), bukan path file.
+   *  Foto lokal masuk lewat import statis next/image, dan JSON tidak bisa
+   *  membawa hasil import -- kunci string ini yang menjembatani keduanya.
+   *  null = belum ada foto; kartu artikel melewati gambarnya, bukan
+   *  menampilkan kotak kosong. */
+  image: z.string().nullable().default(null),
 });
 
 export type Article = z.output<typeof articleSchema>;

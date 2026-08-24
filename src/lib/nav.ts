@@ -45,12 +45,12 @@ export const panelNav: NavSection[] = [
     id: 'nav-discover',
     headingKey: 'navDiscover',
     items: [
-      { href: '/tentang', labelKey: 'navAboutUs' },
-      { href: '/tim', labelKey: 'navOurTeam' },
-      { href: '/pencapaian', labelKey: 'navAchievements' },
-      { href: '/dampak', labelKey: 'navOurImpact' },
-      { href: '/publikasi', labelKey: 'navPublications' },
-      { href: '/jogo-laut', label: 'Jogo Laut' },
+      { href: '/discover/about-us', labelKey: 'navAboutUs' },        
+      { href: '/discover/our-team', labelKey: 'navOurTeam' },        
+      { href: '/discover/achievements', labelKey: 'navAchievements' }, 
+      { href: '/discover/our-impact', labelKey: 'navOurImpact' },    
+      { href: '/discover/publications', labelKey: 'navPublications' }, 
+      { href: '/discover/jogo-laut', label: 'Jogo Laut' },                    
     ],
   },
   {
