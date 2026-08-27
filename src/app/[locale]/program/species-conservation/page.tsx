@@ -1,17 +1,16 @@
 import { notFound } from 'next/navigation';
 import speciesConservationIcon from '@/assets/species-conservation.svg';
 import bgSpeciesConservation from '@/assets/banner/bg_species.png';
-import cps1 from '@/assets/species-conservation/cps1.png';
-import speciesBorder from '@/assets/species-conservation/species_border.png';
+import bgSupport from '@/assets/species-conservation/bg_support.png';
 import cb1 from '@/assets/ocean-accounts/cb1.jpg';
 import cb2 from '@/assets/ocean-accounts/cb2.jpg';
 import cb3 from '@/assets/ocean-accounts/cb3.jpg';
-import cpOa1 from '@/assets/ocean-accounts/cp_oa1.jpg';
-import cpOa2 from '@/assets/ocean-accounts/cp_oa2.jpg';
-import cpOa3 from '@/assets/ocean-accounts/cp_oa3.jpg';
-import cpOa4 from '@/assets/ocean-accounts/cp_oa4.png';
-import cpOa5 from '@/assets/ocean-accounts/cp_oa5.png';
-import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
+import slider1 from '@/assets/species-conservation/slider1.png';
+import slider2 from '@/assets/species-conservation/slider2.png';
+import slider3 from '@/assets/species-conservation/slider3.png';
+import slider4 from '@/assets/species-conservation/slider4.png';
+import fotoKey from '@/assets/species-conservation/key_species.png';
+import fotoCurrent from '@/assets/species-conservation/current_species.png';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
 import { ProgramGallery } from '@/components/program/ProgramGallery';
 import { ProgramHero } from '@/components/program/ProgramHero';
@@ -53,11 +52,10 @@ const OBJECTIVES: ProgramObjective[] = [
 // Foto dokumentasi belum ada untuk Species Conservation -- dipinjam dari
 // Ocean Accounts atas permintaan, sampai foto program ini sendiri tersedia.
 const GALLERY_IMAGES = [
-  { src: cpOa1, alt: '' },
-  { src: cpOa2, alt: '' },
-  { src: cpOa3, alt: '' },
-  { src: cpOa4, alt: '' },
-  { src: cpOa5, alt: '' },
+  { src: slider1, alt: '' },
+  { src: slider2, alt: '' },
+  { src: slider3, alt: '' },
+  { src: slider4, alt: '' },
 ];
 
 const KEY_ACTIVITIES_BULLETS = [
@@ -154,6 +152,8 @@ export default async function SpeciesConservationPage({
           images={GALLERY_IMAGES}
           previousLabel={t.galleryPrevious}
           nextLabel={t.galleryNext}
+          aspectClassName="aspect-square"
+          fit="cover"
         />
       </ProgramObjectives>
 
@@ -161,13 +161,13 @@ export default async function SpeciesConservationPage({
         eyebrow="Key Activities"
         title="From the Landing Site to the Ledger"
         bullets={KEY_ACTIVITIES_BULLETS}
-        image={cps1}
+        image={fotoKey}
       />
       <ProgramFeatureRow
         eyebrow="Current Project"
         title=""
         bullets={CURRENT_PROJECT_BULLETS}
-        image={fotoFdtp}
+        image={fotoCurrent}
         reverse
       />
 
@@ -179,7 +179,7 @@ export default async function SpeciesConservationPage({
       />
 
       <ProgramSupportCta
-        image={speciesBorder}
+        image={bgSupport}
         heading="Sharks and Rays Keep The Ocean Healthy"
         subheading="Protecting them safeguards the fisheries, food security, and coastal livelihood"
         ctaLabel="SUPPORT US"

@@ -395,7 +395,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
         sizes="100vw"
         className="pointer-events-none object-cover select-none"
       />
-      <div className="absolute inset-0 bg-primary/30" />
+      <div className="absolute inset-0 bg-primary/50" />
 
       {/* Padding horizontal simetris polos (px-4), BUKAN Container -- Container
           selalu memakai `lg:ps-panel-gutter` (cuma sisi kiri) untuk menyisakan

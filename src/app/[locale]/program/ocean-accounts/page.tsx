@@ -1,15 +1,15 @@
 import { notFound } from 'next/navigation';
-import bgIkan from '@/assets/bg_ikan.png';
+import bgSupport from '@/assets/ocean-accounts/bg_support.png';
 import bgOceanAccounts from '@/assets/banner/bg_ocean.png';
 import cb1 from '@/assets/ocean-accounts/cb1.jpg';
 import cb2 from '@/assets/ocean-accounts/cb2.jpg';
 import cb3 from '@/assets/ocean-accounts/cb3.jpg';
-import cpOa1 from '@/assets/ocean-accounts/cp_oa1.jpg';
-import cpOa2 from '@/assets/ocean-accounts/cp_oa2.jpg';
-import cpOa3 from '@/assets/ocean-accounts/cp_oa3.jpg';
-import cpOa4 from '@/assets/ocean-accounts/cp_oa4.png';
-import cpOa5 from '@/assets/ocean-accounts/cp_oa5.png';
 import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
+import fotokey from '@/assets/ocean-accounts/key_ocean.png';
+import slider1 from '@/assets/ocean-accounts/slider1.png';
+import slider2 from '@/assets/ocean-accounts/slider2.png';
+import slider3 from '@/assets/ocean-accounts/slider3.png';
+import slider4 from '@/assets/ocean-accounts/slider4.png';
 import oceanAccountIcon from '@/assets/ocean-account.svg';
 import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
@@ -51,11 +51,10 @@ const OBJECTIVES = [
 ];
 
 const GALLERY_IMAGES = [
-  { src: cpOa1, alt: '' },
-  { src: cpOa2, alt: '' },
-  { src: cpOa3, alt: '' },
-  { src: cpOa4, alt: '' },
-  { src: cpOa5, alt: '' },
+  { src: slider1, alt: '' },
+  { src: slider2, alt: '' },
+  { src: slider3, alt: '' },
+  { src: slider4, alt: '' },
 ];
 
 // Dipakai KEY ACTIVITIES saja -- CURRENT PROJECT di bawah punya judul dan
@@ -156,6 +155,8 @@ export default async function OceanAccountsPage({
           images={GALLERY_IMAGES}
           previousLabel={t.galleryPrevious}
           nextLabel={t.galleryNext}
+          aspectClassName="aspect-square"
+          fit="cover"
         />
       </ProgramObjectives>
 
@@ -163,7 +164,7 @@ export default async function OceanAccountsPage({
         eyebrow="Key Activities"
         title="From data to policy"
         bullets={DATA_TO_POLICY_BULLETS}
-        image={fotoFdtp}
+        image={fotokey}
       />
       <ProgramFeatureRow
         eyebrow="Current Project"
@@ -207,7 +208,7 @@ export default async function OceanAccountsPage({
       />
 
       <ProgramSupportCta
-        image={bgIkan}
+        image={bgSupport}
         heading="What we measure today shapes how we protect tomorrow"
         subheading="Because protecting the ocean starts with understanding its true worth"
         ctaLabel="SUPPORT US"

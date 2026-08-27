@@ -3,18 +3,18 @@ import { notFound } from 'next/navigation';
 import bgIkan from '@/assets/banner/bg_ikan.png';
 import ornament4 from '@/assets/banner/ornament4.png';
 import borderIkan from '@/assets/ikan/border_ikan.png';
-import fotoIkan1 from '@/assets/ikan/foto_ikan1.png';
-import fotoIkan2 from '@/assets/ikan/foto_ikan2.png';
-import fotoIkan3 from '@/assets/ikan/foto_ikan3.png';
-import fotoIkan4 from '@/assets/ikan/foto_ikan4.jpg';
+import slider1 from '@/assets/ikan/slider1.png';
+import slider2 from '@/assets/ikan/slider2.png';
+import slider3 from '@/assets/ikan/slider3.png';
+import slider4 from '@/assets/ikan/slider4.png';
 import hpIkan from '@/assets/ikan/hp_ikan.png';
 import kaIkan from '@/assets/ikan/ka_ikan.png';
-import petaIkan from '@/assets/ikan/peta_ikan.png';
+import petaIkan from '@/assets/ikan/peta_ikan.jpeg';
 import ikanIcon from '@/assets/ikan-application.svg';
 import cb1 from '@/assets/ocean-accounts/cb1.jpg';
 import cb2 from '@/assets/ocean-accounts/cb2.jpg';
 import cb3 from '@/assets/ocean-accounts/cb3.jpg';
-import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
+import fotoKey from '@/assets/ikan/key_ikan.png';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
@@ -55,10 +55,10 @@ const OBJECTIVES: ProgramObjective[] = [
 ];
 
 const GALLERY_IMAGES = [
-  { src: fotoIkan1, alt: '' },
-  { src: fotoIkan2, alt: '' },
-  { src: fotoIkan3, alt: '' },
-  { src: fotoIkan4, alt: '' },
+  { src: slider1, alt: '' },
+  { src: slider2, alt: '' },
+  { src: slider3, alt: '' },
+  { src: slider4, alt: '' },
 ];
 
 const KEY_ACTIVITIES_BULLETS = [
@@ -158,7 +158,7 @@ export default async function IkanPage({
       <ProgramObjectives
         icon={ikanIcon}
         eyebrow="Objectives"
-        heading="How this program drives change"
+        heading="How IKAN drives change"
         objectives={OBJECTIVES}
       >
         <ProgramGallery
@@ -174,7 +174,7 @@ export default async function IkanPage({
         eyebrow="Key Activities"
         title="From data collection to better decisions"
         bullets={KEY_ACTIVITIES_BULLETS}
-        image={fotoFdtp}
+        image={fotoKey}
       />
 
       <div className="relative isolate overflow-hidden bg-primary">

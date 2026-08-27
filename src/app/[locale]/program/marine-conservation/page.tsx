@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import fotoPulau from '@/assets/marine-conservation/foto_pulau.png';
+import fotoKey from '@/assets/marine-conservation/key_marine.png';
+import fotoCurrent from '@/assets/marine-conservation/current_marine.png';
 import fotoPulau2 from '@/assets/marine-conservation/foto_pulau2.png';
 import bgMarineConservation from '@/assets/banner/bg_marine.png';
 import petaBg from '@/assets/marine-conservation/peta_bg.png';
@@ -10,6 +11,10 @@ import cpSf1 from '@/assets/sustainable-fisheries/cp1_sf.png';
 import cpSf2 from '@/assets/sustainable-fisheries/cp2_sf.png';
 import cpSf3 from '@/assets/sustainable-fisheries/cp3_sf.png';
 import cpSf4 from '@/assets/sustainable-fisheries/cp4_sf.png';
+import slider1 from '@/assets/marine-conservation/slider1.png';
+import slider2 from '@/assets/marine-conservation/slider2.png';
+import slider3 from '@/assets/marine-conservation/slider3.png';
+import slider4 from '@/assets/marine-conservation/slider4.png';
 import { Container } from '@/components/layout/Container';
 import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
@@ -57,19 +62,20 @@ const OBJECTIVES = [
 // Sustainable Fisheries atas permintaan, sampai foto program ini sendiri
 // tersedia.
 const GALLERY_IMAGES = [
-  { src: cpSf1, alt: '' },
-  { src: cpSf2, alt: '' },
-  { src: cpSf3, alt: '' },
-  { src: cpSf4, alt: '' },
+  { src: slider1, alt: '' },
+  { src: slider2, alt: '' },
+  { src: slider3, alt: '' },
+  { src: slider4, alt: '' },
 ];
 
 const KEY_ACTIVITIES_BULLETS = [
   'Developing and aligning policy, regulatory frameworks, and strategic planning at the national and provincial level;',
   "Supporting effective management of Indonesia's first national offshore MPA in the Sulawesi Sea;",
   'Assisting establishment and effective governance of MPAs and other area-based measure across the four target provinces;',
-  'Improving knowledge and capacity of the MPA and area managers;',
+  'Improving knowledge and capacity of the MPA, area managers, and national stakeholders;',
   'Collecting time series data to measure conservation impact; and',
   'Raising awareness and empowering local and nearby communities.',
+  'Supporting the early implementation of BBNJ Agreement through capacity building, analytical inputs, and documents',
 ];
 
 // Sama seperti RELATED_STORIES di Ocean Accounts/Sustainable Fisheries --
@@ -174,26 +180,29 @@ export default async function MarineConservationPage({
       </ProgramObjectives>
 
       <ProgramFeatureRow
-        eyebrow="Key Activities"
-        title="MPA coverage achieved by 2020"
+        eyebrow="Key Activity"
+        title=""
         bullets={KEY_ACTIVITIES_BULLETS}
-        image={fotoPulau}
+        image={fotoKey}
       />
       <ProgramFeatureRow
-        eyebrow="Current Project"
-        title="XXX"
-        bullets={['aaa', 'bbb', 'ccc']}
+        eyebrow="Current Project & Initiative"
+        title="Scaling Effective Area-based Conservation for People & Ecosystems (SEASCAPE)"
+        bullets={[
+          'Support the Government of Indonesia in fulfilling its global conservation commitments under the "30 by 45 Vision" policy framework.',
+          'Strengthening implementation, accelerating uptake, and generating more streamlined and measurable conservation, livelihood, and climate impacts.',
+        ]}
         extraSections={[
           {
-            title: 'BBNJ Treaty Implementation in Indonesia',
+            title: 'BBNJ Agreement Implementation in Indonesia',
             bullets: [
               'Supported by the High Seas Alliance.',
-              "Advances Indonesia's regional leadership and institutional capacity building.",
-              'Increases local stakeholder engagement for BBNJ Treaty implementation.',
+              'Support agenda development for national consultations',
+              'Increases local stakeholder capacity and engagement for BBNJ Agreement implementation.',
             ],
           },
         ]}
-        image={fotoFdtp}
+        image={fotoCurrent}
         reverse
       />
 

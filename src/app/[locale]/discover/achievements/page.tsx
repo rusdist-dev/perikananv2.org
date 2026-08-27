@@ -152,7 +152,7 @@ const ACHIEVEMENT_STATS_ROWS = [
     { value: '23', label: 'Marine Protected Area' },
     { value: '6', label: 'Area-Based Management' },
     { value: '8', label: 'Fisheries Management Areas (FMAs)' },
-    { value: '72', label: 'Community Groups (Central Java & South Sulawesi)' },
+    { value: '72', label: 'Community Groups' },
   ],
   [
     { value: '52', label: 'Field Enumerators' },
@@ -163,7 +163,7 @@ const ACHIEVEMENT_STATS_ROWS = [
   [
     { value: '12', label: 'Policy Publications' },
     { value: '21', label: 'Scholarship Awardees' },
-    { value: '30', label: 'Student Internships (5 universities, 1 school)' },
+    { value: '30', label: 'Student Internships' },
     { value: '195', label: 'Volunteers' },
   ],
 ];

@@ -9,29 +9,14 @@ import fotoHeidi from '@/assets/foto-tim/foto_heidi.jpg';
 import fotoIrfan from '@/assets/foto-tim/foto_irfan.jpg';
 import fotoNatsir from '@/assets/foto-tim/foto_natsir.png';
 import fotoToni from '@/assets/foto-tim/foto_toni.png';
-import cpSf1 from '@/assets/sustainable-fisheries/cp1_sf.png';
-import cpSf2 from '@/assets/sustainable-fisheries/cp2_sf.png';
-import cpSf3 from '@/assets/sustainable-fisheries/cp3_sf.png';
-import cpSf4 from '@/assets/sustainable-fisheries/cp4_sf.png';
 import wave2 from '@/assets/banner/wave2.png';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import { Container } from '@/components/layout/Container';
-import { ProgramGallery } from '@/components/program/ProgramGallery';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
-
-// Belum ada dokumentasi foto sendiri untuk halaman About Us -- dipinjam dari
-// galeri Sustainable Fisheries (satu-satunya program yang sudah punya set foto
-// dokumentasi nyata, bukan poster) daripada mengarang set foto baru.
-const GALLERY_IMAGES = [
-  { src: cpSf1, alt: '' },
-  { src: cpSf2, alt: '' },
-  { src: cpSf3, alt: '' },
-  { src: cpSf4, alt: '' },
-];
 
 const TEAM_MEMBERS = [
   { image: fotoIrfan, role: 'Senior Advisor for Ocean Program', name: 'Dr. Irfan Yulianto' },

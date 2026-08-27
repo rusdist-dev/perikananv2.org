@@ -1,16 +1,17 @@
 import { notFound } from 'next/navigation';
 import blueCarbonIcon from '@/assets/blue-carbon.svg';
 import bgBlueCarbon from '@/assets/banner/bg_bluecarbon.png';
-import cp1BlueCarbon from '@/assets/blue-carbon/cp1_bluecarbon.png';
-import cp2BlueCarbon from '@/assets/blue-carbon/cp2_bluecarbon.png';
-import cp3BlueCarbon from '@/assets/blue-carbon/cp3_bluecarbon.png';
-import cp4BlueCarbon from '@/assets/blue-carbon/cp4_bluecarbon.png';
+import slider1 from '@/assets/blue-carbon/slider1.png';
+import slider2 from '@/assets/blue-carbon/slider2.png';
+import slider3 from '@/assets/blue-carbon/slider3.png';
+import slider4 from '@/assets/blue-carbon/slider4.png';
 import kaBlueCarbon from '@/assets/blue-carbon/ka_bluecarbon.png';
 import borderBlueCarbon from '@/assets/blue-carbon/border_bluecarbon.png';
 import cb1 from '@/assets/ocean-accounts/cb1.jpg';
 import cb2 from '@/assets/ocean-accounts/cb2.jpg';
 import cb3 from '@/assets/ocean-accounts/cb3.jpg';
-import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
+import fotoKey from '@/assets/blue-carbon/key_bluecarbon.png';
+import fotoCurrent from '@/assets/blue-carbon/current_bluecarbon.png';
 import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
 import { ProgramGallery } from '@/components/program/ProgramGallery';
@@ -51,10 +52,10 @@ const OBJECTIVES: ProgramObjective[] = [
 ];
 
 const GALLERY_IMAGES = [
-  { src: cp1BlueCarbon, alt: '' },
-  { src: cp2BlueCarbon, alt: '' },
-  { src: cp3BlueCarbon, alt: '' },
-  { src: cp4BlueCarbon, alt: '' },
+  { src: slider1, alt: '' },
+  { src: slider2, alt: '' },
+  { src: slider3, alt: '' },
+  { src: slider4, alt: '' },
 ];
 
 const KEY_ACTIVITIES_BULLETS = [
@@ -65,7 +66,7 @@ const KEY_ACTIVITIES_BULLETS = [
 ];
 
 const CURRENT_PROJECT_BULLETS = [
-  'Ocean Accounts for High-Integrity Blue Carbon Project in Demak and Jepara, supported by Norad and GRID Arendal',
+  'Ocean Accounts for High-Integrity Blue Carbon Project in Demak and Jepara.',
 ];
 
 const NUSACORE_DESCRIPTION =
@@ -173,13 +174,13 @@ export default async function BlueCarbonPage({
         eyebrow="Key Activity"
         title="From data to blue carbon impact"
         bullets={KEY_ACTIVITIES_BULLETS}
-        image={fotoFdtp}
+        image={fotoKey}
       />
       <ProgramFeatureRow
         eyebrow="Current Project"
         title=""
         bullets={CURRENT_PROJECT_BULLETS}
-        image={fotoFdtp}
+        image={fotoCurrent}
         reverse
       />
 

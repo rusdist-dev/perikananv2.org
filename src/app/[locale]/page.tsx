@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import contohPeta from '@/assets/contoh_peta.png';
+import contohPeta from '@/assets/our_impact1.png';
 import ornamentBg from '@/assets/banner/ornament1.png';
 import ornamentBoat from '@/assets/banner/ornament2.png';
 import waveBg from '@/assets/banner/bg_wave1.png';
@@ -32,9 +32,9 @@ const IMPACT_STATS = [
   { value: '23', label: 'Marine Protected Areas' },
   { value: '6', label: 'Area-Based Management' },
   { value: '8', label: 'Fisheries Management Areas' },
-  { value: '72', label: 'Community Groups Across Central Java & South Sulawesi' },
+  { value: '72', label: 'Community Groups' },
   { value: '52', label: 'Field Enumerators' },
-  { value: '30', label: 'Student Internships (5 universities, 1 school)' },
+  { value: '30', label: 'Student Internships' },
 ];
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {

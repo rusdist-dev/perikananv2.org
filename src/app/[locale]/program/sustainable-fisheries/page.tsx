@@ -1,15 +1,15 @@
 import { notFound } from 'next/navigation';
-import bgIkan from '@/assets/bg_ikan.png';
+import bgSupport from '@/assets/sustainable-fisheries/bg_support.png';
 import cb1 from '@/assets/ocean-accounts/cb1.jpg';
 import cb2 from '@/assets/ocean-accounts/cb2.jpg';
 import cb3 from '@/assets/ocean-accounts/cb3.jpg';
-import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
+import fotoKey from '@/assets/sustainable-fisheries/key_fisheries.png';
+import fotoCurrent from '@/assets/sustainable-fisheries/current_fisheries.png';
 import bgSustainableFisheries from '@/assets/banner/bg_sustainable.png';
-import cpSf1 from '@/assets/sustainable-fisheries/cp1_sf.png';
-import cpSf2 from '@/assets/sustainable-fisheries/cp2_sf.png';
-import cpSf3 from '@/assets/sustainable-fisheries/cp3_sf.png';
-import cpSf4 from '@/assets/sustainable-fisheries/cp4_sf.png';
-import cpSf5 from '@/assets/sustainable-fisheries/cp5_sf.png';
+import slider1 from '@/assets/sustainable-fisheries/slider1.png';
+import slider2 from '@/assets/sustainable-fisheries/slider2.png';
+import slider3 from '@/assets/sustainable-fisheries/slider3.png';
+import slider4 from '@/assets/sustainable-fisheries/slider4.png';
 import sustainableFisheriesIcon from '@/assets/sustainable-fisheries.svg';
 import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
@@ -51,10 +51,10 @@ const OBJECTIVES = [
 ];
 
 const GALLERY_IMAGES = [
-  { src: cpSf1, alt: '' },
-  { src: cpSf2, alt: '' },
-  { src: cpSf3, alt: '' },
-  { src: cpSf4, alt: '' },
+  { src: slider1, alt: '' },
+  { src: slider2, alt: '' },
+  { src: slider3, alt: '' },
+  { src: slider4, alt: '' },
 ];
 
 const KEY_ACTIVITIES_BULLETS = [
@@ -162,9 +162,9 @@ export default async function SustainableFisheriesPage({
 
       <ProgramFeatureRow
         eyebrow="Key Activities"
-        title="Science, Data & Action"
+        title="Science, Data, and Action"
         bullets={KEY_ACTIVITIES_BULLETS}
-        image={fotoFdtp}
+        image={fotoKey}
       />
       <ProgramFeatureRow
         eyebrow="Current Project"
@@ -172,7 +172,7 @@ export default async function SustainableFisheriesPage({
         bullets={[
           'Enhancing Maritime Environmental Governance in Indonesia and the Philippines (EMERGE)',
         ]}
-        image={fotoFdtp}
+        image={fotoCurrent}
         reverse
       />
 
@@ -192,7 +192,7 @@ export default async function SustainableFisheriesPage({
       />
 
       <ProgramSupportCta
-        image={bgIkan}
+        image={bgSupport}
         heading="Healthy Fisheries, Healthy Oceans, Stronger Communities"
         subheading="Connecting science, data, and collaboration to support sustainable fisheries management and better coastal livelihoods."
         ctaLabel="SUPPORT US"
