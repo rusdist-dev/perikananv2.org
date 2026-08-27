@@ -13,3 +13,4 @@ blob-report/
 .playwright/
 .DS_Store
 Thumbs.db
+*.zip
