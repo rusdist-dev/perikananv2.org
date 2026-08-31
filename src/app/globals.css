@@ -64,6 +64,21 @@
   --color-breadcrumb: #6e6759;
   --color-breadcrumb-fg: #ffffff;
 
+  /* Hijau daratan pada peta. 5.10:1 di atas bg -- AA untuk teks normal, jadi
+     ia juga aman kalau nanti dipakai sebagai label di samping bentuknya.
+
+     Ada di sini, bukan sebagai hex di IndonesiaMap.css, karena berkas itu
+     mensyaratkan setiap warnanya turunan token: hijau tidak ada di palet merek,
+     jadi ia harus MASUK palet dulu. Nilai ini SATU sumber untuk ketiga tema
+     peta; masing-masing menurunkannya sendiri (lebih terang di atas laut
+     gelap, apa adanya di atas latar terang) lewat color-mix.
+
+     Sengaja senada dengan --color-series-5 (#2f7d3a, hijau seri grafik): itu
+     hijau yang sudah dipakai proyek ini. Keduanya TIDAK disatukan karena warna
+     seri hanya boleh dipakai untuk grafik -- menyambungkan peta ke sana berarti
+     mengubah palet peta setiap kali palet grafik disetel ulang. */
+  --color-land: oklch(51.1% 0.096 186.391);
+
   /* --- Netral ---
      TODO: ini masih placeholder; sesuaikan dengan warna merek di atas. */
   --color-bg: #ffffff;
@@ -71,6 +86,40 @@
   --color-fg: #171717;
   --color-muted: #5c5c5c;
   --color-border: #d4d4d4;
+
+  /* --- Warna data (grafik) ----------------------------------------------
+     Dipakai HANYA untuk seri pada grafik dan indikator ambang -- bukan untuk
+     teks badan, tombol, atau latar section. Ada di sini, bukan di komponen
+     grafiknya, karena aturan file ini berlaku sama untuk kartu grafik:
+     "hex liar dan ukuran ad-hoc di komponen adalah bug".
+
+     Warna seri sengaja BUKAN turunan --color-primary/--color-secondary: dua
+     seri yang cuma beda terang di satu rona sama tidak terbedakan pada garis
+     setebal 2px, dan hilang total bagi pembaca dengan defisiensi warna. Yang
+     dipilih di bawah beda rona (teal, biru, ungu, oker, hijau, merah bata)
+     tapi ditahan pada terang yang berdekatan, supaya tidak ada satu seri pun
+     yang tampak "lebih penting" hanya karena lebih mencolok.
+
+     Rasio kontras di atas --color-bg (putih) diukur, bukan dikira -- semuanya
+     >= 4.9:1, jadi warna yang sama boleh dipakai untuk label kecil di samping
+     garisnya, bukan cuma untuk garisnya. Ukur ulang kalau nilainya berubah. */
+  --color-series-1: #0e7c6b; /* 5.10:1 -- teal, seri utama (CO2 tanah, DO) */
+  --color-series-2: #1b77aa; /* 4.92:1 -- biru, sama dengan --color-secondary */
+  --color-series-3: #6b4fa8; /* 6.35:1 -- ungu (pH, konduktivitas) */
+  --color-series-4: #a35a00; /* 5.22:1 -- oker (suhu, rata-rata diurnal) */
+  --color-series-5: #2f7d3a; /* 5.10:1 -- hijau (kelembaban, respirasi) */
+  --color-series-6: #b03a2e; /* 6.02:1 -- merah bata (pencilan, batas atas) */
+
+  /* Tiga tingkat ambang. Sengaja dinamai per PERAN, bukan per warna: kartu
+     kualitas air memilih "level-alert" karena nilainya di luar rentang aman,
+     bukan karena kebetulan ingin merah. Nilainya menumpang pada tiga warna
+     seri di atas supaya paletnya tidak melebar diam-diam.
+
+     Warna TIDAK PERNAH jadi satu-satunya penanda tingkat: setiap tempat yang
+     memakainya juga menuliskan levelnya sebagai teks (WCAG 1.4.1). */
+  --color-level-good: var(--color-series-5);
+  --color-level-warn: var(--color-series-4);
+  --color-level-alert: var(--color-series-6);
 
   /* Focus ring memakai primary: 9.98:1 terhadap bg, jauh di atas syarat 3:1
      untuk indikator non-teks (WCAG 1.4.11). */

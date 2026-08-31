@@ -9,6 +9,7 @@ import achievements4 from '@/assets/achievements/achievements4.png';
 import achievements5 from '@/assets/achievements/achievements5.png';
 import fotoPulau2 from '@/assets/marine-conservation/foto_pulau2.png';
 import { Container } from '@/components/layout/Container';
+import { MilestoneCard } from '@/components/discover/MilestoneCard';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { getDictionary } from '@/i18n/dictionary';
@@ -291,40 +292,26 @@ export default async function AchievementsPage({ params }: { params: Promise<{ l
         </h2>
         <p className="mt-2 text-sm text-muted">Our journey from the beginning until now</p>
 
-        {/* h-full pada tiap kartu memakai stretch bawaan CSS grid (align-items
-            default-nya stretch): tinggi baris mengikuti kartu tertinggi
-            (mis. 2021/2023 dengan poin terpanjang), lalu kartu lain di baris
-            yang sama ikut merentang -- bukan tinggi masing-masing mengikuti
-            kontennya sendiri, yang akan membuat baris jadi tidak rata. 2026
-            sengaja dibiarkan sendirian di baris terakhir (auto-placement grid
-            apa adanya) alih-alih diisi kartu kosong. */}
-        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {/* items-start mematikan stretch bawaan CSS grid (align-items default-nya
+            stretch): tiap kartu setinggi kontennya sendiri, jadi kartu pendek
+            tidak lagi ikut merentang mengejar kartu tertinggi di barisnya dan
+            menyisakan ruang kosong di bawah. Konsekuensinya tepi bawah kartu
+            dalam satu baris tidak rata -- itu memang yang diminta; batas tinggi
+            + show/hide di MilestoneCard yang menjaga selisihnya tetap wajar.
+            2026 sengaja dibiarkan sendirian di baris terakhir (auto-placement
+            grid apa adanya) alih-alih diisi kartu kosong. */}
+        <div className="mt-8 grid grid-cols-1 items-start gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {MILESTONES.map((milestone) => (
-            <div key={milestone.year} className="flex h-full flex-col border border-border bg-surface">
-              <div className="relative aspect-[3/2]">
-                <Image
-                  src={milestone.image}
-                  alt=""
-                  aria-hidden
-                  fill
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-secondary">{milestone.year}</p>
-                <h3 className="text-base font-semibold text-primary">{milestone.title}</h3>
-                {milestone.bullets ? (
-                  <ul className="list-disc space-y-1 ps-4 text-sm text-muted">
-                    {milestone.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-muted">{milestone.description}</p>
-                )}
-              </div>
-            </div>
+            <MilestoneCard
+              key={milestone.year}
+              year={milestone.year}
+              title={milestone.title}
+              image={milestone.image}
+              description={milestone.description}
+              bullets={milestone.bullets}
+              showMoreLabel={t.showMore}
+              showLessLabel={t.showLess}
+            />
           ))}
         </div>
       </Container>

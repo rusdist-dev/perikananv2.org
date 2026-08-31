@@ -81,6 +81,8 @@ type Dictionary = {
   linkCopied: string;
   relatedStory: string;
   moreFromCategory: string;
+  showMore: string;
+  showLess: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -155,6 +157,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     linkCopied: 'Tautan Tersalin',
     relatedStory: 'Kisah Terkait',
     moreFromCategory: 'Selengkapnya dari {category}',
+    showMore: 'Selengkapnya',
+    showLess: 'Tutup',
   },
   en: {
     skipToContent: 'Skip to main content',
@@ -227,6 +231,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     linkCopied: 'Link Copied',
     relatedStory: 'Related Story',
     moreFromCategory: 'More From {category}',
+    showMore: 'Show more',
+    showLess: 'Show less',
   },
 };
 

@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import waveBg from '@/assets/banner/bg_wave1.png';
-import ourImpact1 from '@/assets/our_impact1.png';
 import { Container } from '@/components/layout/Container';
+import { ImpactVillageMap } from '@/components/program/ImpactVillageMap';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
@@ -38,7 +38,7 @@ export default async function OurImpactPage({ params }: { params: Promise<{ loca
         />
       </div>
 
-      <Container className="page-gutter relative pt-10 pb-16 lg:pe-(--spacing-panel-gutter)">
+      <Container className="page-gutter relative pt-10 lg:pe-(--spacing-panel-gutter)">
         <Breadcrumb
           items={[
             { label: t.home, href: '/' },
@@ -61,17 +61,14 @@ export default async function OurImpactPage({ params }: { params: Promise<{ loca
         </p>
 
         <div className="mt-6 h-1 w-full max-w-5xl bg-secondary" />
-
-        <div className="relative mt-10 w-full overflow-hidden rounded-lg border border-border shadow-lg">
-          <Image
-            src={ourImpact1}
-            alt=""
-            aria-hidden
-            sizes="100vw"
-            className="h-auto w-full select-none"
-          />
-        </div>
       </Container>
+
+      {/* Di LUAR Container: pemilih desanya membawa Container sendiri supaya
+          sejajar dengan teks di atas, sedangkan petanya full-bleed selebar
+          viewport. */}
+      <div className="relative mt-10 w-full ">
+        <ImpactVillageMap />
+      </div>
     </div>
   );
 }

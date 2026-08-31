@@ -4,7 +4,6 @@ import fotoKey from '@/assets/marine-conservation/key_marine.png';
 import fotoCurrent from '@/assets/marine-conservation/current_marine.png';
 import fotoPulau2 from '@/assets/marine-conservation/foto_pulau2.png';
 import bgMarineConservation from '@/assets/banner/bg_marine.png';
-import petaBg from '@/assets/marine-conservation/peta_bg.png';
 import marineConservationIcon from '@/assets/marine-conservation.svg';
 import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
 import cpSf1 from '@/assets/sustainable-fisheries/cp1_sf.png';
@@ -16,6 +15,8 @@ import slider2 from '@/assets/marine-conservation/slider2.png';
 import slider3 from '@/assets/marine-conservation/slider3.png';
 import slider4 from '@/assets/marine-conservation/slider4.png';
 import { Container } from '@/components/layout/Container';
+import { IndonesiaMap } from '@/components/program/IndonesiaMap';
+import { FRCI_CONSERVATION_AREA_NAMES } from '@/data/frci-conservation-areas';
 import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
 import { ProgramGallery } from '@/components/program/ProgramGallery';
@@ -206,9 +207,6 @@ export default async function MarineConservationPage({
         reverse
       />
 
-      {/* peta_bg.png punya alpha channel di area lautnya (mirip wave2.png),
-          jadi ditumpuk begitu saja di atas bg-primary tanpa perlu dipotong --
-          birunya menyatu langsung dengan latar section. */}
       <div className="bg-primary text-primary-fg">
         <Container className="page-gutter pt-10 lg:pe-(--spacing-panel-gutter)">
           <p className="text-xs font-bold uppercase tracking-wider text-primary-fg/70">
@@ -216,7 +214,14 @@ export default async function MarineConservationPage({
           </p>
           <h2 className="mt-1 text-2xl font-semibold md:text-3xl mb-7">Marine Protected Area (MPA)</h2>
         </Container>
-        <Image src={petaBg} alt="" aria-hidden sizes="100vw" className="h-auto w-full" />
+        {/* Hanya kawasan tempat FRCI bekerja. Tanpa daftar putih ini peta
+            menggambar seluruh 554 kawasan konservasi Indonesia -- benar sebagai
+            data nasional, tapi section ini judulnya "Work Area". */}
+        <IndonesiaMap
+          theme="brand"
+          ariaLabel="Peta interaktif kawasan konservasi laut tempat FRCI bekerja"
+          mpaNames={FRCI_CONSERVATION_AREA_NAMES}
+        />
       </div>
 
       <ProgramCrossCutting

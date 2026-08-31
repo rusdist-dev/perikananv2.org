@@ -304,10 +304,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">OUR PUBLICATION</p>
         <h2 className="mb-8 text-3xl font-semibold text-primary">The results of our work and collaboration</h2>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {/* Beranda cuma menonjolkan 4 -- daftar lengkapnya (termasuk yang
               tidak tampil di sini) ada di /discover/publications. */}
-          {publications.slice(0, 4).map((publication, index) => (
+          {publications.slice(0, 3).map((publication, index) => (
             <article key={index} className="flex flex-col border border-border">
               <div className="relative aspect-[3/4]">
                 <Image

@@ -1,0 +1,482 @@
+/* =========================================================================
+   TEMA IndonesiaMap
+
+   Kenapa berkas ini ada, bukan globals.css: globals.css hanya memuat token,
+   utility, dan aturan elemen telanjang -- "Apa pun selain ini milik komponen".
+   Kelas Leaflet adalah nama global pihak ketiga yang tidak bisa dijangkau
+   utility Tailwind dengan bersih, jadi ia diurus di sebelah komponennya, sama
+   seperti komponen ini sudah mengimpor leaflet/dist/leaflet.css.
+
+   Kenapa warna ada DI SINI dan bukan di TypeScript: Leaflet SVG renderer
+   memasang warna sebagai presentation attribute (`path.setAttribute('fill',
+   ...)`), dan `var()` TIDAK berlaku di presentation attribute -- jadi
+   `fillColor: 'var(--color-secondary)'` gagal tanpa suara. Sebaliknya,
+   presentation attribute kalah dari aturan CSS APA PUN, jadi aturan di bawah
+   menang atas atribut yang dipasang Leaflet. Hasilnya: TypeScript hanya
+   memilih kelas, seluruh warna tetap turunan token.
+
+   Semua nilai di bawah WAJIB turunan token globals.css. Proyek ini sengaja
+   mematikan palet bawaan Tailwind (`--color-*: initial`) supaya warna di luar
+   palet gagal terang-terangan; hex mentah di sini akan menyelundup melewati
+   penjaga itu. Warna yang benar-benar baru berarti token baru di globals.css.
+
+   Semua selektor diikat ke [data-map-theme] supaya specificity-nya (0,2,x)
+   mengalahkan leaflet.css (0,1,x) tanpa bergantung pada urutan import.
+   ========================================================================= */
+
+/* --- Preset ------------------------------------------------------------
+   Menambah tema = menambah satu blok di bawah ini, tanpa menyentuh TSX.
+   Nama tema baru juga harus masuk ke union MapTheme di IndonesiaMap.tsx --
+   di situlah nama yang salah tertangkap saat typecheck. */
+
+/* Untuk section berlatar --color-primary (mis. "Marine Protected Area").
+   Lautnya SENGAJA sama dengan latar section: daratan lalu terlihat mengapung
+   langsung di atas halaman, persis efek peta_bg.png lama yang punya alpha
+   channel di area lautnya -- bukan kotak peta yang memotong section.
+
+   Terukur: darat/laut 3.14:1 ISI dan 9.98:1 lewat garis pantai; tetangga/laut
+   1.33:1; darat/tetangga 2.36:1; teks chrome 9.98:1.
+   Sejak daratan jadi hijau, angka ISI-nya sendiri sudah lolos 3:1 -- sebelumnya
+   2.03:1 dan tema ini bergantung sepenuhnya pada garis pantai putih untuk
+   memenuhi WCAG 1.4.11 lewat GARIS BATAS. Garis pantainya tetap dipertahankan
+   (ia yang membuat pulau-pulau kecil terbaca sebagai bentuk, bukan bercak),
+   tapi ia bukan lagi satu-satunya yang memisahkan darat dari laut.
+
+   Yang MENURUN karena perubahan ini: kawasan konservasi di atas daratan, dari
+   3.16:1 menjadi 2.04:1 -- isi biru pucat di atas hijau. Kawasan tetap terbaca
+   lewat garis batasnya sendiri (--map-mpa-stroke) dan tetap 6.40:1 di atas
+   laut, tempat sebagian besar kawasan berada. Menaikkannya lagi berarti
+   memucatkan --map-mpa, dan itu keputusan tersendiri. */
+[data-map-theme='brand'] {
+  --map-sea: var(--color-primary);
+  /* Ditarik ke arah putih supaya cukup terang di atas laut navy: hijau token
+     apa adanya cuma 1.85:1 di sini, lebih buruk dari biru yang ia gantikan. */
+  --map-land: color-mix(in srgb, var(--color-land) 75%, white);
+  --map-land-stroke: var(--color-primary-fg);
+  /* Ditarik mendekati warna laut (90%, bukan 82%) supaya luminansinya turun
+     di bawah daratan Indonesia. Di 82% keduanya berjarak cuma 1.22:1 --
+     terbaca beda karena beda hue, yang tidak menolong penglihatan
+     akromatik. */
+  --map-context: color-mix(in srgb, var(--color-primary) 90%, white);
+  --map-context-stroke: color-mix(in srgb, var(--color-primary) 70%, white);
+
+  /* Kawasan konservasi harus terbaca DI ATAS laut MAUPUN daratan, karena
+     sebagian besar kawasan menempel pantai dan melintasi keduanya. Di tema
+     gelap jalan keluarnya warna yang lebih TERANG dari keduanya.
+
+     Garisnya sengaja BERWARNA, bukan nyaris putih: garis pantai di tema ini
+     putih murni, dan garis kawasan yang juga nyaris putih membuat keduanya
+     saling bersaing sehingga peta terbaca sebagai kekusutan garis. */
+  --map-mpa: color-mix(in srgb, oklch(74.6% 0.16 232.661) 90%, white);
+  --map-mpa-stroke: color-mix(in srgb, oklch(74.6% 0.16 232.661) 55%, white);
+
+  --map-chrome-bg: var(--color-bg);
+  --map-chrome-fg: var(--color-primary);
+  --map-chrome-border: var(--color-border);
+
+  /* Penanda desa terpilih. Isi putih + cincin gelap dipakai di kedua tema
+     gelap, dan dibalik di tema terang: pasangan itu yang membuat penanda
+     terbaca di ATAS laut MAUPUN daratan tanpa perlu warna khusus per tema --
+     salah satu dari kedua lapisan itu selalu jadi lawannya.
+
+     Warna dari palet seri sempat dicoba dan dibuang: satu-satunya nada hangat
+     yang ada (#a35a00, #b03a2e) sama gelapnya dengan laut bertema brand. */
+  --map-pin: var(--color-primary-fg);
+  --map-pin-stroke: var(--color-primary);
+
+  /* Penanda desa dan gelembung gerombolnya. Sengaja SENADA dengan penanda
+     terpilih, bukan warna ketiga: yang membedakan "terpilih" dari "tersedia"
+     adalah ukuran dan label permanennya, bukan rona -- peta ini sudah memakai
+     empat warna untuk arti geografis (laut, darat, tetangga, kawasan), dan
+     rona kelima akan terbaca sebagai lapisan data lagi.
+     Terukur: penanda/laut 9.98:1; angka gerombol di gelembungnya 9.98:1. */
+  --map-marker: var(--color-primary-fg);
+  --map-marker-stroke: var(--color-primary);
+  --map-cluster-bg: var(--color-bg);
+  --map-cluster-fg: var(--color-primary);
+
+  /* --color-focus (= --color-primary) tidak terlihat di atas laut bertema
+     brand, karena lautnya PERSIS --color-primary. Cincin fokus harus diganti
+     per tema, bukan diwarisi, atau indikator fokus hilang total -- pelanggaran
+     WCAG 2.4.7 yang tak terlihat sampai ada yang menavigasi pakai keyboard. */
+  --map-focus: var(--color-primary-fg);
+}
+
+/* Untuk section berlatar putih/--color-surface.
+   Terukur: darat 4.39:1 di atas --color-surface dan 5.10:1 di atas putih
+   halaman -- keduanya disebut karena kontainer peta transparan, jadi "laut" di
+   sini adalah latar section yang sebenarnya, bukan --map-sea. Lolos 3:1 dari
+   isinya sendiri, jadi tema ini tidak bergantung pada garis pantai (garis
+   putihnya lenyap di atas latar putih). Tetangga/putih 1.48:1; darat/tetangga
+   3.44:1; chrome 9.98:1. */
+[data-map-theme='light'] {
+  --map-sea: var(--color-surface);
+  /* Apa adanya, tanpa dicerahkan: di atas latar terang, hijau token justru
+     yang paling gelap dari ketiga turunannya -- itu yang dibutuhkan di sini. */
+  --map-land: var(--color-land);
+  --map-land-stroke: var(--color-bg);
+  --map-context: var(--color-border);
+  --map-context-stroke: color-mix(in srgb, var(--color-border) 72%, var(--color-fg));
+
+  /* Di tema terang arahnya DIBALIK: kawasan dibuat lebih gelap dari laut dan
+     daratan, bukan lebih terang. Warna terang di atas laut --color-surface
+     akan lenyap. */
+  --map-mpa: oklch(74.6% 0.16 232.661);
+  --map-mpa-stroke: color-mix(in srgb, oklch(74.6% 0.16 232.661) 80%, black);
+
+  --map-chrome-bg: var(--color-bg);
+  --map-chrome-fg: var(--color-primary);
+  --map-chrome-border: var(--color-border);
+
+  /* Dibalik dari tema brand: lautnya --color-surface, jadi penanda putih akan
+     lenyap di situ. */
+  --map-pin: var(--color-primary);
+  --map-pin-stroke: var(--color-bg);
+
+  /* Dibalik seperti --map-pin: di atas latar terang, penandanyalah yang gelap.
+     Terukur: penanda/putih halaman 9.98:1, penanda/darat hijau 1.96:1 --
+     angka kedua ditolong cincin putih selebar 2px yang mengelilinginya
+     (WCAG 1.4.11 lewat garis batas, sama seperti kawasan konservasi).
+     Angka di gelembung gerombol 9.98:1. */
+  --map-marker: var(--color-primary);
+  --map-marker-stroke: var(--color-bg);
+  --map-cluster-bg: var(--color-primary);
+  --map-cluster-fg: var(--color-primary-fg);
+
+  --map-focus: var(--color-primary);
+}
+
+/* Daratan subjek diturunkan dari --color-land di KETIGA tema, bukan warna yang
+   berbeda-beda: "yang hijau itu Indonesia" jadi aturan yang tetap berlaku saat
+   pembaca berpindah antar halaman. Yang berbeda per tema hanya seberapa jauh
+   hijau itu ditarik ke putih/hitam supaya terbaca di atas lautnya
+   masing-masing.
+
+   Versi pertama tema ini memakai --color-primary untuk darat dan turunan 55%
+   untuk tetangga; hasilnya tetangga cuma berjarak ~5 poin RGB dari laut dan
+   praktis lenyap.
+   Terukur setelah daratan jadi hijau: darat/laut 3.34:1 isi + 8.24:1 garis;
+   tetangga/laut 1.37:1; darat/tetangga 2.44:1; kawasan/darat 3.66:1;
+   chrome 14.81:1.
+   Ubah salah satu nilai di bawah berarti mengukur ulang semuanya. */
+[data-map-theme='dark'] {
+  --map-sea: color-mix(in srgb, var(--color-primary) 30%, black);
+  --map-land: color-mix(in srgb, var(--color-land) 95%, black);
+  --map-land-stroke: color-mix(in srgb, var(--color-land) 55%, white);
+  --map-context: color-mix(in srgb, var(--color-primary) 70%, black);
+  --map-context-stroke: color-mix(in srgb, var(--color-primary) 95%, black);
+
+  --map-mpa: color-mix(in srgb, var(--color-secondary) 30%, white);
+  --map-mpa-stroke: color-mix(in srgb, var(--color-secondary) 60%, white);
+
+  --map-chrome-bg: color-mix(in srgb, var(--color-primary) 60%, black);
+  --map-chrome-fg: var(--color-primary-fg);
+  --map-chrome-border: color-mix(in srgb, var(--color-primary) 85%, black);
+
+  --map-pin: var(--color-primary-fg);
+  --map-pin-stroke: var(--map-sea);
+
+  /* Terukur: penanda/laut 15.28:1; angka gerombol di gelembungnya 14.81:1
+     (gelembungnya menumpang token chrome yang angkanya sudah diukur). */
+  --map-marker: var(--color-primary-fg);
+  --map-marker-stroke: var(--map-sea);
+  --map-cluster-bg: var(--map-chrome-bg);
+  --map-cluster-fg: var(--map-chrome-fg);
+
+  --map-focus: var(--color-secondary);
+}
+
+/* --- Kanvas ------------------------------------------------------------ */
+
+/* Peta ini SENGAJA tidak punya latar sendiri: "laut"-nya adalah latar section
+   di belakangnya, jadi daratan terlihat mengapung langsung di atas halaman --
+   persis efek peta_bg.png lama yang punya alpha channel di area lautnya --
+   bukan kotak peta yang memotong section berikut ornamennya.
+
+   `transparent` di sini tetap WAJIB ditulis: bawaan Leaflet #ddd, yang kalau
+   dibiarkan muncul sebagai kotak abu di tiap tema.
+
+   --map-sea karena itu bukan lagi cat, melainkan CATATAN warna latar yang
+   diasumsikan tiap tema -- dipakai untuk hal yang harus menyamai backdrop
+   (mis. --map-pin-stroke di tema dark) dan jadi acuan angka kontras di
+   komentar preset. Memasang tema pada section yang warnanya lain dari
+   --map-sea-nya berarti semua angka itu batal; pilih preset yang cocok dengan
+   section, jangan mengecat ulang kontainernya di sini.
+
+   font-family diarahkan ke token karena Leaflet meng-hardcode Helvetica untuk
+   bilah atribusi dan tooltip. */
+[data-map-theme].leaflet-container {
+  background: transparent;
+  font-family: var(--font-sans);
+}
+
+/* --- Daratan ----------------------------------------------------------- */
+
+/* fill-opacity WAJIB ditulis: bawaan Leaflet 0.2, jadi tanpa baris ini setiap
+   pulau tampil nyaris transparan.
+
+   non-scaling-stroke: selama animasi zoom Leaflet menskalakan <g> induk, yang
+   ikut menebalkan garis pantai sesaat sebelum reproyeksi. Dengan ini lebar
+   garis tetap konstan sepanjang animasi. */
+[data-map-theme] .map-land,
+[data-map-theme] .map-context {
+  fill-opacity: 1;
+  stroke-opacity: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+[data-map-theme] .map-land {
+  fill: var(--map-land);
+  stroke: var(--map-land-stroke);
+  stroke-width: 0.6;
+}
+
+/* Negara tetangga cuma konteks tepi bingkai, jadi kontrasnya sengaja rendah:
+   ia harus menjelaskan "ini bukan laut" tanpa bersaing dengan subjeknya. */
+[data-map-theme] .map-context {
+  fill: var(--map-context);
+  stroke: var(--map-context-stroke);
+  stroke-width: 0.5;
+}
+
+/* --- Kawasan konservasi ------------------------------------------------ */
+
+/* Isinya SENGAJA tembus pandang, tidak seperti daratan: kawasan konservasi
+   adalah penanda di atas peta, bukan bentuk pengganti -- garis pantai di
+   bawahnya harus tetap terbaca supaya jelas kawasan itu meliputi perairan
+   mana. Itu juga yang membuat kawasan bertumpuk (ada yang beririsan di
+   sumbernya) terlihat sebagai tumpukan, bukan sebagai satu blok rata. */
+[data-map-theme] .map-mpa {
+  fill: var(--map-mpa);
+  fill-opacity: 0.8;
+  stroke: var(--map-mpa-stroke);
+  stroke-width: 0.7;
+}
+
+/* Umpan balik hover: dengan 554 kawasan yang saling berdempet, tanpa ini
+   pengunjung tidak tahu tooltip yang muncul milik bentuk yang mana. */
+[data-map-theme] .map-mpa:hover {
+  fill-opacity: 0.75;
+  stroke-width: 1.2;
+}
+
+/* --- Penanda desa terpilih --------------------------------------------- */
+
+/* Satu-satunya bentuk di peta ini yang BUKAN geografi, jadi ia sengaja tidak
+   memakai bahasa visual lapisan lain: bulat sempurna, bergaris tebal, dan
+   satu-satunya yang berisi penuh di atas kawasan konservasi.
+
+   fill-opacity dan stroke-opacity ditulis eksplisit dengan alasan yang sama
+   seperti pada .map-land -- bawaan Leaflet 0.2 membuatnya nyaris tak terlihat. */
+[data-map-theme] .map-focus-pin {
+  fill: var(--map-pin);
+  fill-opacity: 1;
+  stroke: var(--map-pin-stroke);
+  stroke-opacity: 1;
+  stroke-width: 3;
+  /* Tanpa ini cincin penanda ikut menebal selama animasi flyTo, karena Leaflet
+     menskalakan <g> induknya sebelum reproyeksi. */
+  vector-effect: non-scaling-stroke;
+}
+
+/* --- Penanda desa & gerombolnya --------------------------------------- */
+
+/* Bulatan penanda digambar di sini, bukan lewat berkas gambar seperti ikon
+   bawaan Leaflet: peta ini tidak memuat satu pun aset raster (lihat komentar
+   komponennya), dan ikon PNG bawaan itu juga terkenal patah jalurnya di
+   bundler. Konsekuensinya semua rupa di bawah wajib bisa dinyatakan sebagai
+   CSS -- dan itu justru yang membuat warnanya tetap turunan token.
+
+   Kelas .map-village-marker dipasang lewat divIcon `className`, yang MENGGANTI
+   kelas bawaan `leaflet-div-icon` (kotak putih bergaris) -- jadi tidak ada sisa
+   gaya plugin yang perlu ditimpa. */
+[data-map-theme] .map-village-marker {
+  border-radius: 9999px;
+  background: var(--map-marker);
+  /* Cincin ini yang memisahkan penanda dari daratan hijau di tema light --
+     isinya sendiri cuma 1.96:1 di sana. */
+  box-shadow: 0 0 0 2px var(--map-marker-stroke);
+  /* box-sizing dipaksa karena leaflet.css menyetel `box-sizing: border-box`
+     hanya untuk sebagian elemennya; iconSize dari divIcon dipasang sebagai
+     width/height inline, dan cincin di atas memang harus tumbuh KE LUAR. */
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* Kaki spiderfy: garis yang muncul saat gerombol berisi penanda-penanda pada
+   koordinat yang nyaris sama dibuka. Bawaan pluginnya #222 -- hitam pekat yang
+   tak terlihat di tema gelap dan bukan warna palet di tema mana pun. */
+[data-map-theme] .leaflet-cluster-spider-leg {
+  stroke: var(--map-marker-stroke);
+}
+
+/* Nama desa: ada untuk pembaca layar, tidak untuk mata. Pola clip-path +
+   1px ini dipakai alih-alih `display: none` atau `visibility: hidden` karena
+   keduanya juga menyembunyikannya dari pembaca layar. */
+[data-map-theme] .map-marker-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Gelembung gerombol. Bulat penuh, bukan kotak: bentuknya harus terbaca
+   sebagai "banyak penanda jadi satu", bukan sebagai kartu chrome peta. */
+[data-map-theme] .map-cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--map-cluster-bg);
+  color: var(--map-cluster-fg);
+  border: 2px solid var(--map-cluster-fg);
+  box-sizing: border-box;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+/* Cincin fokus penanda dan gerombol. WAJIB ada: Leaflet memberi ikon penanda
+   `role="button"` dan `tabindex="0"`, jadi keduanya SINGGAHAN TAB yang nyata --
+   berbeda dari <path> kawasan konservasi, yang cincin fokusnya justru dimatikan
+   di bawah karena tidak pernah bisa di-Tab. */
+[data-map-theme] .leaflet-marker-icon:focus-visible {
+  outline: 2px solid var(--map-focus);
+  outline-offset: 2px;
+}
+
+/* Tooltip permanen milik penanda. Berbeda dari tooltip kawasan konservasi, ini
+   TIDAK dipicu hover -- ia label yang menetap, jadi ia boleh lebih tegas. */
+[data-map-theme] .map-tooltip-focus {
+  border-color: var(--map-pin-stroke);
+  font-weight: 600;
+}
+
+[data-map-theme] .map-tooltip {
+  max-width: 18rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--map-chrome-bg);
+  color: var(--map-chrome-fg);
+  border: 1px solid var(--map-chrome-border);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  /* Bawaan Leaflet `white-space: nowrap`. Nama resmi kawasan bisa 100+
+     karakter ("KAWASAN KONSERVASI PESISIR DAN PULAU-PULAU KECIL BANGGAI,
+     ..."), jadi tanpa baris ini tooltipnya memanjang keluar layar. */
+  white-space: normal;
+}
+
+[data-map-theme] .map-tooltip .map-tooltip-name {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+[data-map-theme] .map-tooltip .map-tooltip-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--text-xs);
+  opacity: 0.75;
+}
+
+/* Panah tooltip diwarnai terpisah dari kotaknya: Leaflet membuatnya dari
+   border sebuah pseudo-element, jadi ia tidak mewarisi `background` di atas
+   dan akan tetap putih di tema gelap. */
+[data-map-theme] .leaflet-tooltip-top::before {
+  border-top-color: var(--map-chrome-bg);
+}
+[data-map-theme] .leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--map-chrome-bg);
+}
+[data-map-theme] .leaflet-tooltip-left::before {
+  border-left-color: var(--map-chrome-bg);
+}
+[data-map-theme] .leaflet-tooltip-right::before {
+  border-right-color: var(--map-chrome-bg);
+}
+
+/* --- Chrome Leaflet ---------------------------------------------------- */
+
+/* Leaflet meng-hardcode tombol putih ber-border #ccc dan bayangan hitam 65%.
+   Dibiarkan begitu, tombol zoom terlihat seperti tempelan default di tengah
+   halaman bermerek. */
+[data-map-theme] .leaflet-bar {
+  box-shadow: none;
+  border: 1px solid var(--map-chrome-border);
+}
+
+[data-map-theme] .leaflet-bar a,
+[data-map-theme] .leaflet-bar a:hover {
+  background-color: var(--map-chrome-bg);
+  border-bottom-color: var(--map-chrome-border);
+  color: var(--map-chrome-fg);
+}
+
+[data-map-theme] .leaflet-bar a:hover {
+  background-color: color-mix(in srgb, var(--map-chrome-bg) 88%, var(--map-chrome-fg));
+}
+
+/* Atribusi Natural Earth. Bawaan Leaflet rgba(255,255,255,0.8) + teks #333 --
+   di tema gelap itu muncul sebagai bilah putih terang di sudut peta. */
+[data-map-theme] .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--map-chrome-bg) 88%, transparent);
+  color: var(--map-chrome-fg);
+}
+
+/* Leaflet mewarnai setiap tautan di dalam peta #0078A8, warna di luar palet
+   yang kontrasnya tak pernah diukur terhadap tema mana pun. */
+[data-map-theme] .leaflet-container a {
+  color: var(--map-chrome-fg);
+}
+
+/* Cincin fokus: globals.css memasang outline var(--color-focus) untuk semua
+   [tabindex], dan Leaflet memberi kontainernya tabindex="0" supaya peta bisa
+   digeser pakai panah. Di tema brand warna itu menghilang di atas laut (lihat
+   --map-focus di atas), jadi ia ditimpa di sini untuk kontainer dan tombolnya. */
+[data-map-theme].leaflet-container:focus-visible,
+[data-map-theme] .leaflet-bar a:focus-visible {
+  outline: 2px solid var(--map-focus);
+  outline-offset: 2px;
+}
+
+/* Fokus yang datang dari klik ditandai [data-pointer-focus] oleh
+   IndonesiaMap.tsx (alasannya panjang, ada di komentar effect-nya). Cincin
+   fokus dimatikan HANYA untuk keadaan itu: fokus lewat Tab tidak pernah
+   membawa penanda ini, jadi indikator keyboard-nya tetap utuh. Penandanya juga
+   dilepas begitu tombol keyboard pertama ditekan, supaya panah yang menggeser
+   peta tetap punya cincin. */
+[data-map-theme].leaflet-container[data-pointer-focus]:focus-visible {
+  outline: none;
+}
+
+/* Klik pada sebuah kawasan konservasi membuat <path>-NYA yang jadi
+   document.activeElement (perilaku Chromium untuk shape SVG yang menerima
+   pointerdown), dan UA stylesheet menggambar `outline: auto` di sekeliling
+   bounding box-nya -- terlihat sebagai kotak gelap yang membingkai kawasan,
+   bukan mengikuti bentuknya, dan menetap sampai ada klik di tempat lain.
+
+   Aturan [data-pointer-focus] di atas tidak menjangkaunya karena penanda itu
+   ada di kontainer, sedangkan yang berkedok fokus di sini elemen anaknya.
+
+   Mematikannya TIDAK menghapus indikator keyboard mana pun: Leaflet hanya
+   memasang tabIndex pada kontainer peta dan pada ikon L.marker (leaflet-src.js
+   ~7915) -- tidak pernah pada <path>, jadi bentuk-bentuk ini tidak pernah
+   disinggahi Tab dan fokus ke sini SELALU datang dari pointer. Karena itu
+   selektornya dikunci ke `path`: kalau suatu saat peta ini memakai L.marker
+   yang interaktif, ikonnya yang memang bisa di-Tab tetap dapat cincin fokus.
+   (preventOutline bawaan Leaflet tidak menolong di sini -- ia naik dari
+   tabIndex -1 ke KONTAINER, jadi yang dibungkamnya outline kontainer.)
+
+   Penanda kawasan terpilih tetap ada tanpa cincin ini: tooltip, penebalan
+   .map-mpa:hover, dan panel detail yang terbuka setelah klik. */
+[data-map-theme] path.leaflet-interactive:focus,
+[data-map-theme] path.leaflet-interactive:focus-visible {
+  outline: none;
+}
