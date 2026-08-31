@@ -88,7 +88,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           tanpa `relative` di Container, ia melompat ke <div relative isolate>
           terluar dan membentang sampai ke seksi kedua di bawah.
           `isolate` menahan z-index negatifnya agar berhenti di dalam kotak ini. */}
-      <Container as="div" className="relative isolate pt-16 pb-0 min-h-screen">
+      {/* min-h-screen hanya dari lg ke atas. Di ponsel ornamen hero disembunyikan
+          (lihat komentar panjang di atas), jadi satu layar penuh berisi tiga
+          baris teks dan sisanya kosong -- pengunjung harus menggulir melewati
+          ~440px ruang hampa sebelum isi halaman dimulai. */}
+      <Container as="div" className="page-gutter relative isolate pt-16 pb-0 min-h-[60vh] lg:min-h-screen">
         {/* Bungkus terpisah dari <Image fill> supaya jarak ke tepi kanan bisa
             diatur: `fill` menulis inset:0 lewat inline style, yang tidak bisa
             dikalahkan className manapun. Div ini yang diberi jarak (end-20)
@@ -105,26 +109,43 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             className="object-contain object-right select-none -translate-x-32"
           />
         </div>
-        <div className="max-w-content py-12">
-          <h1 className="text-[12em]/40 font-extrabold text-primary">FRCI</h1>
-          <p className="mt-4 text-[3.3em]/14 text-primary tracking-tighter">
+        {/* Ukuran teks hero WAJIB ikut lebar layar, bukan tetap: 12em = 192px,
+            dan "FRCI" pada ukuran itu selebar 430px -- 40px lebih lebar dari
+            layar 390px. Akibatnya bukan cuma judul terpotong, tapi SELURUH
+            halaman ikut bisa digeser ke samping 163px, termasuk setiap section
+            di bawahnya.
+
+            clamp() dipakai alih-alih menumpuk breakpoint karena yang harus
+            dijaga adalah hubungannya dengan lebar viewport (20vw), bukan
+            nilainya di tiga titik tertentu; batas atasnya tetap 12em supaya
+            tampilan desktop sama persis seperti sebelumnya. */}
+        <div className="max-w-content py-8 lg:py-12">
+          <h1 className="text-[clamp(4rem,20vw,12em)]/[0.85] font-extrabold text-primary lg:text-[12em]/40">
+            FRCI
+          </h1>
+          <p className="mt-4 text-[clamp(1.75rem,9vw,3.3em)]/[1.15] tracking-tighter text-primary lg:text-[3.3em]/14">
             OCEAN PROGRAM <br /> By Rekam{' '}
           </p>
         </div>
-        <div className="max-w-fit bg-primary text-white flex divide-x divide-white uppercase mt-10">
-          <AppLink href={'#'} className="px-4 py-2 text-center hover:underline hover:underline-offset-4 hover:underline-secondary">
+        {/* flex-wrap + garis per item, bukan `divide-x` pada induk: lima tautan
+            sejajar butuh 553px, jadi di ponsel barisan ini harus patah. divide-x
+            hanya memasang garis kiri pada saudara ke-2 dst -- begitu barisnya
+            patah, garisnya mendarat di awal baris kedua alih-alih di antara dua
+            item yang bersebelahan. */}
+        <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit">
+          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Ocean Accounts
           </AppLink>
-          <AppLink href={'#'} className="px-4 py-2 text-center hover:underline hover:underline-offset-4 hover:underline-secondary">
+          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Fisheries
           </AppLink>
-          <AppLink href={'#'} className="px-4 py-2 text-center hover:underline hover:underline-offset-4 hover:underline-secondary">
+          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Ecosystem
           </AppLink>
-          <AppLink href={'#'} className="px-4 py-2 text-center hover:underline hover:underline-offset-4 hover:underline-secondary">
+          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Species
           </AppLink>
-          <AppLink href={'#'} className="px-4 py-2 text-center hover:underline hover:underline-offset-4 hover:underline-secondary">
+          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Blue Carbon
           </AppLink>
         </div>
@@ -134,39 +155,43 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           {/* relative + isolate: sama seperti ornamen di atas, keduanya yang
               mengunci latar ini pada kotak Container ini saja -- bukan pada
               grid induknya. */}
-          <Container as="div" width="content" className="relative isolate pt-8">
-  <Image
-    src={waveBg}
-    alt=""
-    aria-hidden
-    fill
-    sizes="(min-width: 1024px) 50vw, 100vw"
-    className="pointer-events-none -z-10 object-cover opacity-5 select-none"
-  />
+          <Container as="div" width="content" className="page-gutter relative isolate pt-8">
+            <Image
+              src={waveBg}
+              alt=""
+              aria-hidden
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="pointer-events-none -z-10 object-cover opacity-5 select-none"
+            />
 
-  <div className="absolute start-0 top-0 bottom-0 -z-10 hidden w-[20rem] overflow-hidden lg:-ms-[5rem] lg:block">
-    <Image
-      src={ornamentBoat}
-      alt=""
-      aria-hidden
-      fill
-      sizes="20rem"
-      className="object-cover object-right object-bottom"
-    />
-  </div>
+            <div className="absolute start-0 top-0 bottom-0 -z-10 hidden w-[20rem] overflow-hidden lg:-ms-[5rem] lg:block">
+              <Image
+                src={ornamentBoat}
+                alt=""
+                aria-hidden
+                fill
+                sizes="20rem"
+                className="object-cover object-right object-bottom"
+              />
+            </div>
 
-  <div className="pb-8 text-justify pe-5">
-    <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-4">
-      Where Ocean Data Meets Local Action
-    </p>
-    <h2 className="text-3xl font-semibold text-primary mb-6">
-      Measuring what matters, counting what counts, turning data into actions
-    </h2>
-    <p className="mt-4 text-sm font-medium text-primary">
-      REKAM/FRCI (Fisheries Resource Center of Indonesia) is Rekam Nusantara Foundation's Ocean program, offering an alternative approach to fisheries analysis and sustainable marine management grounded in scientific data. We apply innovative science and technology to protect critical species, promote sustainable fishing, and strengthen the management of marine conservation areas, while pioneering the integration of ocean accounting and ecosystem services into how Indonesia manages its seas. In carrying out our programs, REKAM/FRCI partners with stakeholders and policymakers, and involves communities directly in data collection. Guided by our vision of sustainability and justice for Indonesian fisheries, we aim to lead the shift toward evidence-based, inclusive ocean governance, ensuring a thriving marine environment for generations to come.
-    </p>
-  </div>
-</Container>
+            {/* Rata kanan-kiri baru masuk akal kalau satu baris memuat cukup kata: di
+                390px baris ini cuma 5-7 kata, dan justify meregangkan spasinya sampai
+                membentuk "sungai" putih yang menyulitkan mata melacak baris. Rata kiri
+                di ponsel, justify baru dari lg. */}
+            <div className="pb-8 pe-5 text-left lg:text-justify">
+              <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-4">
+                Where Ocean Data Meets Local Action
+              </p>
+              <h2 className="text-3xl font-semibold text-primary mb-6">
+                Measuring what matters, counting what counts, turning data into actions
+              </h2>
+              <p className="mt-4 text-sm font-medium text-primary">
+                REKAM/FRCI (Fisheries Resource Center of Indonesia) is Rekam Nusantara Foundation's Ocean program, offering an alternative approach to fisheries analysis and sustainable marine management grounded in scientific data. We apply innovative science and technology to protect critical species, promote sustainable fishing, and strengthen the management of marine conservation areas, while pioneering the integration of ocean accounting and ecosystem services into how Indonesia manages its seas. In carrying out our programs, REKAM/FRCI partners with stakeholders and policymakers, and involves communities directly in data collection. Guided by our vision of sustainability and justice for Indonesian fisheries, we aim to lead the shift toward evidence-based, inclusive ocean governance, ensuring a thriving marine environment for generations to come.
+              </p>
+            </div>
+          </Container>
           <ProgramSlider
             slides={programSlides}
             learnMoreLabel={t.learnMore}
@@ -181,7 +206,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           bukan ornamen yang sengaja dibiarkan bleed seperti hero, jadi
           `pe` yang sama persis nilainya menyeimbangkan kanan supaya sama
           dengan kiri, bukan menempel ke tepi layar. */}
-      <Container as="div" className="py-16 lg:pe-(--spacing-panel-gutter)">
+      <Container as="div" className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">{t.latestEyebrow}</p>
         <h2 className="mb-8 text-3xl font-semibold text-primary">{t.latestHeading}</h2>
 
@@ -244,7 +269,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           className="pointer-events-none -z-10 object-cover select-none"
         />
 
-        <Container className="grid gap-10 py-16 lg:grid-cols-2 lg:items-center lg:pe-(--spacing-panel-gutter)">
+        <Container className="page-gutter grid gap-10 py-16 lg:grid-cols-2 lg:items-center lg:pe-(--spacing-panel-gutter)">
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-wider text-primary-fg/80">Our Impact</p>
             <h2 className="mb-4 text-3xl font-semibold">Evidence of our action that reaches across Indonesia's seas</h2>
@@ -277,7 +302,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </div>
 
       <div className="bg-surface">
-        <Container className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 lg:pe-(--spacing-panel-gutter)">
+        <Container className="page-gutter grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 lg:pe-(--spacing-panel-gutter)">
           {IMPACT_STATS.map((stat, index) => (
             <div key={stat.label} className="relative px-4 py-8 text-center">
               {/* Garis pendek yang dipusatkan lewat inset-y-0 + my-auto + tinggi
@@ -300,7 +325,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </Container>
       </div>
 
-      <Container className="py-16 lg:pe-(--spacing-panel-gutter)">
+      <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">OUR PUBLICATION</p>
         <h2 className="mb-8 text-3xl font-semibold text-primary">The results of our work and collaboration</h2>
 
@@ -337,7 +362,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </div>
       </Container>
 
-      <Container className="py-16 lg:pe-(--spacing-panel-gutter)">
+      <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
         <p className="mb-6 text-xs font-bold uppercase tracking-wider text-secondary">Featured Video</p>
 
         <div className="border border-border">

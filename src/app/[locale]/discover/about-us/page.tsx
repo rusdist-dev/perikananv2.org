@@ -215,7 +215,7 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
                   alih-alih menautkan ke rute yang belum dibangun. */}
               <AppLink
                 href="#"
-                className="mt-auto inline-flex w-fit items-center rounded-md border border-primary-fg px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-primary-fg hover:bg-primary-fg hover:text-primary"
+                className="mt-auto inline-flex w-fit items-center rounded-md border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
               >
                 Profile
               </AppLink>

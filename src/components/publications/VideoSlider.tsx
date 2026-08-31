@@ -70,7 +70,7 @@ export function VideoSlider({
                   href={video.href}
                   target={video.href.startsWith('http') ? '_blank' : undefined}
                   rel={video.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="mt-auto inline-flex w-fit items-center rounded-md border border-primary px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-fg"
+                  className="mt-auto inline-flex w-fit items-center rounded-md border border-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary lg:py-1.5 hover:bg-primary hover:text-primary-fg"
                 >
                   {watchLabel}
                 </AppLink>

@@ -118,7 +118,7 @@ export function MilestoneCard({
             onClick={() => setIsExpanded((expanded) => !expanded)}
             aria-expanded={isExpanded}
             aria-controls={bodyId}
-            className="self-start pt-1 text-xs font-bold uppercase tracking-wide text-secondary underline underline-offset-4 hover:text-primary"
+            className="-mx-1 self-start px-1 py-2 text-xs font-bold uppercase tracking-wide text-secondary underline underline-offset-4 hover:text-primary"
           >
             {isExpanded ? showLessLabel : showMoreLabel}
           </button>

@@ -106,14 +106,14 @@ export function PublicationsSlider({
                 <div className="mt-auto flex gap-1 pt-2">
                   <AppLink
                     href="#"
-                    className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-1.5 text-center text-[0.6rem] font-bold uppercase text-primary hover:bg-primary hover:text-primary-fg"
+                    className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
                   >
                     {downloadLabel}
                   </AppLink>
                   <button
                     type="button"
                     onClick={() => setOpenIndex(index)}
-                    className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-1.5 text-center text-[0.6rem] font-bold uppercase text-primary hover:bg-primary hover:text-primary-fg"
+                    className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
                   >
                     {readLabel}
                   </button>

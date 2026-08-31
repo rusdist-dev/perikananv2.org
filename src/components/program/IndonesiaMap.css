@@ -423,6 +423,21 @@
   background-color: color-mix(in srgb, var(--map-chrome-bg) 88%, var(--map-chrome-fg));
 }
 
+/* Tombol zoom bawaan Leaflet 30x30 -- di bawah 44px yang dianjurkan untuk
+   target sentuh, dan peta ini justru paling banyak dipakai dengan jempol.
+   Dinaikkan HANYA pada penunjuk kasar (jari, stylus), bukan di semua ukuran
+   layar: kursor tetikus tidak butuh tambahan itu, dan `@media (pointer: coarse)`
+   menanyakan hal yang benar-benar relevan alih-alih menebaknya dari lebar
+   viewport. line-height ikut dinaikkan karena Leaflet memusatkan glyph +/-
+   dengan line-height, bukan flexbox. */
+@media (pointer: coarse) {
+  [data-map-theme] .leaflet-bar a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
+
 /* Atribusi Natural Earth. Bawaan Leaflet rgba(255,255,255,0.8) + teks #333 --
    di tema gelap itu muncul sebagai bilah putih terang di sudut peta. */
 [data-map-theme] .leaflet-control-attribution {

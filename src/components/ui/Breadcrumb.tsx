@@ -38,7 +38,7 @@ export function Breadcrumb({
                 <AppLink
                   href={item.href}
                   aria-current={isLast ? 'page' : undefined}
-                  className="hover:underline underline-offset-2"
+                  className="-my-1 py-1 hover:underline underline-offset-2"
                 >
                   {item.label}
                 </AppLink>

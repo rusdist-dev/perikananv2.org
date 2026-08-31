@@ -144,7 +144,7 @@ function TeamCard({ member, tag }: { member: TeamMember; tag: string }) {
             menautkan ke rute yang belum dibangun. */}
         <AppLink
           href="#"
-          className="mt-auto inline-flex w-fit items-center rounded-sm border border-primary-fg px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-primary-fg hover:bg-primary-fg hover:text-primary"
+          className="mt-auto inline-flex w-fit items-center rounded-sm border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
         >
           Profile
         </AppLink>
@@ -175,7 +175,7 @@ function OfficerCard({ member }: { member: TeamMember }) {
         <p className="text-xs text-muted">{member.role}</p>
         <AppLink
           href="#"
-          className="mt-auto inline-flex w-fit items-center rounded-sm border border-secondary px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-secondary hover:bg-secondary hover:text-secondary-fg"
+          className="mt-auto inline-flex w-fit items-center rounded-sm border border-secondary px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-secondary lg:py-1.5 lg:text-[0.65rem] hover:bg-secondary hover:text-secondary-fg"
         >
           Profile
         </AppLink>
@@ -247,7 +247,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
                   />
                 ) : null}
                 <p className="text-3xl font-bold text-[#f2a93b]">{stat.value}</p>
-                <p className="mt-1 text-[0.65rem] uppercase tracking-wide text-primary-fg/80">
+                <p className="mt-1 text-xs uppercase tracking-wide text-primary-fg/80 lg:text-[0.65rem]">
                   {stat.label}
                 </p>
               </div>
@@ -290,7 +290,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           Responsible for FRCI&apos;s program delivery and institutional partnerships.
         </p>
 
-        <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-8 grid-cols-2 lg:grid-cols-4">
           {MANAGERS.map((member) => (
             <TeamCard key={member.name} member={member} tag="Leadership" />
           ))}
@@ -336,7 +336,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           Coordinators, specialists, and officers behind every program.
         </p>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-6 grid-cols-2 lg:grid-cols-4">
           {OFFICERS.map((member) => (
             <OfficerCard key={member.name} member={member} />
           ))}

@@ -312,10 +312,22 @@ export function IndonesiaMap({
         // halaman tidak bisa dilewati. Zoom tetap tersedia via tombol +/-,
         // dobel-klik, dan pinch di layar sentuh.
         scrollWheelZoom: false,
-        // Di ponsel, drag satu jari milik Leaflet merampas scroll vertikal
-        // halaman sehingga pengunjung terjebak di peta. Panning dimatikan di
-        // sana; zoom pinch dan tombol +/- masih jalan.
-        dragging: !L.Browser.mobile,
+        // Panning menyala di SEMUA perangkat, termasuk ponsel.
+        //
+        // Sebelumnya `!L.Browser.mobile`, dengan alasan drag satu jari merampas
+        // scroll vertikal halaman. Alasan itu benar, tapi harganya ternyata
+        // lebih mahal: di ponsel peta jadi tidak bisa digeser sama sekali, dan
+        // justru DI SITU ia paling perlu digeser -- layar 390px cuma memuat
+        // Indonesia seutuhnya pada zoom paling jauh, jadi begitu pengunjung
+        // memperbesar untuk melihat satu kawasan, ia terkunci di sana.
+        //
+        // Yang menahan efek sampingnya: peta tidak pernah setinggi layar di
+        // ponsel (380px dari ~844px, lihat className bawaan komponen), jadi
+        // selalu ada area halaman di atas/bawahnya untuk memulai gulir. Kalau
+        // suatu saat peta dibuat setinggi layar penuh di ponsel, pola dua jari
+        // (satu jari menggulir halaman, dua jari menggeser peta) harus dipasang
+        // -- BUKAN mematikan panning lagi.
+        dragging: true,
         // Posisi bawaan tombol zoom adalah kiri-atas -- tepat di bawah panel
         // navigasi yang mengambang di sudut itu, jadi tombolnya tak terlihat
         // dan tak bisa diklik. Ia dipasang ulang di kanan-atas di bawah ini.
