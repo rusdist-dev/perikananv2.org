@@ -86,4 +86,13 @@ export const footerNav: NavItem[] = [{ href: '/berita', labelKey: 'navNewsAndAct
  *  Sengaja TIDAK diturunkan dari panelNav: panel memuat rute yang halamannya
  *  belum dibangun, dan sitemap yang mengiklankan URL 404 lebih merugikan
  *  daripada sitemap yang pendek. */
-export const staticRoutes: string[] = ['/', '/berita', '/kontak', '/cari'];
+export const staticRoutes: string[] = [
+  '/',
+  '/berita',
+  '/kontak',
+  '/cari',
+  '/data/ikan',
+  '/data/data-crab',
+  '/data/shark-and-ray',
+  '/data/production-data',
+];

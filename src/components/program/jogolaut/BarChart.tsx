@@ -44,6 +44,18 @@ function BarLabels({ labels, every }: { labels: string[]; every: number }) {
  *  yang berbeda 3% bisa tampak berbeda dua kali lipat. Kalau selisihnya jadi
  *  sulit terlihat karena itu, yang salah adalah pilihan grafiknya (pakai
  *  garis), bukan dasarnya. */
+export type ColumnMarker = {
+  /** Posisi dalam satuan sumbu-x yang SAMA dengan `labels` numerik (mis. cm
+   *  pada grafik frekuensi panjang) -- diinterpolasi linear antara label
+   *  pertama dan terakhir, BUKAN indeks batang. Dipakai untuk parameter
+   *  acuan seperti Lm (panjang matang gonad) dan Linf (panjang asimtotik)
+   *  pada grafik frekuensi panjang, yang jatuh di antara dua batang, bukan
+   *  tepat pada salah satunya. */
+  value: number;
+  label: string;
+  color: SeriesColor;
+};
+
 export function ColumnChart({
   labels,
   values,
@@ -54,6 +66,7 @@ export function ColumnChart({
   height = 220,
   labelEvery = 3,
   ariaLabel,
+  markers,
 }: {
   labels: string[];
   values: number[];
@@ -65,10 +78,17 @@ export function ColumnChart({
   height?: number;
   labelEvery?: number;
   ariaLabel: string;
+  /** Garis referensi vertikal opsional. Mensyaratkan `labels` numerik
+   *  berjarak sama (mis. "0", "15", "30", ...) -- lihat `ColumnMarker`. */
+  markers?: ColumnMarker[];
 }) {
   const upper = values.map((v, i) => v + (errors?.[i] ?? 0));
   const domain = niceDomain(0, Math.max(...upper));
   const pct = (v: number) => (v / (domain.max - domain.min)) * 100;
+
+  const firstLabel = Number(labels[0]);
+  const lastLabel = Number(labels[labels.length - 1]);
+  const markerPct = (value: number) => ((value - firstLabel) / (lastLabel - firstLabel)) * 100;
 
   return (
     <figure className="m-0">
@@ -77,6 +97,7 @@ export function ColumnChart({
           items={[
             { label: seriesLabel, color, unit, shape: 'block' },
             ...(errors ? [{ label: '± 1 simpangan baku', color: 'series-6' as SeriesColor }] : []),
+            ...(markers?.map((m) => ({ label: m.label, color: m.color })) ?? []),
           ]}
         />
       </figcaption>
@@ -110,6 +131,22 @@ export function ColumnChart({
             );
           })}
         </div>
+
+        {markers?.map((marker) => (
+          <div
+            key={marker.label}
+            aria-hidden
+            className={`absolute inset-y-0 w-px ${SERIES_CLASSES[marker.color].swatch}`}
+            style={{ left: `${markerPct(marker.value)}%` }}
+          >
+            <span
+              className={`absolute -top-1 start-1 whitespace-nowrap font-mono text-[0.65rem] ${SERIES_CLASSES[marker.color].text}`}
+              style={{ writingMode: 'vertical-rl' }}
+            >
+              {marker.label}
+            </span>
+          </div>
+        ))}
       </ChartFrame>
     </figure>
   );
