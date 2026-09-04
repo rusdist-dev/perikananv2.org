@@ -1,4 +1,5 @@
 import Image, { type StaticImageData } from 'next/image';
+import type { SubmitEvent } from 'react';
 import newsHeroBg from '@/assets/banner/ornament4.png';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
@@ -24,10 +25,14 @@ type FilterLabels = {
   yearLabel: string;
   allYearLabel: string;
   popularTagsLabel: string;
-  tags: string[];
-  moreTagsLabel: string | null;
   applyLabel: string;
-  unavailableNote: string;
+};
+
+export type FilterValues = {
+  search: string;
+  program: string;
+  category: string;
+  year: string;
 };
 
 type NewsHeroProps = {
@@ -37,14 +42,23 @@ type NewsHeroProps = {
   featured: FeaturedArticle | null;
   readFullStoryLabel: string;
   filter: FilterLabels;
+  filterValues: FilterValues;
+  programOptions: string[];
+  categoryOptions: string[];
+  yearOptions: number[];
+  popularTags: string[];
+  onSearchChange: (value: string) => void;
+  onProgramChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+  onYearChange: (value: string) => void;
+  onTagClick: (tag: string) => void;
+  onApply: (event: SubmitEvent<HTMLFormElement>) => void;
 };
 
 /** Hero /berita: latar biru + ornament4.png (ilustrasi kawanan ikan navy/putih)
  *  menaungi breadcrumb, badge, judul, kartu artikel unggulan, dan panel
- *  filter. Panel filter sengaja non-fungsional (disabled + catatan) --
- *  belum ada dimensi program/kategori/tahun di schema artikel, jadi kontrol
- *  yang terlihat aktif tapi tidak benar-benar menyaring lebih menyesatkan
- *  daripada kontrol yang menyatakan diri belum tersedia (§4j). */
+ *  filter -- yang sekarang benar-benar menyaring grid di bawahnya (lihat
+ *  NewsExplorer, pemilik state filter ini). */
 export function NewsHero({
   breadcrumb,
   badge,
@@ -52,6 +66,17 @@ export function NewsHero({
   featured,
   readFullStoryLabel,
   filter,
+  filterValues,
+  programOptions,
+  categoryOptions,
+  yearOptions,
+  popularTags,
+  onSearchChange,
+  onProgramChange,
+  onCategoryChange,
+  onYearChange,
+  onTagClick,
+  onApply,
 }: NewsHeroProps) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-fg">
@@ -105,7 +130,10 @@ export function NewsHero({
               </div>
             </article>
 
-            <div className="flex flex-col gap-4 rounded-lg bg-white p-6 text-fg">
+            <form
+              onSubmit={onApply}
+              className="flex flex-col gap-4 rounded-lg bg-white p-6 text-fg"
+            >
               <h2 className="text-lg font-bold text-primary">{filter.title}</h2>
 
               <div className="flex flex-col gap-1">
@@ -117,11 +145,12 @@ export function NewsHero({
                 </label>
                 <input
                   id="news-filter-search"
+                  name="q"
                   type="search"
-                  disabled
+                  value={filterValues.search}
+                  onChange={(event) => onSearchChange(event.target.value)}
                   placeholder={`${filter.searchLabel}…`}
-                  aria-describedby="news-filter-note"
-                  className="rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-surface"
+                  className="rounded-md border border-border px-3 py-2 text-sm"
                 />
               </div>
 
@@ -134,11 +163,16 @@ export function NewsHero({
                 </label>
                 <select
                   id="news-filter-program"
-                  disabled
-                  aria-describedby="news-filter-note"
-                  className="rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-surface"
+                  value={filterValues.program}
+                  onChange={(event) => onProgramChange(event.target.value)}
+                  className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option>{filter.allProgramsLabel}</option>
+                  <option value="all">{filter.allProgramsLabel}</option>
+                  {programOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -151,11 +185,16 @@ export function NewsHero({
                 </label>
                 <select
                   id="news-filter-category"
-                  disabled
-                  aria-describedby="news-filter-note"
-                  className="rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-surface"
+                  value={filterValues.category}
+                  onChange={(event) => onCategoryChange(event.target.value)}
+                  className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option>{filter.allCategoryLabel}</option>
+                  <option value="all">{filter.allCategoryLabel}</option>
+                  {categoryOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -168,49 +207,47 @@ export function NewsHero({
                 </label>
                 <select
                   id="news-filter-year"
-                  disabled
-                  aria-describedby="news-filter-note"
-                  className="rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-surface"
+                  value={filterValues.year}
+                  onChange={(event) => onYearChange(event.target.value)}
+                  className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option>{filter.allYearLabel}</option>
+                  <option value="all">{filter.allYearLabel}</option>
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {filter.tags.length > 0 ? (
+              {popularTags.length > 0 ? (
                 <div className="flex flex-col gap-2">
                   <p className="text-xs font-bold tracking-wide text-muted uppercase">
                     {filter.popularTagsLabel}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {filter.tags.map((tag) => (
-                      <span
+                    {popularTags.map((tag) => (
+                      <button
                         key={tag}
-                        className="rounded-full border border-border px-3 py-1 text-xs text-muted"
+                        type="button"
+                        onClick={() => onTagClick(tag)}
+                        aria-pressed={filterValues.category === tag}
+                        className="rounded-full border border-border px-3 py-1 text-xs text-muted hover:border-secondary hover:text-secondary aria-pressed:border-secondary aria-pressed:bg-secondary aria-pressed:text-secondary-fg"
                       >
                         {tag}
-                      </span>
+                      </button>
                     ))}
-                    {filter.moreTagsLabel ? (
-                      <span className="rounded-full border border-border px-3 py-1 text-xs text-muted">
-                        {filter.moreTagsLabel}
-                      </span>
-                    ) : null}
                   </div>
                 </div>
               ) : null}
 
               <button
-                type="button"
-                disabled
-                aria-describedby="news-filter-note"
-                className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold tracking-wide text-primary-fg uppercase disabled:cursor-not-allowed disabled:opacity-60"
+                type="submit"
+                className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold tracking-wide text-primary-fg uppercase hover:opacity-90"
               >
                 {filter.applyLabel}
               </button>
-              <p id="news-filter-note" className="text-xs text-muted">
-                {filter.unavailableNote}
-              </p>
-            </div>
+            </form>
           </div>
         ) : null}
       </Container>

@@ -20,7 +20,6 @@ type Dictionary = {
   footerNav: string;
   languageSwitcher: string;
   search: string;
-  searchUnavailable: string;
   navProgram: string;
   navDiscover: string;
   navData: string;
@@ -64,10 +63,9 @@ type Dictionary = {
   filterYear: string;
   filterAllYear: string;
   filterPopularTags: string;
-  filterMoreTags: string;
   filterApply: string;
-  filterUnavailable: string;
-  newsShowingPlaceholder: string;
+  newsShowingCount: string;
+  newsNoFilterResults: string;
   sortNewest: string;
   sortOldest: string;
   sortMostRead: string;
@@ -83,6 +81,42 @@ type Dictionary = {
   moreFromCategory: string;
   showMore: string;
   showLess: string;
+  contactHeroHeading: string;
+  contactHeroBody: string;
+  contactFormHeading: string;
+  contactFormName: string;
+  contactFormNamePlaceholder: string;
+  contactFormEmail: string;
+  contactFormEmailPlaceholder: string;
+  contactFormSubject: string;
+  contactFormSubjectPlaceholder: string;
+  contactFormMessage: string;
+  contactFormMessagePlaceholder: string;
+  contactFormSubmit: string;
+  contactInfoHeading: string;
+  contactMapEyebrow: string;
+  contactMapHeading: string;
+  contactMapOpenLink: string;
+  searchPagePlaceholder: string;
+  searchPromptHeading: string;
+  searchPromptBody: string;
+  searchHeadingWithQuery: string;
+  searchSummary: string;
+  tabAll: string;
+  typeProgram: string;
+  typePublication: string;
+  filterContentType: string;
+  filterAllTypes: string;
+  filterRelatedSearches: string;
+  resultOpen: string;
+  searchEmptyEyebrow: string;
+  searchEmptyHeading: string;
+  searchEmptyNoResults: string;
+  searchEmptySuggestion: string;
+  searchEmptyGeneric: string;
+  searchEmptySearchSuggestion: string;
+  searchEmptyBrowsePrograms: string;
+  searchEmptyPublicationLibrary: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -96,7 +130,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     footerNav: 'Navigasi footer',
     languageSwitcher: 'Pilih bahasa',
     search: 'Cari',
-    searchUnavailable: 'Pencarian belum tersedia',
     navProgram: 'Program',
     navDiscover: 'Jelajahi',
     navData: 'Data',
@@ -119,7 +152,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     readMore: 'Baca selengkapnya',
     noArticles: 'Belum ada artikel dalam bahasa ini.',
     configMissing: 'Belum dikonfigurasi',
-    footerTagline: 'Program kelautan oleh\nRekam Nusantara Foundation.',
+    footerTagline: 'Program kelautan oleh\nRekam Nusantara Foundation',
     footerCopyright: 'Hak Cipta © Rekam Nusantara Foundation | Unit FRCI',
     stayUpdated: 'Tetap Terhubung',
     learnMore: 'Pelajari Lebih Lanjut',
@@ -140,10 +173,9 @@ const dictionaries: Record<Locale, Dictionary> = {
     filterYear: 'Tahun',
     filterAllYear: 'Semua Tahun',
     filterPopularTags: 'Tag Populer',
-    filterMoreTags: '{count} lainnya',
     filterApply: 'Terapkan Filter',
-    filterUnavailable: 'Filter belum tersedia.',
-    newsShowingPlaceholder: 'Menampilkan 1–9 dari 128',
+    newsShowingCount: 'Menampilkan {from}–{to} dari {total}',
+    newsNoFilterResults: 'Tidak ada berita yang cocok dengan filter ini.',
     sortNewest: 'Terbaru',
     sortOldest: 'Terlama',
     sortMostRead: 'Terpopuler',
@@ -159,6 +191,44 @@ const dictionaries: Record<Locale, Dictionary> = {
     moreFromCategory: 'Selengkapnya dari {category}',
     showMore: 'Selengkapnya',
     showLess: 'Tutup',
+    contactHeroHeading: 'Hubungi tim kami',
+    contactHeroBody: 'Ada pertanyaan tentang program, kemitraan, atau cara berkolaborasi dengan kami?',
+    contactFormHeading: 'Kirim pesan kepada kami',
+    contactFormName: 'Nama Lengkap',
+    contactFormNamePlaceholder: 'Nama Anda',
+    contactFormEmail: 'Email',
+    contactFormEmailPlaceholder: 'nama@email.com',
+    contactFormSubject: 'Subjek',
+    contactFormSubjectPlaceholder: 'Bagaimana kami bisa membantu?',
+    contactFormMessage: 'Pesan',
+    contactFormMessagePlaceholder: 'Tulis pesan Anda...',
+    contactFormSubmit: 'Kirim Pesan',
+    contactInfoHeading: 'Kontak & Alamat',
+    contactMapEyebrow: 'Lokasi',
+    contactMapHeading: 'Temukan Kami',
+    contactMapOpenLink: 'Buka di Google Maps',
+    searchPagePlaceholder: 'Cari kata kunci...',
+    searchPromptHeading: 'Cari',
+    searchPromptBody: 'Ketik kata kunci untuk mencari di seluruh program, berita, dan publikasi kami.',
+    searchHeadingWithQuery: 'Hasil untuk “{query}”',
+    searchSummary: '{count} hasil dari publikasi, berita, dan program.',
+    tabAll: 'Semua',
+    typeProgram: 'Program',
+    typePublication: 'Publikasi',
+    filterContentType: 'Jenis Konten',
+    filterAllTypes: 'Semua Jenis',
+    filterRelatedSearches: 'Pencarian Terkait',
+    resultOpen: 'Buka',
+    searchEmptyEyebrow: 'Cari',
+    searchEmptyHeading: 'Saat tidak ada yang cocok',
+    searchEmptyNoResults: 'Tidak ada hasil untuk “{query}”',
+    searchEmptySuggestion:
+      'Mungkin maksud Anda “{suggestion}”? Anda juga bisa menjelajah berdasarkan program, atau mencari langsung di pustaka publikasi.',
+    searchEmptyGeneric:
+      'Anda bisa menjelajah berdasarkan program, atau mencari langsung di pustaka publikasi.',
+    searchEmptySearchSuggestion: 'Cari “{suggestion}”',
+    searchEmptyBrowsePrograms: 'Jelajahi Program',
+    searchEmptyPublicationLibrary: 'Pustaka Publikasi',
   },
   en: {
     skipToContent: 'Skip to main content',
@@ -170,7 +240,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     footerNav: 'Footer navigation',
     languageSwitcher: 'Choose language',
     search: 'Search',
-    searchUnavailable: 'Search is not available yet',
     navProgram: 'Program',
     navDiscover: 'Discover',
     navData: 'Data',
@@ -193,7 +262,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     readMore: 'Read more',
     noArticles: 'No articles in this language yet.',
     configMissing: 'Not configured yet',
-    footerTagline: 'Ocean program by\nRekam Nusantara Foundation.',
+    footerTagline: 'Ocean program by\nRekam Nusantara Foundation',
     footerCopyright: 'Copyright © Rekam Nusantara Foundation | Unit FRCI',
     stayUpdated: 'Stay Updated',
     learnMore: 'Learn More',
@@ -214,10 +283,9 @@ const dictionaries: Record<Locale, Dictionary> = {
     filterYear: 'Year',
     filterAllYear: 'All Year',
     filterPopularTags: 'Popular Tags',
-    filterMoreTags: '{count} more',
     filterApply: 'Apply Filters',
-    filterUnavailable: 'Filter is not available yet.',
-    newsShowingPlaceholder: 'Showing 1–9 of 128',
+    newsShowingCount: 'Showing {from}–{to} of {total}',
+    newsNoFilterResults: 'No news matches these filters.',
     sortNewest: 'Newest',
     sortOldest: 'Oldest',
     sortMostRead: 'Most Read',
@@ -233,6 +301,43 @@ const dictionaries: Record<Locale, Dictionary> = {
     moreFromCategory: 'More From {category}',
     showMore: 'Show more',
     showLess: 'Show less',
+    contactHeroHeading: 'Get in touch with our team',
+    contactHeroBody: 'Have any questions about our programs, partnerships, or ways to collaborate?',
+    contactFormHeading: 'Send us a message',
+    contactFormName: 'Full Name',
+    contactFormNamePlaceholder: 'Your name',
+    contactFormEmail: 'Email',
+    contactFormEmailPlaceholder: 'you@email.com',
+    contactFormSubject: 'Subject',
+    contactFormSubjectPlaceholder: 'How can we help?',
+    contactFormMessage: 'Message',
+    contactFormMessagePlaceholder: 'Write your message...',
+    contactFormSubmit: 'Send Message',
+    contactInfoHeading: 'Contact & Address',
+    contactMapEyebrow: 'Location',
+    contactMapHeading: 'Find Us',
+    contactMapOpenLink: 'Open in Google Maps',
+    searchPagePlaceholder: 'Search keyword...',
+    searchPromptHeading: 'Search',
+    searchPromptBody: 'Type a keyword to search across our programs, news, and publications.',
+    searchHeadingWithQuery: 'Results for “{query}”',
+    searchSummary: '{count} results across publications, news, and programs.',
+    tabAll: 'All',
+    typeProgram: 'Programs',
+    typePublication: 'Publications',
+    filterContentType: 'Content Type',
+    filterAllTypes: 'All Types',
+    filterRelatedSearches: 'Related Searches',
+    resultOpen: 'Open',
+    searchEmptyEyebrow: 'Search',
+    searchEmptyHeading: 'When nothing matches',
+    searchEmptyNoResults: 'No results for “{query}”',
+    searchEmptySuggestion:
+      'Did you mean “{suggestion}”? You can also browse by program, or search the publication library directly.',
+    searchEmptyGeneric: 'You can also browse by program, or search the publication library directly.',
+    searchEmptySearchSuggestion: 'Search “{suggestion}”',
+    searchEmptyBrowsePrograms: 'Browse Programs',
+    searchEmptyPublicationLibrary: 'Publication Library',
   },
 };
 

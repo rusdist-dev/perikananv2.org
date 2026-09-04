@@ -358,17 +358,16 @@
   font-weight: 600;
 }
 
-[data-map-theme] .map-tooltip {
-  max-width: 18rem;
+[data-map-theme] .map-tooltip,
+[data-map-theme] .leaflet-tooltip {
+  max-width: 350px !important; /* Memaksa menimpa max-width bawaan Leaflet */
+  width: max-content !important; /* Membuat lebar menyesuaikan konten jika perlu */
   padding: 0.5rem 0.625rem;
   background: var(--map-chrome-bg);
   color: var(--map-chrome-fg);
   border: 1px solid var(--map-chrome-border);
   border-radius: var(--radius-sm);
   box-shadow: none;
-  /* Bawaan Leaflet `white-space: nowrap`. Nama resmi kawasan bisa 100+
-     karakter ("KAWASAN KONSERVASI PESISIR DAN PULAU-PULAU KECIL BANGGAI,
-     ..."), jadi tanpa baris ini tooltipnya memanjang keluar layar. */
   white-space: normal;
 }
 

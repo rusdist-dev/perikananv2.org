@@ -6,7 +6,6 @@ import achievements1 from '@/assets/achievements/achievements1.png';
 import achievements2 from '@/assets/achievements/achievements2.png';
 import achievements3 from '@/assets/achievements/achievements3.png';
 import achievements4 from '@/assets/achievements/achievements4.png';
-import achievements5 from '@/assets/achievements/achievements5.png';
 import fotoPulau2 from '@/assets/marine-conservation/foto_pulau2.png';
 import { Container } from '@/components/layout/Container';
 import { MilestoneCard } from '@/components/discover/MilestoneCard';
@@ -187,22 +186,6 @@ const POLICY_IMPACTS = [
   },
 ];
 
-/** 4 foto dokumentasi nyata (achievements1/2/3/5) diputar dua kali untuk 8
- *  kartu -- bukan dipasangkan satu foto per penghargaan, karena memang belum
- *  ada foto dokumentasi khusus per acara penghargaan. */
-const RECOGNITION_PHOTOS = [achievements1, achievements2, achievements3, achievements5];
-
-const RECOGNITIONS = [
-  { title: 'Ocean Data Innovation Award', org: 'Indonesia Marine Science Society', year: '2025' },
-  { title: 'Technical Advisor, Ocean Accounts', org: 'Ministry of Marine Affairs and Fisheries', year: '2024' },
-  { title: 'Best Community Science program', org: 'SEAFDEC Regional Forum', year: '2023' },
-  { title: 'Technical Advisor, Ocean Accounts', org: 'Ministry of Marine Affairs and Fisheries', year: '2024' },
-  { title: 'Open Data Commendation', org: 'Global Ocean Accounts Partnership', year: '2022' },
-  { title: 'Fisheries Research Grant', org: 'Blue Ventures Foundation', year: '2021' },
-  { title: 'Marine Conservation Fellowship', org: 'Pew Charitable Trusts', year: '2019' },
-  { title: 'Marine Conservation Fellowship', org: 'Pew Charitable Trusts', year: '2019' },
-].map((item, index) => ({ ...item, image: RECOGNITION_PHOTOS[index % RECOGNITION_PHOTOS.length] }));
-
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
@@ -367,38 +350,6 @@ export default async function AchievementsPage({ params }: { params: Promise<{ l
                 />
               </div>
             </div>
-          </div>
-        </Container>
-      </div>
-
-      <div className="bg-surface">
-        <Container className="page-gutter relative py-16 lg:pe-(--spacing-panel-gutter)">
-          <p className="text-xs font-bold uppercase tracking-wider text-secondary">Recognition</p>
-          <h2 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">
-            Where our work has been recognized
-          </h2>
-
-          <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {RECOGNITIONS.map((recognition, index) => (
-              <div key={`${recognition.title}-${index}`} className="flex flex-col bg-bg">
-                <div className="relative aspect-[3/2]">
-                  <Image
-                    src={recognition.image}
-                    alt=""
-                    aria-hidden
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex flex-col gap-1 p-4">
-                  <h3 className="text-sm font-semibold text-primary">{recognition.title}</h3>
-                  <p className="text-xs text-muted">
-                    {recognition.org} &middot; {recognition.year}
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
         </Container>
       </div>

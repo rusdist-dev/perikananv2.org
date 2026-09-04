@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import jogoLautHero from '@/assets/jogo-laut.png';
 import { isLocale } from '@/i18n/config';
 import { JogoLautDashboard } from '@/components/program/jogolaut/JogoLautDashboard';
 import { ProgramHero } from '@/components/program/ProgramHero';
@@ -22,7 +23,8 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         ]}
         title="Jogo Laut: Stasiun riset terpadu - Cilacap, Jawa Tengah"
         lead="Platform pemantauan ekosistem pesisir secara real-time yang dikembangkan oleh Rekam Nusantara Foundation bersama IPB University, Kementerian Kelautan dan Perikanan, BRIN, Pemerintah Provinsi Jawa Tengah, dan Kelompok Masyarakat"
-        // image={bgMarineConservation}
+        image={jogoLautHero}
+        imageEdgeShadow
       />
 
       {/* Kartu grafiknya berdiri sendiri sebagai satu komponen, bukan ditulis

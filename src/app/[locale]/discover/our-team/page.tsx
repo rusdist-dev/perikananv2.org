@@ -34,6 +34,7 @@ import fotoFilipo from '@/assets/foto-tim/foto_filipo.png';
 import fotoIbnu from '@/assets/foto-tim/foto_ibnu.png';
 import fotoRegi from '@/assets/foto-tim/foto_regi.png';
 import fotoWahyu from '@/assets/foto-tim/foto_wahyu.png';
+import fotoEko from '@/assets/foto-tim/foto_eko.png';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
@@ -64,6 +65,7 @@ const ADVISORS: TeamMember[] = [
   { image: fotoBudy, name: 'Prof. Budy Wiryawan', role: 'Senior Advisor' },
   { image: fotoToni, name: 'Dr. Toni Ruchimat', role: 'Senior Advisor' },
   { image: fotoAri, name: 'Arisetiarso Soemodinoto, Ph.D.', role: 'Senior Advisor' },
+  { image: fotoEko, name: 'Eko Rudiyanto', role: 'Senior Advisor' },
 ];
 
 const MANAGERS: TeamMember[] = [

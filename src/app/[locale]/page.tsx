@@ -6,6 +6,7 @@ import ornamentBoat from '@/assets/banner/ornament2.png';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import wave2 from '@/assets/banner/wave2.png';
 import { ProgramSlider } from '@/components/home/ProgramSlider';
+import { HomePublicationsGrid } from '@/components/home/HomePublicationsGrid';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
@@ -120,11 +121,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             nilainya di tiga titik tertentu; batas atasnya tetap 12em supaya
             tampilan desktop sama persis seperti sebelumnya. */}
         <div className="max-w-content py-8 lg:py-12">
-          <h1 className="text-[clamp(4rem,20vw,12em)]/[0.85] font-extrabold text-primary lg:text-[12em]/40">
-            FRCI
+          <h1 className="text-[clamp(4rem,20vw,12em)]/[0.85] font-extrabold text-primary lg:text-[10em]/40">
+            OCEAN
           </h1>
           <p className="mt-4 text-[clamp(1.75rem,9vw,3.3em)]/[1.15] tracking-tighter text-primary lg:text-[3.3em]/14">
-            OCEAN PROGRAM <br /> By Rekam{' '}
+            PROGRAM of REKAM{' '}
           </p>
         </div>
         {/* flex-wrap + garis per item, bukan `divide-x` pada induk: lima tautan
@@ -133,19 +134,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             patah, garisnya mendarat di awal baris kedua alih-alih di antara dua
             item yang bersebelahan. */}
         <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit">
-          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/ocean-accounts'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Ocean Accounts
           </AppLink>
-          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/sustainable-fisheries'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Fisheries
           </AppLink>
-          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/marine-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Ecosystem
           </AppLink>
-          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/species-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Species
           </AppLink>
-          <AppLink href={'#'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/blue-carbon'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
             Blue Carbon
           </AppLink>
         </div>
@@ -277,7 +278,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               FRCI&apos;s Ocean Accounts framework is now active in all 8 of Indonesia&apos;s Fisheries Management Areas, translating field-level catch and ecosystem data into policy that communities can act on.
             </p>
             <AppLink
-              href="#"
+              href="/discover/our-impact"
               className="inline-flex w-fit items-center gap-2 rounded-md bg-white px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary hover:opacity-90"
             >
               View the Full Map
@@ -329,37 +330,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">OUR PUBLICATION</p>
         <h2 className="mb-8 text-3xl font-semibold text-primary">The results of our work and collaboration</h2>
 
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Beranda cuma menonjolkan 4 -- daftar lengkapnya (termasuk yang
-              tidak tampil di sini) ada di /discover/publications. */}
-          {publications.slice(0, 3).map((publication, index) => (
-            <article key={index} className="flex flex-col border border-border">
-              <div className="relative aspect-[3/4]">
-                <Image
-                  src={publication.image}
-                  alt=""
-                  aria-hidden
-                  fill
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-secondary">{publication.category}</p>
-                <h3 className="text-base font-semibold text-primary">{publication.title}</h3>
-                {/* §4j: belum ada berkas untuk diunduh -- href="#" menyatakan
-                    itu apa adanya, sama seperti tombol placeholder lain di
-                    hero, bukan menautkan ke berkas yang belum ada. */}
-                <AppLink
-                  href="#"
-                  className="mt-auto inline-flex w-fit items-center rounded-md border border-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-fg"
-                >
-                  {t.download}
-                </AppLink>
-              </div>
-            </article>
-          ))}
-        </div>
+        {/* Beranda cuma menonjolkan 3 -- daftar lengkapnya (termasuk yang
+            tidak tampil di sini) ada di /discover/publications. */}
+        <HomePublicationsGrid
+          publications={publications.slice(0, 3)}
+          downloadLabel={t.download}
+          readLabel="Read"
+          pdfUnavailableLabel="This PDF is not available yet."
+          closeLabel="Close"
+        />
       </Container>
 
       <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">

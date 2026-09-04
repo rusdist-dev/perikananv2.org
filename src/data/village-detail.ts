@@ -1,6 +1,6 @@
 import type { StaticImageData } from 'next/image';
 
-import placeholderPhoto from '@/assets/sustainable-fisheries/slider1.png';
+import placeholderPhoto from '@/assets/marine-conservation/slider4.png';
 
 /**
  * Isi panel detail desa: foto kegiatan, angka, dan tiga daftar kegiatan.

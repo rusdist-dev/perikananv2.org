@@ -48,7 +48,6 @@ export function SiteShell({ locale, children }: { locale: Locale; children: Reac
           expandMenu: t.expandMenu,
           languageSwitcher: t.languageSwitcher,
           search: t.search,
-          searchUnavailable: t.searchUnavailable,
         }}
       />
 
