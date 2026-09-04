@@ -9,7 +9,7 @@ import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { MINIMIZED_SECTION_ID } from '@/lib/nav';
-import { stripLocale } from '@/i18n/routing';
+import { localizedPath, stripLocale } from '@/i18n/routing';
 import { cn } from '@/lib/cn';
 import type { Locale } from '@/i18n/config';
 
@@ -39,7 +39,6 @@ export type NavLabels = {
   expandMenu: string;
   languageSwitcher: string;
   search: string;
-  searchUnavailable: string;
 };
 
 // Dua wilayah, satu tombol. aria-controls menerima daftar id dipisah spasi;
@@ -166,11 +165,7 @@ function PanelBody({
       <div id={EXTRA_UTILITY_ID} className={cn('flex flex-col gap-1', minimized && 'hidden')}>
         <LanguageSwitcher locale={locale} label={labels.languageSwitcher} />
 
-        {/* §4j: belum ada rute pencarian, jadi kotaknya menyatakan diri belum
-            aktif alih-alih menelan ketikan pengguna tanpa hasil. Hidupkan
-            dengan membungkusnya jadi <form action="/cari"> dan membuang
-            `disabled` begitu halamannya ada. */}
-        <div>
+        <form action={localizedPath('/cari', locale)} role="search" onSubmit={onNavigate}>
           <label
             htmlFor="site-search"
             className="flex items-center gap-3 rounded-md bg-primary px-4 py-2 text-primary-fg"
@@ -179,17 +174,13 @@ function PanelBody({
             <span className="sr-only">{labels.search}</span>
             <input
               id="site-search"
+              name="q"
               type="search"
-              disabled
               placeholder={`${labels.search}…`}
-              aria-describedby="site-search-note"
-              className="w-full bg-transparent text-sm text-primary-fg placeholder:text-primary-fg/70 disabled:cursor-not-allowed"
+              className="w-full bg-transparent text-sm text-primary-fg placeholder:text-primary-fg/70"
             />
           </label>
-          <p id="site-search-note" className="mt-1 text-xs text-muted">
-            {labels.searchUnavailable}
-          </p>
-        </div>
+        </form>
       </div>
     </div>
   );

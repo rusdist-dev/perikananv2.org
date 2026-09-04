@@ -25,8 +25,8 @@ const social: OptionalString = {
 
 /** null = belum ada. Jangan isi contoh; footer menampilkan status "belum dikonfigurasi". */
 const contact: OptionalString = {
-  email: null,
-  phone: null,
+  email: 'hello@frci.rekam.org',
+  phone: '+62 21 555 0182',
   address: 'Jl. Sempur No.35, RT.03/RW.01, Sempur, Kecamatan Bogor Tengah, Kota Bogor, Jawa Barat 16129',
 };
 

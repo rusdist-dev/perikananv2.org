@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import footerBg from '@/assets/banner/bg_footer.png';
+import footerBg from '@/assets/banner/bg_footer1.png';
 import logoFrci from '@/assets/logo-frci.png';
 import { AppLink } from '@/components/ui/AppLink';
 import { Container } from '@/components/layout/Container';
@@ -78,7 +78,7 @@ export function SiteFooter({ locale }: { locale: Locale }) {
           <AppLink href="/" className="flex w-fit items-center gap-2">
             {/* Logo aslinya biru; brightness-0 invert mengubahnya jadi siluet
                 putih tanpa perlu aset kedua khusus latar gelap. */}
-            <Image src={logoFrci} alt="FRCI" className="h-10 w-auto brightness-0 invert" />
+            <Image src={logoFrci} alt="FRCI" className="h-14 w-auto brightness-0 invert" />
           </AppLink>
           {/* whitespace-pre-line menghormati '\n' yang sudah ditulis di
               kamus (dictionary.ts) -- baris patah persis di titik yang

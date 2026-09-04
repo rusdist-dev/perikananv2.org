@@ -1,12 +1,12 @@
 'use client';
 
 import Image, { type StaticImageData } from 'next/image';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { Swiper as SwiperInstance } from 'swiper';
 import { Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
+import { VideoModal } from '@/components/publications/VideoModal';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -22,21 +22,40 @@ export type VideoSlide = {
  * Next(), panah di padding pembungkus). Kartunya lebih sederhana -- satu
  * tombol WATCH, bukan dua bersebelahan -- jadi tidak butuh penyesuaian
  * lebar/font seketat kartu publikasi.
+ *
+ * WATCH membuka VideoModal alih-alih menautkan ke YouTube di tab baru --
+ * sama seperti Read di PublicationsSlider yang membuka PdfViewerModal,
+ * bukan href="#".
  */
 export function VideoSlider({
   videos,
   watchLabel,
   previousLabel,
   nextLabel,
+  unavailableLabel,
+  closeLabel,
 }: {
   videos: VideoSlide[];
   watchLabel: string;
   previousLabel: string;
   nextLabel: string;
+  unavailableLabel: string;
+  closeLabel: string;
 }) {
   const swiperRef = useRef<SwiperInstance | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const openVideo = openIndex !== null ? videos[openIndex] : null;
 
   return (
+    <>
+      <VideoModal
+        isOpen={openVideo !== null}
+        videoUrl={openVideo?.href ?? null}
+        title={openVideo?.title ?? ''}
+        unavailableLabel={unavailableLabel}
+        closeLabel={closeLabel}
+        onClose={() => setOpenIndex(null)}
+      />
     <div className="relative px-6 sm:px-8">
       <Swiper
         modules={[Navigation]}
@@ -66,14 +85,13 @@ export function VideoSlider({
               </div>
               <div className="flex flex-1 flex-col gap-3 p-4">
                 <p className="line-clamp-3 min-h-[3.75rem] text-sm text-muted">{video.title}</p>
-                <AppLink
-                  href={video.href}
-                  target={video.href.startsWith('http') ? '_blank' : undefined}
-                  rel={video.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(index)}
                   className="mt-auto inline-flex w-fit items-center rounded-md border border-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary lg:py-1.5 hover:bg-primary hover:text-primary-fg"
                 >
                   {watchLabel}
-                </AppLink>
+                </button>
               </div>
             </article>
           </SwiperSlide>
@@ -97,5 +115,6 @@ export function VideoSlider({
         <span className="sr-only">{nextLabel}</span>
       </button>
     </div>
+    </>
   );
 }

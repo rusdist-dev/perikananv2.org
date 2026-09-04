@@ -99,17 +99,29 @@ export function PublicationsSlider({
                 <h3 className="line-clamp-2 min-h-[2.5rem] text-sm leading-snug font-semibold text-primary">
                   {publication.title}
                 </h3>
-                {/* §4j: belum ada berkas untuk diunduh -- href="#" menyatakan
-                    itu apa adanya. Read sudah tersambung ke PdfViewerModal;
-                    modalnya sendiri yang menampilkan pesan "belum tersedia"
-                    untuk publikasi yang `pdfUrl`-nya masih null. */}
+                {/* Download langsung lewat <a download> ke pdfUrl -- BUKAN
+                    AppLink, berkas publik seperti ini tidak boleh diberi
+                    prefiks locale (lihat PdfViewerModal). §4j: publikasi yang
+                    `pdfUrl`-nya masih null tetap href="#" apa adanya; Read
+                    sudah tersambung ke PdfViewerModal, yang menampilkan pesan
+                    "belum tersedia" untuk kasus itu. */}
                 <div className="mt-auto flex gap-1 pt-2">
-                  <AppLink
-                    href="#"
-                    className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
-                  >
-                    {downloadLabel}
-                  </AppLink>
+                  {publication.pdfUrl ? (
+                    <a
+                      href={publication.pdfUrl}
+                      download
+                      className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
+                    >
+                      {downloadLabel}
+                    </a>
+                  ) : (
+                    <AppLink
+                      href="#"
+                      className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
+                    >
+                      {downloadLabel}
+                    </AppLink>
+                  )}
                   <button
                     type="button"
                     onClick={() => setOpenIndex(index)}

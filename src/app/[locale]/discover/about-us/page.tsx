@@ -9,6 +9,7 @@ import fotoHeidi from '@/assets/foto-tim/foto_heidi.jpg';
 import fotoIrfan from '@/assets/foto-tim/foto_irfan.jpg';
 import fotoNatsir from '@/assets/foto-tim/foto_natsir.png';
 import fotoToni from '@/assets/foto-tim/foto_toni.png';
+import fotoEko from '@/assets/foto-tim/foto_eko.png';
 import wave2 from '@/assets/banner/wave2.png';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import { Container } from '@/components/layout/Container';
@@ -26,6 +27,7 @@ const TEAM_MEMBERS = [
   { image: fotoBudy, role: 'Penasihat Senior', name: 'Prof. Budy Wiryawan' },
   { image: fotoToni, role: 'Penasihat Senior', name: 'Dr. Toni Ruchimat' },
   { image: fotoAri, role: 'Senior Advisor', name: 'Arisetiarso Soemodinoto, Ph.D.' },
+  { image: fotoEko, role: 'Senior Advisor', name: 'Eko Rudiyanto' },
 ];
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -76,7 +78,7 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
           {t.navDiscover}
         </span>
 
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-16">
+        <div className="mt-10 grid gap-5 lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-5 2xl:pb-[12rem]">
           <div className="flex flex-col gap-6 text-justify text-sm leading-relaxed text-[#5b6360] md:text-base">
             <p>
               Established in 2018, REKAM/FRCI is Rekam Nusantara Foundation&apos;s dedicated program
@@ -119,7 +121,7 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
               acuan, yang punya kolom sesempit itu karena kolom teks di
               sebelahnya jauh lebih lebar -- di bawah lg keduanya bertumpuk
               penuh lebar, jadi baris manual dilepas dan kata mengalir wajar. */}
-          <h1 className="text-4xl leading-[1.05] text-primary sm:text-5xl lg:text-6xl lg:translate-x-20 lg:translate-y-5">
+          <h1 className="text-4xl leading-[1.05] text-primary sm:text-5xl lg:text-7xl lg:translate-x-28 lg:translate-y-5 font-semibold">
             We <br className="hidden lg:block" />
             speak <br className="hidden lg:block" />
             with <br className="hidden lg:block" />
