@@ -49,7 +49,7 @@ const OBJECTIVES = [
   },
   {
     eyebrow: '03',
-    title: 'Engaging stakeholders and empowering nearby communities.',
+    title: 'Engaging stakeholders and empowering local communities.',
     description: '',
   },
   {
@@ -145,8 +145,8 @@ export default async function MarineConservationPage({
           { label: t.navProgram, href: '#' },
           { label: programLabel, href: NAV_ITEM.href },
         ]}
-        title="Marine conservation: Protecting the oceans that protects us"
-        lead="Protection of marine areas to prevent biodiversity loss, sustain fisheries resources, reserve blue carbon area, reduce the risk of ecosystem collapse and mitigate climate change, ensuring marine resources remain available for future generations in Indonesia."
+        title="Marine conservation: Protecting the oceans to secure our shared future"
+        lead="Protecting Indonesia’s marine areas to halt biodiversity loss, sustain local fisheries, and combat climate change, ensuring resilient oceans for future generations."
         image={bgMarineConservation}
       />
 
@@ -155,7 +155,7 @@ export default async function MarineConservationPage({
           As the largest archipelago country, Indonesia sits together with other 16 megadiverse countries and is nested at the very heart of Coral Triangle – an epicenter of marine biodiversity. It hosts 76% of the world's coral species, provides home for 37% of the world's reef fish species, and ranks as the world's second-largest fisheries producer. Those highlight the importance of marine ecosystem conservation in Indonesia for ocean health, food security, and livelihoods, both at local and global scale. REKAM through its Fisheries Resource Center of Indonesia (FRCI) unit works with governments, conservation managers, civil society, and local communities to strengthen the policies, capacity, and participation needed for marine conservation areas to be effectively and sustainably managed.
         </p>
         <p>
-          In response to the global target to effectively conserve and manage at least 30% of the coastal and marine areas, FRCI collaborates with Government of Indonesia (GoI) and other stakeholders on refining the strategic plan and national roadmap for expanding and effectively manage Marine Protected Areas (MPAs). The work also includes integrating Other Effective Area-based Conservation Measures (OECMs) recognition as part of MPA&OECM Vision 2045, also known as 30x45 agenda. The agenda focuses on providing policy and regulatory framework, as well as guidelines for implementation of MPAs, and integration of OECMs or other area-based measures on the ground.
+          In response to the global target to effectively conserve and manage at least 30% of the coastal and marine areas, FRCI collaborates with Government of Indonesia (GoI) and other stakeholders on aligning with the global 30x30 target to protect 30% of marine areas by 2030 through MPAs and Other Effective area-based Conservation Measures (OECMs), FRCI collaborates with the Government of Indonesia (GoI) and key stakeholders to leverage the MPA Vision 2030 into the MPA & OECM Vision 2045 (30x45 Agenda). This updated roadmap integrates MPA establishment and expansion as well as OECM recognition to expand the conserved areas to 30% of Indonesia’s coastal and marine areas, totaling 97.5 million hectares, and effectively manage them by 2045. Also includes integrating Other Effective Area-based Conservation Measures (OECMs) recognition. The 30x45 Agenda focuses on providing policy and regulatory framework, as well as guidelines for implementation of MPAs, and integration of OECMs or other area-based measures on the ground.
         </p>
         <p>
           At the national level, FRCI streams the effort on (a) strengthening policy and regulatory through (b) robust science backing up, and (c) developing pathways for effective conservation actions on-site. The efforts include developing and aligning policy and regulatory frameworks, strategic planning, and supporting the effective management of Indonesia's first national offshore MPA in the Sulawesi Sea. At the provincial level, FRCI fully supports local governments in establishing and strengthening the effective, adaptive, and sustainable management of area-based conservation across four provinces: Central Java, South Sulawesi, West Nusa Tenggara, and Maluku. Supporting activities include the establishment of provincial MPAs, the development of required regulations and protocols, training and certification for MPA and area managers, technical assistance for on-site implementation, time series data collection to measure the impact of area management, and efforts to raise awareness and empower local communities within these areas.
