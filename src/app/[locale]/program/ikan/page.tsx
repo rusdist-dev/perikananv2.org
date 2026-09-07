@@ -136,13 +136,13 @@ export default async function IkanPage({
           { label: programLabel, href: NAV_ITEM.href },
         ]}
         title="IKAN: Collaboration for better fisheries data"
-        lead="An Android-based, open-access application designed for collaborative fisheries data collection."
+        lead="An android-based, open-access application designed for collaborative fisheries data collection."
         image={bgIkan}
       />
 
       <ProgramIntro>
         <p>
-          IKAN (Initiative on Collaborative Fisheries Data Collection) is an FRCI initiative that aims to strengthen fisheries data collection through a collaborative, technology-enabled, and evidence-based approach. The initiative brings together fishers, data collectors, researchers, government institutions, and other fisheries stakeholders to generate reliable and timely information that can support better fisheries management.
+          IKAN (<em>Inisiatif Kolaborasi Pendataan Perikanan</em> / Initiative on Collaborative Fisheries Data Collection) is a FRCI initiative that aims to strengthen fisheries data collection through a collaborative, technology-enabled, and evidence-based approach. The initiative brings together fishers, data collectors, researchers, government institutions, and other fisheries stakeholders to generate reliable and timely information that can support better fisheries management.
         </p>
         <p>
           IKAN responds to persistent challenges in fisheries data collection, including limited coverage, inconsistent data quality, fragmented information systems, and difficulties in translating field observations into management-relevant information. By combining participatory data collection with digital technologies, IKAN seeks to improve the quality, consistency, traceability, and accessibility of fisheries data.

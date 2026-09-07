@@ -61,6 +61,7 @@ export const panelNav: NavSection[] = [
       { href: '/data/data-crab', label: 'Data Crab' },
       { href: '/data/shark-and-ray', label: 'Shark and Ray' },
       { href: '/data/production-data', label: 'Production Data' },
+      { href: '/data/vessel-data', label: 'Vessel Data' },
     ],
   },
   {
@@ -95,4 +96,5 @@ export const staticRoutes: string[] = [
   '/data/data-crab',
   '/data/shark-and-ray',
   '/data/production-data',
+  '/data/vessel-data',
 ];

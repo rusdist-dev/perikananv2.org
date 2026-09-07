@@ -156,7 +156,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           {/* relative + isolate: sama seperti ornamen di atas, keduanya yang
               mengunci latar ini pada kotak Container ini saja -- bukan pada
               grid induknya. */}
-          <Container as="div" width="content" className="page-gutter relative isolate pt-8">
+          <Container as="div" className="page-gutter relative isolate pt-8">
             <Image
               src={waveBg}
               alt=""
