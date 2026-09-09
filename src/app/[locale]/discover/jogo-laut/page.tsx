@@ -21,8 +21,8 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           { label: 'Jogo Laut', href: '#' },
           // { label: programLabel, href: NAV_ITEM.href },
         ]}
-        title="Jogo Laut: Stasiun riset terpadu - Cilacap, Jawa Tengah"
-        lead="Platform pemantauan ekosistem pesisir secara real-time yang dikembangkan oleh Rekam Nusantara Foundation bersama IPB University, Kementerian Kelautan dan Perikanan, BRIN, Pemerintah Provinsi Jawa Tengah, dan Kelompok Masyarakat"
+        title={t.jogoLautHeroTitle}
+        lead={t.jogoLautHeroLead}
         image={jogoLautHero}
         imageEdgeShadow
       />

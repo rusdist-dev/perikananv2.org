@@ -28,27 +28,27 @@ export default async function IkanDataPage({ params }: { params: Promise<{ local
         { label: 'IKAN', href: '/data/ikan' },
       ]}
       datasetName="IKAN"
-      description="Ringkasan trip, komposisi tangkapan, dan sebaran panjang dari data yang dikumpulkan lewat aplikasi IKAN."
+      description={t.dataIkanDescription}
       trips={{
         labels: monthlyLabels(),
         values: sampleTripCounts(),
-        unit: 'trip',
-        seriesLabel: 'Number of Trips',
+        unit: t.dataIkanTripsUnit,
+        seriesLabel: t.dataIkanTripsSeriesLabel,
         color: 'series-2',
         labelEvery: 7,
       }}
       catchComposition={{
         labels: SAMPLE_CATCH_COMPOSITION.labels,
         values: SAMPLE_CATCH_COMPOSITION.values,
-        unit: 'kg',
-        seriesLabel: 'Berat tangkapan',
+        unit: t.dataIkanCatchUnit,
+        seriesLabel: t.dataIkanCatchSeriesLabel,
         color: 'series-1',
       }}
       lengthFrequency={{
         labels: SAMPLE_LENGTH_FREQUENCY.labels,
         values: SAMPLE_LENGTH_FREQUENCY.values,
-        unit: 'individu',
-        seriesLabel: 'Frekuensi',
+        unit: t.dataIkanLengthUnit,
+        seriesLabel: t.dataIkanLengthSeriesLabel,
         color: 'series-3',
       }}
     />

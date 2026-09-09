@@ -39,17 +39,19 @@ import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Icon } from '@/components/ui/Icon';
-import { getDictionary } from '@/i18n/dictionary';
+import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
 
 type TeamMember = { image: StaticImageData; name: string; role: string };
 
-const HERO_STATS = [
-  { value: '48', label: 'Team members' },
-  { value: '7', label: 'Field officers' },
-  { value: '15', label: 'Years of fieldwork' },
-];
+function getHeroStats(t: Dictionary) {
+  return [
+    { value: '48', label: t.ourTeamHeroStatMembers },
+    { value: '7', label: t.ourTeamHeroStatFieldOfficers },
+    { value: '15', label: t.ourTeamHeroStatYearsFieldwork },
+  ];
+}
 
 // Sama persis dengan TEAM_MEMBERS di halaman About Us -- satu-satunya foto tim
 // yang sudah ada sebelum foto manager diunggah.
@@ -113,7 +115,14 @@ const OFFICERS: TeamMember[] = [
   { image: fotoWahyu, name: 'Wahyu Putri Fajar Rahmalinda', role: 'FRCI Program Officer' },
 ];
 
-const ENUMERATOR_STATS = ['180+ enumerators', '100+ landing sites', '11 fisheries areas', 'Quarterly training'];
+function getEnumeratorStats(t: Dictionary) {
+  return [
+    t.ourTeamEnumeratorStat1,
+    t.ourTeamEnumeratorStat2,
+    t.ourTeamEnumeratorStat3,
+    t.ourTeamEnumeratorStat4,
+  ];
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -124,7 +133,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 /** Kartu foto + label jabatan, dipakai baik untuk seksi Advisor maupun
  *  Manager -- bedanya cuma teks tag kecil di kartu ("Advisor"/"Leadership"),
  *  jadi satu markup dipakai bersama daripada digandakan. */
-function TeamCard({ member, tag }: { member: TeamMember; tag: string }) {
+function TeamCard({
+  member,
+  tag,
+  profileLabel,
+}: {
+  member: TeamMember;
+  tag: string;
+  profileLabel: string;
+}) {
   return (
     <div className="flex flex-col">
       <div className="relative aspect-[3/4]">
@@ -148,7 +165,7 @@ function TeamCard({ member, tag }: { member: TeamMember; tag: string }) {
           href="#"
           className="mt-auto inline-flex w-fit items-center rounded-sm border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
         >
-          Profile
+          {profileLabel}
         </AppLink>
       </div>
     </div>
@@ -159,7 +176,7 @@ function TeamCard({ member, tag }: { member: TeamMember; tag: string }) {
  *  navy seperti TeamCard) -- lapisan tim yang jauh lebih banyak orangnya,
  *  jadi kartu dibuat lebih ringan/rata supaya grid delapan-belasnya tidak
  *  terasa seberat grid Advisor/Manager yang berlatar navy. */
-function OfficerCard({ member }: { member: TeamMember }) {
+function OfficerCard({ member, profileLabel }: { member: TeamMember; profileLabel: string }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-md bg-bg shadow-sm">
       <div className="relative aspect-square">
@@ -179,7 +196,7 @@ function OfficerCard({ member }: { member: TeamMember }) {
           href="#"
           className="mt-auto inline-flex w-fit items-center rounded-sm border border-secondary px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-secondary lg:py-1.5 lg:text-[0.65rem] hover:bg-secondary hover:text-secondary-fg"
         >
-          Profile
+          {profileLabel}
         </AppLink>
       </div>
     </div>
@@ -232,15 +249,12 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
               {t.navOurTeam}
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted md:text-base">
-              comprises marine conservation fisheries researchers and activists with over two
-              decades of experience working with communities, governments, and private sector,
-              through data management, knowledge and capacity building, and policy advocacy in
-              the marine and fisheries subject.
+              {t.ourTeamHeroBody}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4 rounded-md bg-primary p-6 text-primary-fg lg:mt-1">
-            {HERO_STATS.map((stat, index) => (
+            {getHeroStats(t).map((stat, index) => (
               <div key={stat.label} className="relative text-center">
                 {index > 0 ? (
                   <span
@@ -263,18 +277,17 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
       </Container>
 
       <Container className="page-gutter relative pt-10 pb-16 lg:pe-(--spacing-panel-gutter)">
-        <p className="text-xs font-bold uppercase tracking-wider text-secondary">Advisor</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-secondary">{t.ourTeamAdvisorLabel}</p>
         <h2 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">
-          The experts behind our work
+          {t.ourTeamAdvisorHeading}
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Senior researchers and sector experts who set FRCI&apos;s scientific standards and open
-          doors with institutional partners.
+          {t.ourTeamAdvisorSubheading}
         </p>
 
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {ADVISORS.map((member) => (
-            <TeamCard key={member.name} member={member} tag="Advisor" />
+            <TeamCard key={member.name} member={member} tag={t.ourTeamAdvisorLabel} profileLabel={t.ourTeamProfileCta} />
           ))}
         </div>
       </Container>
@@ -284,17 +297,17 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
       </Container>
 
       <Container className="page-gutter relative pt-10 pb-16 lg:pe-(--spacing-panel-gutter)">
-        <p className="text-xs font-bold uppercase tracking-wider text-secondary">Manager</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-secondary">{t.ourTeamManagerEyebrow}</p>
         <h2 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">
-          The leaders of our programs
+          {t.ourTeamManagerHeading}
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Responsible for FRCI&apos;s program delivery and institutional partnerships.
+          {t.ourTeamManagerSubheading}
         </p>
 
         <div className="mt-8 grid gap-8 grid-cols-2 lg:grid-cols-4">
           {MANAGERS.map((member) => (
-            <TeamCard key={member.name} member={member} tag="Leadership" />
+            <TeamCard key={member.name} member={member} tag={t.ourTeamLeadershipTag} profileLabel={t.ourTeamProfileCta} />
           ))}
         </div>
       </Container>
@@ -320,7 +333,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
 
       <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter) lg:py-20">
         <h2 className="max-w-md text-3xl font-semibold leading-tight md:text-4xl lg:max-w-xl lg:text-5xl">
-          Measuring what matters, counting what counts, turning data into actions
+          {t.homeHeroHeading}
         </h2>
       </Container>
     </div>
@@ -330,17 +343,17 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
         beranda. */}
     <div className="bg-surface">
       <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
-        <p className="text-xs font-bold uppercase tracking-wider text-secondary">Officer</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-secondary">{t.ourTeamOfficerEyebrow}</p>
         <h2 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">
-          The people who make it happen
+          {t.ourTeamOfficerHeading}
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Coordinators, specialists, and officers behind every program.
+          {t.ourTeamOfficerSubheading}
         </p>
 
         <div className="mt-8 grid gap-6 grid-cols-2 lg:grid-cols-4">
           {OFFICERS.map((member) => (
-            <OfficerCard key={member.name} member={member} />
+            <OfficerCard key={member.name} member={member} profileLabel={t.ourTeamProfileCta} />
           ))}
         </div>
       </Container>
@@ -353,19 +366,16 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
     <div className="grid grid-cols-1 lg:grid-cols-2">
       <div className="flex flex-col justify-center gap-4 px-(--spacing-gutter) py-16 lg:ps-panel-gutter lg:pe-16">
         <p className="text-xs font-bold uppercase tracking-wider text-secondary">
-          Field Volunteers &amp; Enumerators
+          {t.ourTeamEnumeratorEyebrow}
         </p>
         <h2 className="text-2xl font-semibold text-primary md:text-3xl">
-          The people behind every data point
+          {t.ourTeamEnumeratorHeading}
         </h2>
         <p className="text-sm text-muted">
-          Beyond the core team, more than 180 trained community enumerators and volunteers
-          record catch data at landing sites across Indonesia. The data stays open-access and
-          credited to the people who recorded it, with contributors retaining full access to the
-          data they collect.
+          {t.ourTeamEnumeratorBody}
         </p>
         <div className="mt-2 flex flex-wrap gap-3">
-          {ENUMERATOR_STATS.map((label) => (
+          {getEnumeratorStats(t).map((label) => (
             <span
               key={label}
               className="rounded-full border border-border px-4 py-1.5 text-xs text-muted"
@@ -406,12 +416,12 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           sebenarnya. Pita CTA ini penuh lebar tanpa konten lain yang perlu
           sejajar dengan panel, jadi padding-nya boleh simetris. */}
       <div className="relative flex flex-col items-center gap-3 px-4 py-12 text-center text-primary-fg sm:py-14">
-        <p className="text-xs font-bold uppercase tracking-wider text-primary-fg/80">Join Us</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-primary-fg/80">{t.ourTeamJoinUsEyebrow}</p>
         <h2 className="max-w-2xl text-2xl font-bold md:text-3xl">
-          We work with people who want their efforts matter
+          {t.ourTeamJoinUsHeading}
         </h2>
         <p className="max-w-xl text-sm text-primary-fg/90">
-          Find out more about available opportunities and the research fellowship program here.
+          {t.ourTeamJoinUsBody}
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-4">
           {/* Belum ada halaman lowongan/fellowship -- href="#" menyatakan itu
@@ -424,14 +434,14 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
             href="#"
             className="inline-flex w-fit items-center gap-2 rounded-md border border-primary-fg bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary-fg hover:opacity-90"
           >
-            See Open Roles
+            {t.ourTeamJoinUsSeeRoles}
             <Icon id="arrow-right" />
           </AppLink>
           <AppLink
             href="#"
             className="inline-flex w-fit items-center rounded-md bg-white px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary hover:opacity-90"
           >
-            Fellowship Program
+            {t.ourTeamJoinUsFellowship}
           </AppLink>
         </div>
       </div>

@@ -18,7 +18,7 @@ import { ProgramIntro } from '@/components/program/ProgramIntro';
 import { ProgramObjectives, type ProgramObjective } from '@/components/program/ProgramObjectives';
 import { ProgramRelatedStories, type RelatedStory } from '@/components/program/ProgramRelatedStories';
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
-import { getDictionary } from '@/i18n/dictionary';
+import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { isLocale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
 
@@ -28,26 +28,25 @@ const NAV_ITEM = panelNav
   .find((section) => section.id === 'nav-program')!
   .items.find((item) => item.href === '/program/species-conservation')!;
 
-const OBJECTIVES: ProgramObjective[] = [
-  {
-    eyebrow: '01',
-    title: 'Strengthen governance and enforcement',
-    description:
-      'Equip government agencies with the training, tools, and policy frameworks, including CITES and RFMOs implementation — needed to detect, regulate, and legally manage the shark and ray trade.',
-  },
-  {
-    eyebrow: '02',
-    title: 'Build the scientific evidence base',
-    description:
-      'Generate reliable data on threatened shark and ray species (species identification methods, trade monitoring, stock information) to inform sound fisheries management and policy decisions.',
-  },
-  {
-    eyebrow: '03',
-    title: 'Engage fishing communities and industry in sustainable practices',
-    description:
-      'Work directly with shark fishing communities, processors, traders, and companies to build buy-in and support the adoption of sustainable, compliant practices across the supply chain.',
-  },
-];
+function getObjectives(t: Dictionary): ProgramObjective[] {
+  return [
+    {
+      eyebrow: '01',
+      title: t.speciesConservationObjective1Title,
+      description: t.speciesConservationObjective1Desc,
+    },
+    {
+      eyebrow: '02',
+      title: t.speciesConservationObjective2Title,
+      description: t.speciesConservationObjective2Desc,
+    },
+    {
+      eyebrow: '03',
+      title: t.speciesConservationObjective3Title,
+      description: t.speciesConservationObjective3Desc,
+    },
+  ];
+}
 
 // Foto dokumentasi belum ada untuk Species Conservation -- dipinjam dari
 // Ocean Accounts atas permintaan, sampai foto program ini sendiri tersedia.
@@ -58,50 +57,47 @@ const GALLERY_IMAGES = [
   { src: slider4, alt: '' },
 ];
 
-const KEY_ACTIVITIES_BULLETS = [
-  'National Sharks ID Training Program',
-  'CITES and RFMOs implementation and identification guide',
-  'Engage in policy dialogue and inter-agency coordination with the Ministry of Marine Affairs and Fisheries on shark/ray management measures',
-  'DNA-based species identification innovation',
-  'Engage with shark fishing communities and companies to support conservation and sustainability',
-];
-
-const CURRENT_PROJECT_BULLETS = [
-  'Illegal Wildlife Trade – Challenge Fund (IWTEX005) — "Strengthening Indonesia\'s capacity to reduce illegal shark fisheries and trade"',
-];
+function getKeyActivitiesBullets(t: Dictionary) {
+  return [
+    t.speciesConservationKeyActivityBullet1,
+    t.speciesConservationKeyActivityBullet2,
+    t.speciesConservationKeyActivityBullet3,
+    t.speciesConservationKeyActivityBullet4,
+    t.speciesConservationKeyActivityBullet5,
+  ];
+}
 
 // Sama seperti RELATED_STORIES di Ocean Accounts/Marine Conservation --
 // masih contoh, tapi fotonya dipinjam dari Ocean Accounts atas permintaan,
 // sampai foto berita Species Conservation sendiri tersedia.
-const RELATED_STORIES: RelatedStory[] = [
-  {
-    image: cb1,
-    date: '28 Jul 2026',
-    category: 'Policy',
-    title: 'Aligning Science and Policy: Indonesia Strengthens Its Position for CITES AC34',
-    excerpt:
-      "FRCI supports the government's technical preparation ahead of the CITES Animals Committee session.",
-    href: '#',
-  },
-  {
-    image: cb2,
-    date: '14 Jul 2026',
-    category: 'Ocean Accounts',
-    title: "From Pilot Projects to National Policy: Aligning Ocean Accounts for Indonesia's Future",
-    excerpt:
-      'How years of pilot-site data collection are shaping a national ocean accounting framework.',
-    href: '#',
-  },
-  {
-    image: cb3,
-    date: '10 Jul 2026',
-    category: 'Conservation',
-    title: "Beyond Borders: Building Indonesia's Readiness for High Seas Conservation",
-    excerpt:
-      'FRCI examines what it will take for Indonesia to engage effectively in high seas governance.',
-    href: '#',
-  },
-];
+function getRelatedStories(t: Dictionary): RelatedStory[] {
+  return [
+    {
+      image: cb1,
+      date: '28 Jul 2026',
+      category: 'Policy',
+      title: t.speciesConservationRelatedStory1Title,
+      excerpt: t.speciesConservationRelatedStory1Excerpt,
+      href: '#',
+    },
+    {
+      image: cb2,
+      date: '14 Jul 2026',
+      category: 'Ocean Accounts',
+      title: t.speciesConservationRelatedStory2Title,
+      excerpt: t.speciesConservationRelatedStory2Excerpt,
+      href: '#',
+    },
+    {
+      image: cb3,
+      date: '10 Jul 2026',
+      category: 'Conservation',
+      title: t.speciesConservationRelatedStory3Title,
+      excerpt: t.speciesConservationRelatedStory3Excerpt,
+      href: '#',
+    },
+  ];
+}
 
 export default async function SpeciesConservationPage({
   params,
@@ -125,28 +121,22 @@ export default async function SpeciesConservationPage({
           { label: t.navProgram, href: '#' },
           { label: programLabel, href: NAV_ITEM.href },
         ]}
-        title="Species conservation: Protecting sharks and rays, sustaining oceans resources"
-        lead="Strengthening capacity and governance for the sustainable use of sharks and rays in Indonesia."
+        title={t.speciesConservationHeroTitle}
+        lead={t.speciesConservationHeroLead}
         image={bgSpeciesConservation}
       />
 
       <ProgramIntro>
-        <p>
-          Sharks are among the oldest groups of vertebrate animals on Earth, having existed for more than 400 million years. They belong to the class Chondrichthyes, which includes sharks, rays, skates, and chimaeras. More than 400 shark species have been described globally, ranging from small deep-sea species to the world's largest fish, the whale shark (Rhincodon typus). As apex and mesopredators, sharks and rays play a crucial role in maintaining the balance and health of marine ecosystems — regulating prey populations, sustaining food webs, transporting nutrients across ecosystems, and influencing the behavior of other species. In doing so, they help sustain biodiversity, ecosystem resilience, and productive fisheries.
-        </p>
-        <p>
-          Unlike many bony fish, sharks generally grow slowly, mature late, and produce relatively few offspring. These biological characteristics make shark populations particularly vulnerable to overfishing and slow to recover once depleted. As a result, overfishing has halved shark and ray populations over the past 50 years and driven an estimated 37% of species toward extinction, making chondrichthyans among the most threatened vertebrate lineages (Dulvy et al., 2021). As the highest elasmobranch landings in the world, with annual catches exceeding 100,000 tonnes and one of the largest exporters of shark and ray products globally, Indonesia faces significant challenges to improve its fisheries management and trades.
-        </p>
-        <p>
-          Rekam Nusantara Foundation has actively promoted shark and ray conservation and sustainable practices in fisheries and trade in Indonesia since 2013 —through awareness and research on threatened shark species. Since 2018, Rekam Nusantara Foundation, through its Fisheries Resources Center of Indonesia (FRCI) unit, has been partnering with the Indonesian Ministry of Marine Affairs and Fisheries (MMAF) in strengthen capacity and governance for the sustainability of shark and ray fisheries in Indonesia.
-        </p>
+        <p>{t.speciesConservationIntroP1}</p>
+        <p>{t.speciesConservationIntroP2}</p>
+        <p>{t.speciesConservationIntroP3}</p>
       </ProgramIntro>
 
       <ProgramObjectives
         icon={speciesConservationIcon}
-        eyebrow="Objectives"
-        heading="How this program drives change"
-        objectives={OBJECTIVES}
+        eyebrow={t.speciesConservationObjectivesEyebrow}
+        heading={t.speciesConservationObjectivesHeading}
+        objectives={getObjectives(t)}
       >
         <ProgramGallery
           images={GALLERY_IMAGES}
@@ -158,31 +148,31 @@ export default async function SpeciesConservationPage({
       </ProgramObjectives>
 
       <ProgramFeatureRow
-        eyebrow="Key Activities"
-        title="From the Landing Site to the Ledger"
-        bullets={KEY_ACTIVITIES_BULLETS}
+        eyebrow={t.speciesConservationKeyActivitiesEyebrow}
+        title={t.speciesConservationKeyActivitiesTitle}
+        bullets={getKeyActivitiesBullets(t)}
         image={fotoKey}
       />
       <ProgramFeatureRow
-        eyebrow="Current Project"
+        eyebrow={t.speciesConservationCurrentProjectEyebrow}
         title=""
-        bullets={CURRENT_PROJECT_BULLETS}
+        bullets={[t.speciesConservationCurrentProjectBullet1]}
         image={fotoCurrent}
         reverse
       />
 
       <ProgramRelatedStories
-        eyebrow="Related Stories"
-        heading="Where Species Conservation making a difference"
-        stories={RELATED_STORIES}
+        eyebrow={t.speciesConservationRelatedStoriesEyebrow}
+        heading={t.speciesConservationRelatedStoriesHeading}
+        stories={getRelatedStories(t)}
         readStoryLabel={t.readStory}
       />
 
       <ProgramSupportCta
         image={bgSupport}
-        heading="Sharks and Rays Keep The Ocean Healthy"
-        subheading="Protecting them safeguards the fisheries, food security, and coastal livelihood"
-        ctaLabel="SUPPORT US"
+        heading={t.speciesConservationSupportHeading}
+        subheading={t.speciesConservationSupportSubheading}
+        ctaLabel={t.speciesConservationSupportCta}
         ctaHref="#"
       />
     </>

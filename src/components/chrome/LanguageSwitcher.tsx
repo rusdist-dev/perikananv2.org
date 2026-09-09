@@ -9,7 +9,7 @@ import { cn } from '@/lib/cn';
 /**
  * Menukar bahasa TANPA memindahkan pembaca ke beranda: ia membuang segmen
  * locale dari path saat ini dan membiarkan AppLink memasang yang baru, jadi
- * /en/berita <-> /berita. Switcher yang selalu menuju '/' adalah cara paling
+ * /id/berita <-> /berita. Switcher yang selalu menuju '/' adalah cara paling
  * cepat kehilangan pembaca yang sudah sampai di halaman dalam.
  *
  * Bukan <select>: daftar dua entri sebagai link berarti bisa dibuka di tab
@@ -38,6 +38,9 @@ export function LanguageSwitcher({
                 href={bare}
                 localeOverride={l}
                 hrefLang={htmlLang[l]}
+                // scroll={false}: berganti bahasa tetap di posisi baca saat ini,
+                // bukan lompat ke atas seperti navigasi ke halaman baru.
+                scroll={false}
                 // aria-current memberi tahu screen reader bahasa mana yang aktif;
                 // pembeda visual saja tidak sampai ke sana.
                 aria-current={current ? 'true' : undefined}

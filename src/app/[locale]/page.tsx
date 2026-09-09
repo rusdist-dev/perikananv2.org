@@ -12,7 +12,7 @@ import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
 import { getArticles } from '@/lib/content';
 import { formatArticleDate } from '@/lib/date';
-import { getDictionary } from '@/i18n/dictionary';
+import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
@@ -29,14 +29,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 /** "06" ditulis apa adanya (string, bukan number) supaya nol di depannya
  *  tidak hilang -- persis seperti pada rancangannya. */
-const IMPACT_STATS = [
-  { value: '23', label: 'Marine Protected Areas' },
-  { value: '6', label: 'Area-Based Management' },
-  { value: '8', label: 'Fisheries Management Areas' },
-  { value: '72', label: 'Community Groups' },
-  { value: '52', label: 'Field Enumerators' },
-  { value: '30', label: 'Student Internships' },
-];
+function getImpactStats(t: Dictionary) {
+  return [
+    { value: '23', label: t.impactStatMarineProtectedAreas },
+    { value: '6', label: t.impactStatAreaBasedManagement },
+    { value: '8', label: t.impactStatFisheriesManagementAreas },
+    { value: '72', label: t.impactStatCommunityGroups },
+    { value: '52', label: t.impactStatFieldEnumerators },
+    { value: '30', label: t.impactStatStudentInternships },
+  ];
+}
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -134,19 +136,19 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             patah, garisnya mendarat di awal baris kedua alih-alih di antara dua
             item yang bersebelahan. */}
         <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit">
-          <AppLink href={'/program/ocean-accounts'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/ocean-accounts'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Ocean Accounts
           </AppLink>
-          <AppLink href={'/program/sustainable-fisheries'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/sustainable-fisheries'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Fisheries
           </AppLink>
-          <AppLink href={'/program/marine-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/marine-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Ecosystem
           </AppLink>
-          <AppLink href={'/program/species-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/species-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Species
           </AppLink>
-          <AppLink href={'/program/blue-carbon'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:underline-secondary sm:grow-0 sm:border-b-0 sm:py-2">
+          <AppLink href={'/program/blue-carbon'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Blue Carbon
           </AppLink>
         </div>
@@ -183,13 +185,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 di ponsel, justify baru dari lg. */}
             <div className="pb-8 pe-5 text-left lg:text-justify">
               <p className="text-xs font-bold uppercase tracking-wider text-secondary mb-4">
-                Where Ocean Data Meets Local Action
+                {t.homeHeroEyebrow}
               </p>
               <h2 className="text-3xl font-semibold text-primary mb-6">
-                Measuring what matters, counting what counts, turning data into actions
+                {t.homeHeroHeading}
               </h2>
               <p className="mt-4 text-sm font-medium text-primary">
-                REKAM/FRCI (Fisheries Resource Center of Indonesia) is Rekam Nusantara Foundation's Ocean program, offering an alternative approach to fisheries analysis and sustainable marine management grounded in scientific data. We apply innovative science and technology to protect critical species, promote sustainable fishing, and strengthen the management of marine conservation areas, while pioneering the integration of ocean accounting and ecosystem services into how Indonesia manages its seas. In carrying out our programs, REKAM/FRCI partners with stakeholders and policymakers, and involves communities directly in data collection. Guided by our vision of sustainability and justice for Indonesian fisheries, we aim to lead the shift toward evidence-based, inclusive ocean governance, ensuring a thriving marine environment for generations to come.
+                {t.homeHeroBody}
               </p>
             </div>
           </Container>
@@ -272,16 +274,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
         <Container className="page-gutter grid gap-10 py-16 lg:grid-cols-2 lg:items-center lg:pe-(--spacing-panel-gutter)">
           <div>
-            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-primary-fg/80">Our Impact</p>
-            <h2 className="mb-4 text-3xl font-semibold">Evidence of our action that reaches across Indonesia's seas</h2>
-            <p className="mb-6 text-primary-fg/90">
-              FRCI&apos;s Ocean Accounts framework is now active in all 8 of Indonesia&apos;s Fisheries Management Areas, translating field-level catch and ecosystem data into policy that communities can act on.
-            </p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wider text-primary-fg/80">{t.navOurImpact}</p>
+            <h2 className="mb-4 text-3xl font-semibold">{t.homeImpactHeading}</h2>
+            <p className="mb-6 text-primary-fg/90">{t.homeImpactBody}</p>
             <AppLink
               href="/discover/our-impact"
               className="inline-flex w-fit items-center gap-2 rounded-md bg-white px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary hover:opacity-90"
             >
-              View the Full Map
+              {t.homeImpactCta}
               <Icon id="arrow-right" />
             </AppLink>
           </div>
@@ -304,7 +304,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       <div className="bg-surface">
         <Container className="page-gutter grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 lg:pe-(--spacing-panel-gutter)">
-          {IMPACT_STATS.map((stat, index) => (
+          {getImpactStats(t).map((stat, index) => (
             <div key={stat.label} className="relative px-4 py-8 text-center">
               {/* Garis pendek yang dipusatkan lewat inset-y-0 + my-auto + tinggi
                   tetap (h-16) -- BUKAN divide-x/y bawaan Tailwind, yang menaruh
@@ -327,22 +327,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </div>
 
       <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
-        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">OUR PUBLICATION</p>
-        <h2 className="mb-8 text-3xl font-semibold text-primary">The results of our work and collaboration</h2>
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">{t.homePublicationsEyebrow}</p>
+        <h2 className="mb-8 text-3xl font-semibold text-primary">{t.homePublicationsHeading}</h2>
 
         {/* Beranda cuma menonjolkan 3 -- daftar lengkapnya (termasuk yang
             tidak tampil di sini) ada di /discover/publications. */}
         <HomePublicationsGrid
           publications={publications.slice(0, 3)}
           downloadLabel={t.download}
-          readLabel="Read"
-          pdfUnavailableLabel="This PDF is not available yet."
-          closeLabel="Close"
+          readLabel={t.read}
+          pdfUnavailableLabel={t.pdfUnavailable}
+          closeLabel={t.close}
         />
       </Container>
 
       <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
-        <p className="mb-6 text-xs font-bold uppercase tracking-wider text-secondary">Featured Video</p>
+        <p className="mb-6 text-xs font-bold uppercase tracking-wider text-secondary">{t.homeFeaturedVideo}</p>
 
         <div className="border border-border">
           {/* youtube-nocookie.com: mode privasi-tinggi YouTube -- cookie

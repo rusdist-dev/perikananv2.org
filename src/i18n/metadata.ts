@@ -6,7 +6,7 @@ import { site } from '@/lib/site';
 /**
  * Canonical dan hreflang dibangun dari fungsi yang sama dengan yang dipakai
  * middleware dan AppLink (localizedPath). Kalau metadata menghitung URL-nya
- * sendiri, ia akan menunjuk /id/berita sementara pembaca ada di /berita --
+ * sendiri, ia akan menunjuk /en/berita sementara pembaca ada di /berita --
  * mesin pencari lalu meng-index alamat yang me-redirect ke tempat lain.
  */
 

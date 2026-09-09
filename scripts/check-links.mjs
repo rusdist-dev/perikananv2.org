@@ -8,8 +8,8 @@
  *   2. link internal di halaman berlocale-prefiks yang LUPA membawa prefiksnya.
  *
  * (2) adalah kegagalan yang tidak terlihat dari status HTTP: /berita di halaman
- * /en tetap menjawab 200, sambil diam-diam melempar pembaca Inggris ke versi
- * Indonesia. Tanpa pemeriksaan ini ia hanya ketahuan lewat laporan pengguna.
+ * /id tetap menjawab 200, sambil diam-diam melempar pembaca Indonesia ke versi
+ * Inggris. Tanpa pemeriksaan ini ia hanya ketahuan lewat laporan pengguna.
  *
  * Butuh server hidup:
  *   npm run build && npm run start -- --port 3100
@@ -21,8 +21,8 @@ const BASE = (process.env.BASE_URL ?? 'http://localhost:3100').replace(/\/$/, ''
 // Harus cocok dengan src/i18n/config.ts. Diduplikasi dengan sengaja: skrip ini
 // berjalan di Node polos tanpa resolusi alias TypeScript, dan menambah build
 // step demi dua string akan membuatnya lebih rapuh, bukan kurang.
-const DEFAULT_LOCALE = 'id';
-const PREFIXED_LOCALES = ['en'];
+const DEFAULT_LOCALE = 'en';
+const PREFIXED_LOCALES = ['id'];
 
 /** Titik masuk crawl: bentuk kanonik tiap locale. */
 const ENTRY_POINTS = ['/', ...PREFIXED_LOCALES.map((l) => `/${l}`)];

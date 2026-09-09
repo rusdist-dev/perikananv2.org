@@ -13,7 +13,7 @@ import { isLocale } from '@/i18n/config';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  return buildMetadata({ locale, path: '/data/data-crab', title: 'Data Crab' });
+  return buildMetadata({ locale, path: '/data/data-crab', title: getDictionary(locale).navDataCrab });
 }
 
 export default async function DataCrabPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -30,30 +30,30 @@ export default async function DataCrabPage({ params }: { params: Promise<{ local
         // pola yang sama dengan breadcrumb Program/Connect yang juga belum
         // punya indeks.
         { label: t.navData, href: '#' },
-        { label: 'Data Crab', href: '/data/data-crab' },
+        { label: t.navDataCrab, href: '/data/data-crab' },
       ]}
-      datasetName="Data Crab"
-      description="Ringkasan trip, komposisi tangkapan, dan sebaran ukuran karapas kepiting/rajungan dari data yang dikumpulkan di lapangan."
+      datasetName={t.navDataCrab}
+      description={t.dataCrabDescription}
       trips={{
         labels: monthlyLabels(),
         values: sampleTripCounts(),
-        unit: 'trip',
-        seriesLabel: 'Number of Trips',
+        unit: t.dataCrabTripsUnit,
+        seriesLabel: t.dataCrabTripsSeriesLabel,
         color: 'series-2',
         labelEvery: 7,
       }}
       catchComposition={{
         labels: SAMPLE_CATCH_COMPOSITION.labels,
         values: SAMPLE_CATCH_COMPOSITION.values,
-        unit: 'kg',
-        seriesLabel: 'Berat tangkapan',
+        unit: t.dataCrabCatchUnit,
+        seriesLabel: t.dataCrabCatchSeriesLabel,
         color: 'series-1',
       }}
       lengthFrequency={{
         labels: SAMPLE_LENGTH_FREQUENCY.labels,
         values: SAMPLE_LENGTH_FREQUENCY.values,
-        unit: 'individu',
-        seriesLabel: 'Frekuensi',
+        unit: t.dataCrabLengthUnit,
+        seriesLabel: t.dataCrabLengthSeriesLabel,
         color: 'series-3',
       }}
     />

@@ -11,15 +11,15 @@ import slider2 from '@/assets/sustainable-fisheries/slider2.png';
 import slider3 from '@/assets/sustainable-fisheries/slider3.png';
 import slider4 from '@/assets/sustainable-fisheries/slider4.png';
 import sustainableFisheriesIcon from '@/assets/sustainable-fisheries.svg';
-import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
 import { ProgramGallery } from '@/components/program/ProgramGallery';
 import { ProgramHero } from '@/components/program/ProgramHero';
 import { ProgramIntro } from '@/components/program/ProgramIntro';
+import { ProgramNusacore } from '@/components/program/ProgramNusacore';
 import { ProgramObjectives } from '@/components/program/ProgramObjectives';
 import { ProgramRelatedStories, type RelatedStory } from '@/components/program/ProgramRelatedStories';
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
-import { getDictionary } from '@/i18n/dictionary';
+import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { isLocale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
 
@@ -29,26 +29,25 @@ const NAV_ITEM = panelNav
   .find((section) => section.id === 'nav-program')!
   .items.find((item) => item.href === '/program/sustainable-fisheries')!;
 
-const OBJECTIVES = [
-  {
-    eyebrow: '01',
-    title: 'Strengthen science-based fisheries management',
-    description:
-      'Improve scientific information and analysis to support effective and sustainable fisheries management.',
-  },
-  {
-    eyebrow: '02',
-    title: 'Strengthen fisheries data and monitoring systems',
-    description:
-      'Improve the availability, quality, and use of fisheries data for evidence-based decision-making.',
-  },
-  {
-    eyebrow: '03',
-    title: 'Promote sustainable and ecosystem-based fisheries',
-    description:
-      'Support fisheries management that maintains resource productivity, ecosystem health, and coastal community livelihoods.',
-  },
-];
+function getObjectives(t: Dictionary) {
+  return [
+    {
+      eyebrow: '01',
+      title: t.sustainableFisheriesObjective1Title,
+      description: t.sustainableFisheriesObjective1Desc,
+    },
+    {
+      eyebrow: '02',
+      title: t.sustainableFisheriesObjective2Title,
+      description: t.sustainableFisheriesObjective2Desc,
+    },
+    {
+      eyebrow: '03',
+      title: t.sustainableFisheriesObjective3Title,
+      description: t.sustainableFisheriesObjective3Desc,
+    },
+  ];
+}
 
 const GALLERY_IMAGES = [
   { src: slider1, alt: '' },
@@ -57,54 +56,44 @@ const GALLERY_IMAGES = [
   { src: slider4, alt: '' },
 ];
 
-const KEY_ACTIVITIES_BULLETS = [
-  'Conducting fisheries research, stock assessments, and analysis of fisheries dynamics;',
-  'Strengthening fisheries data collection, monitoring, validation, and management systems;',
-  'Developing and applying fisheries and ecosystem models to support management decisions;',
-  'Supporting science-based fisheries management strategies, indicators, and harvest control measures;',
-  'Strengthening collaboration and knowledge exchange among fisheries stakeholders to support sustainable management.',
-];
+function getKeyActivitiesBullets(t: Dictionary) {
+  return [
+    t.sustainableFisheriesKeyActivityBullet1,
+    t.sustainableFisheriesKeyActivityBullet2,
+    t.sustainableFisheriesKeyActivityBullet3,
+    t.sustainableFisheriesKeyActivityBullet4,
+    t.sustainableFisheriesKeyActivityBullet5,
+  ];
+}
 
-const NUSACORE_DESCRIPTION =
-  'formally "Nature-based Solutions for Advancing Coastal Resilience in Central Java, Indonesia" — is a 3-year initiative (2025–2028) led by REKAM and funded through the UK FCDO\'s COAST Facility, responding to worsening coastal erosion, climate change impacts, and mangrove loss along Central Java\'s northern coast that past restoration efforts failed to resolve due to weak execution and reliance on external funding. The programme builds community-led, self-financing Nature-based Solutions that restore mangrove ecosystems while reducing poverty, pairing habitat rehabilitation with sustainable aquaculture — mangrove crabs, milkfish, green mussels, and shrimp — through a silvofishery model that lets conservation and livelihoods reinforce each other. Anchored by GEDSI and FPIC principles and capacity-building at the institutional level, NUSACORE\'s project site covers 17 sites in 11 districts and reaches 25 community groups across Central Java.';
-
-const NUSACORE_ACTIVITIES = [
-  'Mangrove ecosystem rehabilitation and restoration to rebuild natural coastal defenses and reverse erosion',
-  'Development of silvofishery pilots that pair mangrove conservation with sustainable aquaculture of mangrove crabs, milkfish, mussels, and shrimp',
-  'Training, mentoring, and value-added fisheries processing to build self-financing, poverty-reducing livelihoods less dependent on external funding',
-  'Application of GEDSI and FPIC principles to ensure equitable participation of women, youth, persons with disabilities, and other vulnerable groups',
-  'Institutional strengthening — coastal management standards, stakeholder capacity building, and climate-responsive planning policy across 25 community groups in 17 locations at 11 districts in Central Java',
-];
-
-const RELATED_STORIES: RelatedStory[] = [
-  {
-    image: cb1,
-    date: '28 Jul 2026',
-    category: 'Policy',
-    title: 'Aligning Science and Policy: Indonesia Strengthens Its Position for CITES AC34',
-    excerpt:
-      "FRCI supports the government's technical preparation ahead of the CITES Animals Committee session.",
-    href: '#',
-  },
-  {
-    image: cb2,
-    date: '14 Jul 2026',
-    category: 'Ocean Accounts',
-    title: "From Pilot Projects to National Policy: Aligning Ocean Accounts for Indonesia's Future",
-    excerpt:
-      'How years of pilot-site data collection are shaping a national ocean accounting framework.',
-    href: '#',
-  },
-  {
-    image: cb3,
-    date: '10 Jul 2026',
-    category: 'Conservation',
-    title: "Beyond Borders: Building Indonesia's Readiness for High Seas Conservation",
-    excerpt:
-      'FRCI examines what it will take for Indonesia to engage effectively in high seas governance.',
-    href: '#',
-  },
-];
+function getRelatedStories(t: Dictionary): RelatedStory[] {
+  return [
+    {
+      image: cb1,
+      date: '28 Jul 2026',
+      category: 'Policy',
+      title: t.sustainableFisheriesRelatedStory1Title,
+      excerpt: t.sustainableFisheriesRelatedStory1Excerpt,
+      href: '#',
+    },
+    {
+      image: cb2,
+      date: '14 Jul 2026',
+      category: 'Ocean Accounts',
+      title: t.sustainableFisheriesRelatedStory2Title,
+      excerpt: t.sustainableFisheriesRelatedStory2Excerpt,
+      href: '#',
+    },
+    {
+      image: cb3,
+      date: '10 Jul 2026',
+      category: 'Conservation',
+      title: t.sustainableFisheriesRelatedStory3Title,
+      excerpt: t.sustainableFisheriesRelatedStory3Excerpt,
+      href: '#',
+    },
+  ];
+}
 
 export default async function SustainableFisheriesPage({
   params,
@@ -128,28 +117,22 @@ export default async function SustainableFisheriesPage({
           { label: t.navProgram, href: '#' },
           { label: programLabel, href: NAV_ITEM.href },
         ]}
-        title="Sustainable fisheries: Advancing sustainable fisheries through science, data, and collaboration"
-        lead="A model for fisheries management that not only preserves marine ecosystems."
+        title={t.sustainableFisheriesHeroTitle}
+        lead={t.sustainableFisheriesHeroLead}
         image={bgSustainableFisheries}
       />
 
       <ProgramIntro>
-        <p>
-          The Sustainable Fisheries Program is an FRCI initiative that aims to advance sustainable fisheries management in Indonesia, particularly in small-scale fisheries. The program connects science, data, technology, local knowledge, and stakeholder collaboration to support evidence-based fisheries policy and management (science–policy nexus), sustain fishery resources and marine ecosystems, and improve coastal livelihoods. 
-        </p>
-        <p>
-          The program was developed in response to key challenges facing the fisheries sector, including overfishing, habitat degradation, and challenges in fisheries governance. FRCI supports adaptive fisheries management through fisheries research and stock assessments, ecosystem-based fisheries management, fisheries monitoring, and fisheries and ecosystem modelling. In Saleh Bay, West Nusa Tenggara, FRCI initiated an Ecosystem-Based Fisheries Management (EBFM) approach to integrate ecosystem considerations into small-scale fisheries management. In collaboration with partners, FRCI also serves as a Scientific Service Provider (SSP) for snapper and grouper stock assessments in support of KOMNAS KAJISKAN.
-        </p>
-        <p>
-          FRCI also conducts landing monitoring and fisheries resource surveys across various locations, including blue swimming crab and mud crab monitoring linked to mangrove ecosystem conditions, reef fish surveys in the Liukang Tangaya MPA, and shark and ray monitoring to support species conservation. These activities are supported by participatory data collection and collaborative approaches to strengthen the quality and relevance of fisheries information. Through these efforts, FRCI aims to generate robust scientific evidence and management recommendations to support effective and sustainable fisheries management.
-        </p>
+        <p>{t.sustainableFisheriesIntroP1}</p>
+        <p>{t.sustainableFisheriesIntroP2}</p>
+        <p>{t.sustainableFisheriesIntroP3}</p>
       </ProgramIntro>
 
       <ProgramObjectives
         icon={sustainableFisheriesIcon}
-        eyebrow="Objectives"
-        heading="How this program drives change"
-        objectives={OBJECTIVES}
+        eyebrow={t.sustainableFisheriesObjectivesEyebrow}
+        heading={t.sustainableFisheriesObjectivesHeading}
+        objectives={getObjectives(t)}
       >
         <ProgramGallery
           images={GALLERY_IMAGES}
@@ -161,41 +144,33 @@ export default async function SustainableFisheriesPage({
       </ProgramObjectives>
 
       <ProgramFeatureRow
-        eyebrow="Key Activities"
-        title="Science, Data, and Action"
-        bullets={KEY_ACTIVITIES_BULLETS}
+        eyebrow={t.sustainableFisheriesKeyActivitiesEyebrow}
+        title={t.sustainableFisheriesKeyActivitiesTitle}
+        bullets={getKeyActivitiesBullets(t)}
         image={fotoKey}
       />
       <ProgramFeatureRow
-        eyebrow="Current Project"
+        eyebrow={t.sustainableFisheriesCurrentProjectEyebrow}
         title=""
-        bullets={[
-          'Enhancing Maritime Environmental Governance in Indonesia and the Philippines (EMERGE)',
-        ]}
+        bullets={[t.sustainableFisheriesCurrentProjectBullet1]}
         image={fotoCurrent}
         reverse
       />
 
-      <ProgramCrossCutting
-        eyebrow="Cross-cutting Program"
-        title="NUSACORE"
-        description={NUSACORE_DESCRIPTION}
-        activityLabel="Key Activity"
-        activities={NUSACORE_ACTIVITIES}
-      />
+      <ProgramNusacore />
 
       <ProgramRelatedStories
-        eyebrow="Related Stories"
-        heading="Where Sustainable Fisheries making a difference"
-        stories={RELATED_STORIES}
+        eyebrow={t.sustainableFisheriesRelatedStoriesEyebrow}
+        heading={t.sustainableFisheriesRelatedStoriesHeading}
+        stories={getRelatedStories(t)}
         readStoryLabel={t.readStory}
       />
 
       <ProgramSupportCta
         image={bgSupport}
-        heading="Healthy Fisheries, Healthy Oceans, Stronger Communities"
-        subheading="Connecting science, data, and collaboration to support sustainable fisheries management and better coastal livelihoods."
-        ctaLabel="SUPPORT US"
+        heading={t.sustainableFisheriesSupportHeading}
+        subheading={t.sustainableFisheriesSupportSubheading}
+        ctaLabel={t.sustainableFisheriesSupportCta}
         ctaHref="#"
       />
     </>

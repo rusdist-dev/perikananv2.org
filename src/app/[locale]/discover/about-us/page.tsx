@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import ornamentBg1 from '@/assets/banner/ornament3.png';
@@ -80,52 +81,25 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
 
         <div className="mt-10 grid gap-5 lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-5 2xl:pb-[12rem]">
           <div className="flex flex-col gap-6 text-justify text-sm leading-relaxed text-[#5b6360] md:text-base">
-            <p>
-              Established in 2018, REKAM/FRCI is Rekam Nusantara Foundation&apos;s dedicated program
-              for fisheries and marine conservation, built on science-based data and close
-              collaboration with communities, government, and researchers. Our current work spans
-              three key regions, Central Java, Saleh Bay in West Nusa Tenggara, and the Liukang
-              Tangaya Marine Protected Area (MPA) in South Sulawesi, where we generate the evidence
-              needed for sustainable fisheries and marine management.
-            </p>
-            <p>
-              REKAM/FRCI&apos;s work is organized around five major programs. Our Sustainable
-              Fisheries program promotes science-based management of Indonesia&apos;s small-scale
-              fisheries by integrating research, technology, and local knowledge, informing policy,
-              raising public awareness, and strengthening fisheries governance for the long-term
-              resilience of coastal communities. Our Ocean Accounts program advances the integration
-              of ecosystem, economic, and social data into national ocean governance, supporting
-              Indonesia&apos;s transition toward evidence-based, sustainable ocean management. Our
-              Marine Conservation program works with national and local government to strengthen the
-              effective, adaptive management of MPAs, from research and cost-benefit analysis to
-              capacity building for managers and local communities. Our Species Conservation program
-              focuses on protecting Indonesia&apos;s sharks and rays, the world&apos;s largest shark
-              and ray catch, through capacity building, CITES compliance support, and nationwide
-              research on the shark and ray trade chain. Our Blue Carbon program supports the
-              rehabilitation and sustainable management of mangrove and seagrass ecosystems,
-              empowering coastal communities through livelihood strategies grounded in local
-              potential.
-            </p>
-            <p>
-              Underpinning all five programs is IKAN, our Android-based mobile application for
-              fisheries data collection. Publicly accessible and built on citizen-science principles
-              aligned with standard scientific protocols, IKAN enables fishers, enumerators, and
-              community members across Indonesia to contribute directly to the data that informs
-              stock assessments and fisheries management decisions. Since its development, REKAM/FRCI
-              has continued to expand and refine IKAN to make marine science more participatory,
-              transparent, and community-driven.
-            </p>
+            <p>{t.aboutUsIntroBody1}</p>
+            <p>{t.aboutUsIntroBody2}</p>
+            <p>{t.aboutUsIntroBody3}</p>
           </div>
 
           {/* Satu kata per baris (br disembunyikan di bawah lg) meniru rancangan
               acuan, yang punya kolom sesempit itu karena kolom teks di
               sebelahnya jauh lebih lebar -- di bawah lg keduanya bertumpuk
-              penuh lebar, jadi baris manual dilepas dan kata mengalir wajar. */}
+              penuh lebar, jadi baris manual dilepas dan kata mengalir wajar.
+              Kata-katanya dipecah dari kamus (bukan ditulis literal) supaya
+              versi id/en yang jumlah katanya beda tetap dapat baris sendiri
+              per kata. */}
           <h1 className="text-4xl leading-[1.05] text-primary sm:text-5xl lg:text-7xl lg:translate-x-28 lg:translate-y-5 font-semibold">
-            We <br className="hidden lg:block" />
-            speak <br className="hidden lg:block" />
-            with <br className="hidden lg:block" />
-            evidence
+            {t.aboutUsHeroHeading.split(' ').map((word, index, words) => (
+              <Fragment key={`${word}-${index}`}>
+                {word}{' '}
+                {index < words.length - 1 ? <br className="hidden lg:block" /> : null}
+              </Fragment>
+            ))}
           </h1>
         </div>
       </Container>
@@ -157,17 +131,16 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
       />
 
       <Container className="page-gutter py-12 lg:pe-(--spacing-panel-gutter) lg:py-16">
-        <h2 className="text-2xl font-semibold md:text-3xl">Mission and approach</h2>
+        <h2 className="text-2xl font-semibold md:text-3xl">{t.aboutUsMissionHeading}</h2>
 
         <div className="mt-8 grid grid-cols-1 gap-10 sm:grid-cols-2">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-primary-fg">Our Mission</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary-fg">{t.aboutUsMissionEyebrow}</p>
             <h3 className="mt-2 text-lg font-bold">
-              An alternative to fisheries analysis, grounded in science
+              {t.aboutUsMissionTitle}
             </h3>
             <p className="mt-2 text-sm text-primary-fg/85">
-              FRCI provides an alternative approach to fisheries analysis and sustainable marine
-              management based on scientific data.
+              {t.aboutUsMissionBody}
             </p>
           </div>
 
@@ -180,11 +153,10 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
               aria-hidden
               className="absolute inset-y-0 start-0 my-auto hidden h-20 w-px bg-primary-fg sm:block"
             />
-            <p className="text-xs font-bold uppercase tracking-wider text-primary-fg">Our Approach</p>
-            <h3 className="mt-2 text-lg font-bold">Partnership, not just publication</h3>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary-fg">{t.aboutUsApproachEyebrow}</p>
+            <h3 className="mt-2 text-lg font-bold">{t.aboutUsApproachTitle}</h3>
             <p className="mt-2 text-sm text-primary-fg/85">
-              We partner and collaborate with stakeholders and policymakers, and involve
-              communities to take part in data collection.
+              {t.aboutUsApproachBody}
             </p>
           </div>
         </div>
@@ -192,8 +164,8 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
     </div>
 
     <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter)">
-      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">Our Team</p>
-      <h2 className="mb-8 text-3xl font-semibold text-primary">The experts behind our work</h2>
+      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">{t.aboutUsTeamEyebrow}</p>
+      <h2 className="mb-8 text-3xl font-semibold text-primary">{t.aboutUsTeamHeading}</h2>
 
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {TEAM_MEMBERS.map((member) => (
@@ -209,7 +181,7 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
               />
             </div>
             <div className="flex flex-1 flex-col gap-1 bg-primary p-4 text-primary-fg">
-              <p className="text-xs font-bold uppercase tracking-wide text-primary-fg/70">Advisor</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-primary-fg/70">{t.aboutUsTeamMemberTag}</p>
               <p className="text-sm font-bold">{member.name}</p>
               <p className="text-xs text-primary-fg/85">{member.role}</p>
               {/* Belum ada halaman profil individu -- href="#" menyatakan itu
@@ -219,7 +191,7 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
                 href="#"
                 className="mt-auto inline-flex w-fit items-center rounded-md border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
               >
-                Profile
+                {t.aboutUsProfileCta}
               </AppLink>
             </div>
           </div>
@@ -252,7 +224,7 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
 
       <Container className="page-gutter py-16 lg:pe-(--spacing-panel-gutter) lg:py-20">
         <h2 className="ms-auto max-w-md text-3xl font-semibold leading-tight md:text-4xl lg:max-w-xl lg:text-5xl">
-          Measuring what matters, counting what counts, turning data into actions
+          {t.homeHeroHeading}
         </h2>
       </Container>
     </div>

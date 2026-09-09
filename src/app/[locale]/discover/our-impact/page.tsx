@@ -52,12 +52,11 @@ export default async function OurImpactPage({ params }: { params: Promise<{ loca
         </span>
 
         <h1 className="mt-4 max-w-4xl text-4xl leading-tight text-primary sm:text-5xl">
-          Our Impact: Evidence of our action that reaches across Indonesia&apos;s seas
+          {t.ourImpactHeading}
         </h1>
 
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted md:text-base">
-          FRCI&apos;s Ocean Accounts framework is now active in Indonesian seas, translating
-          field-level ecosystem and economic data into information that communities can act on.
+          {t.ourImpactBody}
         </p>
 
         <div className="mt-6 h-1 w-full max-w-5xl bg-secondary" />

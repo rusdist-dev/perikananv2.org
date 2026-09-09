@@ -7,7 +7,7 @@ import { isLocale } from '@/i18n/config';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  return buildMetadata({ locale, path: '/data/shark-and-ray', title: 'Shark and Ray' });
+  return buildMetadata({ locale, path: '/data/shark-and-ray', title: getDictionary(locale).navSharkAndRay });
 }
 
 export default async function SharkAndRayPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -24,7 +24,7 @@ export default async function SharkAndRayPage({ params }: { params: Promise<{ lo
         // pola yang sama dengan breadcrumb Program/Connect yang juga belum
         // punya indeks.
         { label: t.navData, href: '#' },
-        { label: 'Shark and Ray', href: '/data/shark-and-ray' },
+        { label: t.navSharkAndRay, href: '/data/shark-and-ray' },
       ]}
     />
   );

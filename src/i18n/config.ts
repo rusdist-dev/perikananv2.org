@@ -2,8 +2,8 @@ export const locales = ['id', 'en'] as const;
 
 export type Locale = (typeof locales)[number];
 
-/** Locale ini hidup tanpa prefiks URL: /berita, bukan /id/berita. */
-export const defaultLocale: Locale = 'id';
+/** Locale ini hidup tanpa prefiks URL: /berita, bukan /en/berita. */
+export const defaultLocale: Locale = 'en';
 
 /** Dipakai untuk atribut <html lang> dan hreflang, bukan untuk segmen URL. */
 export const htmlLang: Record<Locale, string> = {

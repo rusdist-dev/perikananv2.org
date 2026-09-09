@@ -12,11 +12,11 @@ import type { Locale } from '@/i18n/config';
  * Ia membaca locale dari URL-nya sendiri (usePathname), bukan dari prop.
  * Meneruskan prop `locale` ke puluhan pemanggil berarti puluhan kesempatan
  * lupa, dan link yang lupa prefiks tidak pernah terlihat rusak: ia tetap
- * menjawab 200 sambil diam-diam melempar pembaca /en kembali ke locale default.
+ * menjawab 200 sambil diam-diam melempar pembaca /id kembali ke locale default.
  * Status HTTP tidak bisa menangkap kegagalan itu -- karena itu
  * scripts/check-links.mjs ikut menegakkan prefiksnya dari sisi hasil build.
  *
- * `href` yang dioper SELALU path tanpa locale: '/berita', bukan '/en/berita'.
+ * `href` yang dioper SELALU path tanpa locale: '/berita', bukan '/id/berita'.
  */
 
 type AppLinkProps = Omit<ComponentProps<typeof Link>, 'href'> & {

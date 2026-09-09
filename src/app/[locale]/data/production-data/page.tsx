@@ -7,7 +7,7 @@ import { isLocale } from '@/i18n/config';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  return buildMetadata({ locale, path: '/data/production-data', title: 'Production Data' });
+  return buildMetadata({ locale, path: '/data/production-data', title: getDictionary(locale).navProductionData });
 }
 
 export default async function ProductionDataPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -24,7 +24,7 @@ export default async function ProductionDataPage({ params }: { params: Promise<{
         // pola yang sama dengan breadcrumb Program/Connect yang juga belum
         // punya indeks.
         { label: t.navData, href: '#' },
-        { label: 'Production Data', href: '/data/production-data' },
+        { label: t.navProductionData, href: '/data/production-data' },
       ]}
     />
   );

@@ -11,11 +11,11 @@ import { defaultLocale, isLocale } from '@/i18n/config';
  * Locale default hidup TANPA prefiks di address bar, tapi App Router hanya
  * mengenal rute berprefiks (app/[locale]/...). File ini yang menjembatani:
  *
- *   /berita     -> rewrite internal ke /id/berita   (URL tetap /berita)
- *   /id/berita  -> redirect 308 ke /berita          (bentuk kanonik)
- *   /en/berita  -> lewat apa adanya
+ *   /berita     -> rewrite internal ke /en/berita   (URL tetap /berita)
+ *   /en/berita  -> redirect 308 ke /berita          (bentuk kanonik)
+ *   /id/berita  -> lewat apa adanya
  *
- * Redirect (bukan rewrite) untuk /id/* itu yang mencegah satu halaman hidup di
+ * Redirect (bukan rewrite) untuk /en/* itu yang mencegah satu halaman hidup di
  * dua URL sekaligus -- duplikat yang membelah sinyal SEO dan membuat canonical
  * berselisih dengan alamat yang benar-benar dibuka pembaca.
  */

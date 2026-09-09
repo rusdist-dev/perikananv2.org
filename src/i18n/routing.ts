@@ -6,13 +6,13 @@ import { defaultLocale, isLocale, type Locale } from './config';
  * memanggil fungsi di sini -- kalau aturannya berubah, ia berubah sekali.
  */
 
-/** Membaca locale dari pathname apa adanya. `/en/berita` -> 'en'; `/berita` -> 'id'. */
+/** Membaca locale dari pathname apa adanya. `/id/berita` -> 'id'; `/berita` -> 'en'. */
 export function localeFromPathname(pathname: string): Locale {
   const first = pathname.split('/')[1] ?? '';
   return isLocale(first) ? first : defaultLocale;
 }
 
-/** Membuang segmen locale kalau ada. `/en/berita` -> `/berita`; `/en` -> `/`. */
+/** Membuang segmen locale kalau ada. `/id/berita` -> `/berita`; `/id` -> `/`. */
 export function stripLocale(pathname: string): string {
   const first = pathname.split('/')[1] ?? '';
   if (!isLocale(first)) return pathname;

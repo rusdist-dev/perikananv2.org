@@ -17,15 +17,15 @@ import slider4 from '@/assets/marine-conservation/slider4.png';
 import { Container } from '@/components/layout/Container';
 import { IndonesiaMap } from '@/components/program/IndonesiaMap';
 import { FRCI_CONSERVATION_AREA_NAMES } from '@/data/frci-conservation-areas';
-import { ProgramCrossCutting } from '@/components/program/ProgramCrossCutting';
 import { ProgramFeatureRow } from '@/components/program/ProgramFeatureRow';
 import { ProgramGallery } from '@/components/program/ProgramGallery';
 import { ProgramHero } from '@/components/program/ProgramHero';
 import { ProgramIntro } from '@/components/program/ProgramIntro';
+import { ProgramNusacore } from '@/components/program/ProgramNusacore';
 import { ProgramObjectives } from '@/components/program/ProgramObjectives';
 import { ProgramRelatedStories, type RelatedStory } from '@/components/program/ProgramRelatedStories';
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
-import { getDictionary } from '@/i18n/dictionary';
+import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { isLocale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
 
@@ -35,29 +35,30 @@ const NAV_ITEM = panelNav
   .find((section) => section.id === 'nav-program')!
   .items.find((item) => item.href === '/program/marine-conservation')!;
 
-const OBJECTIVES = [
-  {
-    eyebrow: '01',
-    title: 'Advancing policy and strategic alignment at regional, national, and provincial level.',
-    description: '',
-  },
-  {
-    eyebrow: '02',
-    title:
-      'Strengthening effective, adaptive, and sustainable management of the MPAs or other area-based measures.',
-    description: '',
-  },
-  {
-    eyebrow: '03',
-    title: 'Engaging stakeholders and empowering local communities.',
-    description: '',
-  },
-  {
-    eyebrow: '04',
-    title: 'Measuring systematic, evidence-based, and inclusive conservation impact.',
-    description: '',
-  },
-];
+function getObjectives(t: Dictionary) {
+  return [
+    {
+      eyebrow: '01',
+      title: t.marineConservationObjective1Title,
+      description: '',
+    },
+    {
+      eyebrow: '02',
+      title: t.marineConservationObjective2Title,
+      description: '',
+    },
+    {
+      eyebrow: '03',
+      title: t.marineConservationObjective3Title,
+      description: '',
+    },
+    {
+      eyebrow: '04',
+      title: t.marineConservationObjective4Title,
+      description: '',
+    },
+  ];
+}
 
 // Foto dokumentasi belum ada untuk Marine Conservation -- dipinjam dari
 // Sustainable Fisheries atas permintaan, sampai foto program ini sendiri
@@ -69,59 +70,49 @@ const GALLERY_IMAGES = [
   { src: slider4, alt: '' },
 ];
 
-const KEY_ACTIVITIES_BULLETS = [
-  'Developing and aligning policy, regulatory frameworks, and strategic planning at the national and provincial level;',
-  "Supporting effective management of Indonesia's first national offshore MPA in the Sulawesi Sea;",
-  'Assisting establishment and effective governance of MPAs and other area-based measure across the four target provinces;',
-  'Improving knowledge and capacity of the MPA, area managers, and national stakeholders;',
-  'Collecting time series data to measure conservation impact; and',
-  'Raising awareness and empowering local and nearby communities.',
-  'Supporting the early implementation of BBNJ Agreement through capacity building, analytical inputs, and documents',
-];
+function getKeyActivitiesBullets(t: Dictionary) {
+  return [
+    t.marineConservationKeyActivityBullet1,
+    t.marineConservationKeyActivityBullet2,
+    t.marineConservationKeyActivityBullet3,
+    t.marineConservationKeyActivityBullet4,
+    t.marineConservationKeyActivityBullet5,
+    t.marineConservationKeyActivityBullet6,
+    t.marineConservationKeyActivityBullet7,
+  ];
+}
 
 // Sama seperti RELATED_STORIES di Ocean Accounts/Sustainable Fisheries --
 // masih contoh, tapi fotonya dipinjam dari Sustainable Fisheries atas
 // permintaan, sampai foto berita Marine Conservation sendiri tersedia.
-const NUSACORE_DESCRIPTION =
-  'formally "Nature-based Solutions for Advancing Coastal Resilience in Central Java, Indonesia" — is a 3-year initiative (2025–2028) led by REKAM and funded through the UK FCDO\'s COAST Facility, responding to worsening coastal erosion, climate change impacts, and mangrove loss along Central Java\'s northern coast that past restoration efforts failed to resolve due to weak execution and reliance on external funding. The programme builds community-led, self-financing Nature-based Solutions that restore mangrove ecosystems while reducing poverty, pairing habitat rehabilitation with sustainable aquaculture — mangrove crabs, milkfish, green mussels, and shrimp — through a silvofishery model that lets conservation and livelihoods reinforce each other. Anchored by GEDSI and FPIC principles and capacity-building at the institutional level, NUSACORE\'s project site covers 17 sites in 11 districts and reaches 25 community groups across Central Java.';
-
-const NUSACORE_ACTIVITIES = [
-  'Mangrove ecosystem rehabilitation and restoration to rebuild natural coastal defenses and reverse erosion',
-  'Development of silvofishery pilots that pair mangrove conservation with sustainable aquaculture of mangrove crabs, milkfish, mussels, and shrimp',
-  'Training, mentoring, and value-added fisheries processing to build self-financing, poverty-reducing livelihoods less dependent on external funding',
-  'Application of GEDSI and FPIC principles to ensure equitable participation of women, youth, persons with disabilities, and other vulnerable groups',
-  'Institutional strengthening — coastal management standards, stakeholder capacity building, and climate-responsive planning policy across 25 community groups in 17 locations at 11 districts in Central Java',
-];
-
-const RELATED_STORIES: RelatedStory[] = [
-  {
-    image: cpSf1,
-    date: '28 Jul 2026',
-    category: 'Policy',
-    title: 'Aligning Science and Policy: Indonesia Strengthens Its Position for CITES AC34',
-    excerpt:
-      "FRCI supports the government's technical preparation ahead of the CITES Animals Committee session.",
-    href: '#',
-  },
-  {
-    image: cpSf2,
-    date: '14 Jul 2026',
-    category: 'Ocean Accounts',
-    title: "From Pilot Projects to National Policy: Aligning Ocean Accounts for Indonesia's Future",
-    excerpt:
-      'How years of pilot-site data collection are shaping a national ocean accounting framework.',
-    href: '#',
-  },
-  {
-    image: cpSf3,
-    date: '10 Jul 2026',
-    category: 'Conservation',
-    title: "Beyond Borders: Building Indonesia's Readiness for High Seas Conservation",
-    excerpt:
-      'FRCI examines what it will take for Indonesia to engage effectively in high seas governance.',
-    href: '#',
-  },
-];
+function getRelatedStories(t: Dictionary): RelatedStory[] {
+  return [
+    {
+      image: cpSf1,
+      date: '28 Jul 2026',
+      category: 'Policy',
+      title: t.marineConservationRelatedStory1Title,
+      excerpt: t.marineConservationRelatedStory1Excerpt,
+      href: '#',
+    },
+    {
+      image: cpSf2,
+      date: '14 Jul 2026',
+      category: 'Ocean Accounts',
+      title: t.marineConservationRelatedStory2Title,
+      excerpt: t.marineConservationRelatedStory2Excerpt,
+      href: '#',
+    },
+    {
+      image: cpSf3,
+      date: '10 Jul 2026',
+      category: 'Conservation',
+      title: t.marineConservationRelatedStory3Title,
+      excerpt: t.marineConservationRelatedStory3Excerpt,
+      href: '#',
+    },
+  ];
+}
 
 export default async function MarineConservationPage({
   params,
@@ -145,31 +136,23 @@ export default async function MarineConservationPage({
           { label: t.navProgram, href: '#' },
           { label: programLabel, href: NAV_ITEM.href },
         ]}
-        title="Marine conservation: Protecting the oceans to secure our shared future"
-        lead="Protecting Indonesia’s marine areas to halt biodiversity loss, sustain local fisheries, and combat climate change, ensuring resilient oceans for future generations."
+        title={t.marineConservationHeroTitle}
+        lead={t.marineConservationHeroLead}
         image={bgMarineConservation}
       />
 
       <ProgramIntro>
-        <p>
-          As the largest archipelago country, Indonesia sits together with other 16 megadiverse countries and is nested at the very heart of Coral Triangle – an epicenter of marine biodiversity. It hosts 76% of the world's coral species, provides home for 37% of the world's reef fish species, and ranks as the world's second-largest fisheries producer. Those highlight the importance of marine ecosystem conservation in Indonesia for ocean health, food security, and livelihoods, both at local and global scale. REKAM through its Fisheries Resource Center of Indonesia (FRCI) unit works with governments, conservation managers, civil society, and local communities to strengthen the policies, capacity, and participation needed for marine conservation areas to be effectively and sustainably managed.
-        </p>
-        <p>
-          Aligning with the global 30x30 target to protect 30% of marine areas by 2030 through MPAs and Other Effective area-based Conservation Measures (OECMs), FRCI collaborates with the Government of Indonesia (GoI) and key stakeholders to leverage the MPA Vision 2030 into the MPA & OECM Vision 2045 (30x45 Agenda). This updated roadmap integrates MPA establishment and expansion as well as OECM recognition to expand the conserved areas to 30% of Indonesia’s coastal and marine areas, totaling 97.5 million hectares, and effectively manage them by 2045. The 30x45 Agenda focuses on providing policy and regulatory framework, as well as guidelines for implementation of MPAs, and integration of OECMs or other area-based measures on the ground.
-        </p>
-        <p>
-          At the national level, FRCI streams the effort on (a) strengthening policy and regulatory through (b) robust science backing up, and (c) developing pathways for effective conservation actions on-site. The efforts include developing and aligning policy and regulatory frameworks, strategic planning, and supporting the effective management of Indonesia's first national offshore MPA in the Sulawesi Sea. At the provincial level, FRCI fully supports local governments in establishing and strengthening the effective, adaptive, and sustainable management of area-based conservation across four provinces: Central Java, South Sulawesi, West Nusa Tenggara, and Maluku. Supporting activities include the establishment of provincial MPAs, the development of required regulations and protocols, training and certification for MPA and area managers, technical assistance for on-site implementation, time series data collection to measure the impact of area management, and efforts to raise awareness and empower local communities within these areas.
-        </p>
-        <p>
-          Beyond the national level, FRCI also supports the GoI in implementing the UN Biodiversity Beyond National Jurisdiction (BBNJ) Treaty, with key focus on engagement in High Seas MPA establishment processes—as part of the effort towards 30x30.
-        </p>
+        <p>{t.marineConservationIntroP1}</p>
+        <p>{t.marineConservationIntroP2}</p>
+        <p>{t.marineConservationIntroP3}</p>
+        <p>{t.marineConservationIntroP4}</p>
       </ProgramIntro>
 
       <ProgramObjectives
         icon={marineConservationIcon}
-        eyebrow="Objective"
-        heading="How this program drives change"
-        objectives={OBJECTIVES}
+        eyebrow={t.marineConservationObjectiveEyebrow}
+        heading={t.marineConservationObjectivesHeading}
+        objectives={getObjectives(t)}
       >
         <ProgramGallery
           images={GALLERY_IMAGES}
@@ -181,25 +164,25 @@ export default async function MarineConservationPage({
       </ProgramObjectives>
 
       <ProgramFeatureRow
-        eyebrow="Key Activity"
+        eyebrow={t.marineConservationKeyActivityEyebrow}
         title=""
-        bullets={KEY_ACTIVITIES_BULLETS}
+        bullets={getKeyActivitiesBullets(t)}
         image={fotoKey}
       />
       <ProgramFeatureRow
-        eyebrow="Current Project & Initiative"
-        title="Scaling Effective Area-based Conservation for People & Ecosystems (SEASCAPE)"
+        eyebrow={t.marineConservationCurrentProjectEyebrow}
+        title={t.marineConservationCurrentProjectTitle}
         bullets={[
-          'Support the Government of Indonesia in fulfilling its global conservation commitments under the "30 by 45 Vision" policy framework.',
-          'Strengthening implementation, accelerating uptake, and generating more streamlined and measurable conservation, livelihood, and climate impacts.',
+          t.marineConservationCurrentProjectBullet1,
+          t.marineConservationCurrentProjectBullet2,
         ]}
         extraSections={[
           {
-            title: 'BBNJ Agreement Implementation in Indonesia',
+            title: t.marineConservationBbnjTitle,
             bullets: [
-              'Supported by the High Seas Alliance.',
-              'Support agenda development for national consultations',
-              'Increases local stakeholder capacity and engagement for BBNJ Agreement implementation.',
+              t.marineConservationBbnjBullet1,
+              t.marineConservationBbnjBullet2,
+              t.marineConservationBbnjBullet3,
             ],
           },
         ]}
@@ -210,41 +193,36 @@ export default async function MarineConservationPage({
       <div className="bg-primary text-primary-fg">
         <Container className="page-gutter pt-10 lg:pe-(--spacing-panel-gutter)">
           <p className="text-xs font-bold uppercase tracking-wider text-primary-fg/70">
-            Work Area
+            {t.marineConservationWorkAreaEyebrow}
           </p>
-          <h2 className="mt-1 text-2xl font-semibold md:text-3xl mb-7">Marine Protected Area (MPA)</h2>
+          <h2 className="mt-1 text-2xl font-semibold md:text-3xl mb-7">
+            {t.marineConservationWorkAreaHeading}
+          </h2>
         </Container>
         {/* Hanya kawasan tempat FRCI bekerja. Tanpa daftar putih ini peta
             menggambar seluruh 554 kawasan konservasi Indonesia -- benar sebagai
             data nasional, tapi section ini judulnya "Work Area". */}
         <IndonesiaMap
           theme="brand"
-          ariaLabel="Peta interaktif kawasan konservasi laut tempat FRCI bekerja"
+          ariaLabel={t.marineConservationMapAriaLabel}
           mpaNames={FRCI_CONSERVATION_AREA_NAMES}
         />
       </div>
 
-      <ProgramCrossCutting
-        eyebrow="Cross-cutting Program"
-        title="NUSACORE"
-        description={NUSACORE_DESCRIPTION}
-        activityLabel="Key Activity"
-        activities={NUSACORE_ACTIVITIES}
-        variant="white"
-      />
+      <ProgramNusacore />
 
       <ProgramRelatedStories
-        eyebrow="Related Stories"
-        heading="Where Marine Conservation making a difference"
-        stories={RELATED_STORIES}
+        eyebrow={t.marineConservationRelatedStoriesEyebrow}
+        heading={t.marineConservationRelatedStoriesHeading}
+        stories={getRelatedStories(t)}
         readStoryLabel={t.readStory}
       />
 
       <ProgramSupportCta
         image={fotoPulau2}
-        heading="Protect 97.5 million hectares of Indonesia's marine areas by 2045"
-        subheading="Beyond establishing protected areas, it is about making conservation work."
-        ctaLabel="SUPPORT US"
+        heading={t.marineConservationSupportHeading}
+        subheading={t.marineConservationSupportSubheading}
+        ctaLabel={t.marineConservationSupportCta}
         ctaHref="#"
       />
     </>
