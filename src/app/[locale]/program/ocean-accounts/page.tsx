@@ -169,7 +169,7 @@ export default async function OceanAccountsPage({
         reverse
       />
 
-      <ProgramNusacore />
+      <ProgramNusacore locale={locale} />
 
       <ProgramRelatedStories
         eyebrow={t.oceanAccountsRelatedStoriesEyebrow}
@@ -183,7 +183,7 @@ export default async function OceanAccountsPage({
         heading={t.oceanAccountsSupportHeading}
         subheading={t.oceanAccountsSupportSubheading}
         ctaLabel={t.oceanAccountsSupportCta}
-        ctaHref="#"
+        ctaHref="/kontak"
       />
     </>
   );

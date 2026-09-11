@@ -9,19 +9,19 @@ import yt1 from '@/assets/publication/yt1.png';
 import yt2 from '@/assets/publication/yt2.png';
 import yt3 from '@/assets/publication/yt3.png';
 import yt4 from '@/assets/publication/yt4.png';
+// Sampulnya render halaman pertama PDF-nya sendiri (belum ada aset sampul
+// terpisah untuk keempat produk ini), pola yang sama dengan
+// panduan-lepas-pantai.jpg -- dirender sekali lewat pdfjs-dist +
+// @napi-rs/canvas di luar repo.
+import liukangTangayaEncyclopedia from '@/assets/publication/liukang-tangaya-encyclopedia.jpg';
+import seagrassEcosystemModule from '@/assets/publication/seagrass-ecosystem-module.jpg';
+import turtleSeagrassStoryBook from '@/assets/publication/turtle-seagrass-story-book.jpg';
+import liukangTangayaMpaPoster from '@/assets/publication/liukang-tangaya-mpa-poster.jpg';
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { PublicationsSlider, type PublicationSlide } from '@/components/publications/PublicationsSlider';
 import { VideoSlider } from '@/components/publications/VideoSlider';
 import { FeaturedPublicationActions } from '@/components/publications/FeaturedPublicationActions';
-
-/** Tab dokumen ini murni tampilan (disabled), sama seperti sebelumnya --
- *  belum ada field `type` di src/data/publications.ts untuk benar-benar
- *  menyaring 5 publikasi nyata yang ada sekarang. Beda dari search+category
- *  di bawah, taksonomi ini ("Research Reports", dst.) tidak berhubungan sama
- *  sekali dengan `category` yang benar-benar ada pada tiap publikasi, jadi
- *  tidak bisa diaktifkan dengan jujur seperti kotak pencarian. */
-const DOCUMENT_TYPES = ['Research Reports', 'Policy Briefs', 'Field Guides', 'Data Sheets'];
 
 /** 8 kode WPP (Wilayah Pengelolaan Perikanan / Fisheries Management Area)
  *  ini yang membuat stat "8 FMAs Covered" di bawah punya arti -- 572, 712,
@@ -32,18 +32,37 @@ const DOCUMENT_TYPES = ['Research Reports', 'Policy Briefs', 'Field Guides', 'Da
  *  publikasi di src/data/publications.ts. */
 const FMAS = ['715', '718', '572', '712', '713', '714', '571', '573'];
 
+/** Tab dokumen ini murni tampilan (disabled), sama seperti sebelumnya --
+ *  belum ada field `type` di src/data/publications.ts untuk benar-benar
+ *  menyaring 5 publikasi nyata yang ada sekarang. Beda dari search+category
+ *  di bawah, taksonomi ini ("Research Reports", dst.) tidak berhubungan sama
+ *  sekali dengan `category` yang benar-benar ada pada tiap publikasi, jadi
+ *  tidak bisa diaktifkan dengan jujur seperti kotak pencarian. Labelnya
+ *  diambil dari `labels` (chrome UI, bukan konten editorial), jadi fungsi
+ *  ini butuh `t` dan dipanggil di dalam komponen, bukan konstanta modul. */
+function getDocumentTypes(t: Labels): string[] {
+  return [
+    t.docTypeResearchReports,
+    t.docTypePolicyBriefs,
+    t.docTypeFieldGuides,
+    t.docTypeDataSheets,
+  ];
+}
+
 /** Angka-angka ini masih tampilan, pola yang sama dengan
  *  `newsShowingPlaceholder` (sekarang sudah nyata) di /berita: jumlah
  *  publikasi/kategori/unduhan sungguhan jauh lebih kecil dari yang dirender
  *  di grid di bawah (baru 5 aset publikasi nyata), tapi stat card di
  *  rancangan acuan menunjukkan skala penuh koleksi yang dituju, bukan isi
  *  grid saat ini. */
-const PUBLICATION_STATS = [
-  { value: '23', label: 'Publications Available' },
-  { value: '6', label: 'Total Downloads' },
-  { value: '8', label: 'Document Categories' },
-  { value: String(FMAS.length), label: 'FMAs Covered' },
-];
+function getPublicationStats(t: Labels) {
+  return [
+    { value: '23', label: t.statAvailable },
+    { value: '6', label: t.statDownloads },
+    { value: '8', label: t.statCategories },
+    { value: String(FMAS.length), label: t.statFmas },
+  ];
+}
 
 /** Judul & href diambil dari isi sungguhan tiap thumbnail (lihat teks di
  *  atas gambarnya) -- BUKAN dikarang. "Ocean Accounts" reuse ID video yang
@@ -71,6 +90,35 @@ const VIDEOS = [
   },
 ];
 
+/** Sampul, kategori, dan judul diambil langsung dari isi asli tiap PDF di
+ *  public/documents/ (lihat komentar di atas soal render sampulnya). */
+const KNOWLEDGE_PRODUCTS: PublicationSlide[] = [
+  {
+    image: liukangTangayaEncyclopedia,
+    category: 'Education Book',
+    title: 'Liukang Tangaya at a Glance',
+    pdfUrl: '/documents/liukang-tangaya-encyclopedia.pdf',
+  },
+  {
+    image: seagrassEcosystemModule,
+    category: 'Education Book',
+    title: 'Introduction to Seagrass Ecosystem',
+    pdfUrl: '/documents/seagrass-ecosystem-module.pdf',
+  },
+  {
+    image: turtleSeagrassStoryBook,
+    category: 'Story Book',
+    title: "Documenting the Turtle's Steps in the Deep Blue Sea",
+    pdfUrl: '/documents/turtle-seagrass-story-book.pdf',
+  },
+  {
+    image: liukangTangayaMpaPoster,
+    category: 'Poster',
+    title: 'Liukang Tangaya Marine Protected Area Zones',
+    pdfUrl: '/documents/liukang-tangaya-mpa-poster.pdf',
+  },
+];
+
 /** Membuang diakritik dan menyeragamkan kapital, sama seperti SearchableSelect/lib/search. */
 function normalize(text: string): string {
   return text
@@ -84,8 +132,41 @@ type Labels = {
   navDiscover: string;
   navPublications: string;
   download: string;
+  read: string;
+  watch: string;
+  pdfUnavailable: string;
+  videoUnavailable: string;
+  close: string;
   galleryPrevious: string;
   galleryNext: string;
+  badge: string;
+  heroHeading: string;
+  heroBody: string;
+  searchLabel: string;
+  searchPlaceholder: string;
+  categoryLabel: string;
+  allCategoriesOption: string;
+  allTab: string;
+  docTypeResearchReports: string;
+  docTypePolicyBriefs: string;
+  docTypeFieldGuides: string;
+  docTypeDataSheets: string;
+  documentTypeNote: string;
+  statAvailable: string;
+  statDownloads: string;
+  statCategories: string;
+  statFmas: string;
+  featuredEyebrow: string;
+  featuredBody: string;
+  featuredDownloadCta: string;
+  featuredReadCta: string;
+  ourPublicationEyebrow: string;
+  ourPublicationHeading: string;
+  noResults: string;
+  knowledgeProductEyebrow: string;
+  knowledgeProductHeading: string;
+  videoEyebrow: string;
+  videoHeading: string;
 };
 
 type Props = {
@@ -93,7 +174,7 @@ type Props = {
   labels: Labels;
 };
 
-export function PublicationsExplorer({ publications, labels }: Props) {
+export function PublicationsExplorer({ publications, labels: t }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
 
@@ -110,10 +191,13 @@ export function PublicationsExplorer({ publications, labels }: Props) {
   }, [publications, search, category]);
 
   const breadcrumb: BreadcrumbItem[] = [
-    { label: labels.home, href: '/' },
-    { label: labels.navDiscover, href: '/discover/about-us' },
-    { label: labels.navPublications, href: '/discover/publications' },
+    { label: t.home, href: '/' },
+    { label: t.navDiscover, href: '/discover/about-us' },
+    { label: t.navPublications, href: '/discover/publications' },
   ];
+
+  const documentTypes = getDocumentTypes(t);
+  const publicationStats = getPublicationStats(t);
 
   return (
     <div className="relative isolate overflow-hidden bg-bg">
@@ -135,16 +219,15 @@ export function PublicationsExplorer({ publications, labels }: Props) {
         <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start">
           <div>
             <span className="inline-block rounded-full border border-secondary px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-secondary">
-              Open Access Publication
+              {t.badge}
             </span>
 
             <h1 className="mt-4 max-w-2xl text-4xl leading-tight text-primary sm:text-5xl">
-              All our numbers are open access
+              {t.heroHeading}
             </h1>
 
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted md:text-base">
-              Explore our technical reports, policy briefs, field guides, and data sheets from
-              FRCI&apos;s work across Indonesia&apos;s seas.
+              {t.heroBody}
             </p>
           </div>
 
@@ -157,14 +240,14 @@ export function PublicationsExplorer({ publications, labels }: Props) {
                 htmlFor="publications-search"
                 className="text-xs font-bold uppercase tracking-wide text-muted"
               >
-                Search Publications
+                {t.searchLabel}
               </label>
               <input
                 id="publications-search"
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search…"
+                placeholder={t.searchPlaceholder}
                 className="rounded-md border border-border bg-bg px-3 py-2 text-sm"
               />
             </div>
@@ -174,7 +257,7 @@ export function PublicationsExplorer({ publications, labels }: Props) {
                 htmlFor="publications-category"
                 className="text-xs font-bold uppercase tracking-wide text-muted"
               >
-                Category
+                {t.categoryLabel}
               </label>
               <select
                 id="publications-category"
@@ -182,7 +265,7 @@ export function PublicationsExplorer({ publications, labels }: Props) {
                 onChange={(event) => setCategory(event.target.value)}
                 className="rounded-md border border-border bg-bg px-3 py-2 text-sm"
               >
-                <option value="all">All Categories</option>
+                <option value="all">{t.allCategoriesOption}</option>
                 {categoryOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -209,10 +292,10 @@ export function PublicationsExplorer({ publications, labels }: Props) {
 
         <div className="relative mt-10 flex flex-wrap items-center gap-3 border-b border-border pb-4">
           <div className="relative pb-2">
-            <span className="text-sm font-bold uppercase tracking-wide text-primary">All</span>
+            <span className="text-sm font-bold uppercase tracking-wide text-primary">{t.allTab}</span>
             <span aria-hidden className="absolute inset-x-0 -bottom-4 h-0.5 bg-secondary" />
           </div>
-          {DOCUMENT_TYPES.map((type) => (
+          {documentTypes.map((type) => (
             <button
               key={type}
               type="button"
@@ -224,12 +307,12 @@ export function PublicationsExplorer({ publications, labels }: Props) {
             </button>
           ))}
           <p id="publications-document-type-note" className="sr-only">
-            Document type filter is not available yet.
+            {t.documentTypeNote}
           </p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4">
-          {PUBLICATION_STATS.map((stat, index) => (
+          {publicationStats.map((stat, index) => (
             <div key={stat.label} className="relative px-4 py-8 text-center">
               {index > 0 ? (
                 <span
@@ -257,7 +340,7 @@ export function PublicationsExplorer({ publications, labels }: Props) {
 
         <Container className="page-gutter relative py-16 lg:pe-(--spacing-panel-gutter) lg:py-20">
           <p className="text-xs font-bold uppercase tracking-wider text-primary-fg/70">
-            Featured Publication
+            {t.featuredEyebrow}
           </p>
 
           <div className="mt-6 grid gap-10 lg:grid-cols-[28rem_1fr] lg:items-center">
@@ -280,16 +363,17 @@ export function PublicationsExplorer({ publications, labels }: Props) {
                 State of Indonesia&apos;s fisheries management areas — Annual Report 2025
               </h2>
               <p className="mt-3 max-w-xl text-sm text-primary-fg/85 md:text-base">
-                The full-year data account across all 8 FMAs — catch trends, ecosystem
-                indicators, and community monitoring coverage.
+                {t.featuredBody}
               </p>
 
               <FeaturedPublicationActions
                 pdfUrl="/documents/state-of-indonesia.pdf"
                 title="State of Indonesia's fisheries management areas — Annual Report 2025"
                 downloadFileName="state-of-indonesia-annual-report-2025.pdf"
-                unavailableLabel="This PDF is not available yet."
-                closeLabel="Close"
+                downloadLabel={t.featuredDownloadCta}
+                readLabel={t.featuredReadCta}
+                unavailableLabel={t.pdfUnavailable}
+                closeLabel={t.close}
               />
             </div>
           </div>
@@ -299,23 +383,23 @@ export function PublicationsExplorer({ publications, labels }: Props) {
       <div className="bg-surface">
         <Container className="page-gutter relative py-16 lg:pe-(--spacing-panel-gutter)">
           <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">
-            Our Publication
+            {t.ourPublicationEyebrow}
           </p>
           <h2 className="mb-8 text-3xl font-semibold text-primary">
-            The results of our work and collaboration
+            {t.ourPublicationHeading}
           </h2>
 
           {filtered.length === 0 ? (
-            <p className="text-muted">No publications match this search.</p>
+            <p className="text-muted">{t.noResults}</p>
           ) : (
             <PublicationsSlider
               publications={filtered}
-              downloadLabel={labels.download}
-              readLabel="Read"
-              previousLabel={labels.galleryPrevious}
-              nextLabel={labels.galleryNext}
-              pdfUnavailableLabel="This PDF is not available yet."
-              closeLabel="Close"
+              downloadLabel={t.download}
+              readLabel={t.read}
+              previousLabel={t.galleryPrevious}
+              nextLabel={t.galleryNext}
+              pdfUnavailableLabel={t.pdfUnavailable}
+              closeLabel={t.close}
             />
           )}
         </Container>
@@ -324,19 +408,40 @@ export function PublicationsExplorer({ publications, labels }: Props) {
       <div className="bg-surface">
         <Container className="page-gutter relative py-16 lg:pe-(--spacing-panel-gutter)">
           <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">
-            Video Publication
+            {t.knowledgeProductEyebrow}
           </p>
           <h2 className="mb-8 text-3xl font-semibold text-primary">
-            Watch and learn more about our ocean
+            {t.knowledgeProductHeading}
+          </h2>
+
+          <PublicationsSlider
+            publications={KNOWLEDGE_PRODUCTS}
+            downloadLabel={t.download}
+            readLabel={t.read}
+            previousLabel={t.galleryPrevious}
+            nextLabel={t.galleryNext}
+            pdfUnavailableLabel={t.pdfUnavailable}
+            closeLabel={t.close}
+          />
+        </Container>
+      </div>
+
+      <div className="bg-surface">
+        <Container className="page-gutter relative py-16 lg:pe-(--spacing-panel-gutter)">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">
+            {t.videoEyebrow}
+          </p>
+          <h2 className="mb-8 text-3xl font-semibold text-primary">
+            {t.videoHeading}
           </h2>
 
           <VideoSlider
             videos={VIDEOS}
-            watchLabel="Watch"
-            previousLabel={labels.galleryPrevious}
-            nextLabel={labels.galleryNext}
-            unavailableLabel="This video is not available yet."
-            closeLabel="Close"
+            watchLabel={t.watch}
+            previousLabel={t.galleryPrevious}
+            nextLabel={t.galleryNext}
+            unavailableLabel={t.videoUnavailable}
+            closeLabel={t.close}
           />
         </Container>
       </div>

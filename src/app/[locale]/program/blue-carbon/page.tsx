@@ -161,7 +161,7 @@ export default async function BlueCarbonPage({
         reverse
       />
 
-      <ProgramNusacore />
+      <ProgramNusacore locale={locale} />
 
       <ProgramRelatedStories
         eyebrow={t.blueCarbonRelatedStoriesEyebrow}
@@ -175,7 +175,7 @@ export default async function BlueCarbonPage({
         heading={t.blueCarbonSupportHeading}
         subheading={t.blueCarbonSupportSubheading}
         ctaLabel={t.blueCarbonSupportCta}
-        ctaHref="#"
+        ctaHref="/kontak"
       />
     </>
   );

@@ -34,6 +34,8 @@ export type CommonDictionary = {
   nextSlide: string;
   read: string;
   pdfUnavailable: string;
+  watch: string;
+  videoUnavailable: string;
   close: string;
   download: string;
   galleryPrevious: string;
@@ -107,6 +109,8 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     nextSlide: 'Program berikutnya',
     read: 'Baca',
     pdfUnavailable: 'PDF ini belum tersedia.',
+    watch: 'Tonton',
+    videoUnavailable: 'Video ini belum tersedia.',
     close: 'Tutup',
     download: 'Unduh',
     galleryPrevious: 'Gambar sebelumnya',
@@ -182,6 +186,8 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     nextSlide: 'Next program',
     read: 'Read',
     pdfUnavailable: 'This PDF is not available yet.',
+    watch: 'Watch',
+    videoUnavailable: 'This video is not available yet.',
     close: 'Close',
     download: 'Download',
     galleryPrevious: 'Previous image',

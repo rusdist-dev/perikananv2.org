@@ -13,49 +13,47 @@ import iconCrab from '@/assets/nusacore/i-crab.svg';
 import iconShellfish from '@/assets/nusacore/i-shellfish.svg';
 import iconMilkfish from '@/assets/nusacore/i-milkfish.svg';
 import iconShrimp from '@/assets/nusacore/i-shrimp.svg';
+import { getDictionary, type Dictionary } from '@/i18n/dictionary';
+import type { Locale } from '@/i18n/config';
 
-const ABOUT_POINTS = [
-  {
-    icon: iconMangrove,
-    lead: 'Restoring mangrove ecosystems',
-    rest: 'to address erosion and climate change.',
-  },
-  {
-    icon: iconCommunities,
-    lead: 'Strengthening the capacity and self-reliance of coastal communities',
-    rest: 'through training, sustainable business models, and inclusive governance grounded in GEDSI and FPIC principles.',
-  },
-  {
-    icon: iconStakeholder,
-    lead: 'Strengthening institutional capacity',
-    rest: 'through coastal management standards, stakeholder capacity building, and climate-responsive planning policy.',
-  },
-  {
-    icon: iconRp,
-    lead: 'Aligning conservation with economic wellbeing,',
-    rest: 'by integrating nature restoration with silvofishery-based business opportunities such as mangrove crab, milkfish, shrimp, and shellfish farming.',
-  },
-];
+function getAboutPoints(t: Dictionary) {
+  return [
+    { icon: iconMangrove, lead: t.nusacorePoint1Lead, rest: t.nusacorePoint1Rest },
+    { icon: iconCommunities, lead: t.nusacorePoint2Lead, rest: t.nusacorePoint2Rest },
+    { icon: iconStakeholder, lead: t.nusacorePoint3Lead, rest: t.nusacorePoint3Rest },
+    { icon: iconRp, lead: t.nusacorePoint4Lead, rest: t.nusacorePoint4Rest },
+  ];
+}
 
-const IMPACT_STATS = [
-  { icon: iconLocation, value: '17', label: 'Locations in Central Java' },
-  { icon: iconPeople, value: '11', label: 'Districts reached' },
-  { icon: iconHand, value: '1.700', label: 'Change agents involved' },
-  { icon: iconAreas, value: '25', label: 'Areas supported' },
-];
+function getImpactStats(t: Dictionary) {
+  return [
+    { icon: iconLocation, value: t.nusacoreStatLocationsValue, label: t.nusacoreStatLocationsLabel },
+    { icon: iconPeople, value: t.nusacoreStatDistrictsValue, label: t.nusacoreStatDistrictsLabel },
+    { icon: iconHand, value: t.nusacoreStatChangeAgentsValue, label: t.nusacoreStatChangeAgentsLabel },
+    { icon: iconAreas, value: t.nusacoreStatAreasValue, label: t.nusacoreStatAreasLabel },
+  ];
+}
 
-const COMMODITIES = [
-  { icon: iconCrab, label: 'Mangrove Crab' },
-  { icon: iconShellfish, label: 'Shellfish' },
-  { icon: iconMilkfish, label: 'Milkfish' },
-  { icon: iconShrimp, label: 'Shrimp' },
-];
+function getCommodities(t: Dictionary) {
+  return [
+    { icon: iconCrab, label: t.nusacoreCommodityMangroveCrab },
+    { icon: iconShellfish, label: t.nusacoreCommodityShellfish },
+    { icon: iconMilkfish, label: t.nusacoreCommodityMilkfish },
+    { icon: iconShrimp, label: t.nusacoreCommodityShrimp },
+  ];
+}
 
 /** NUSACORE adalah satu program lintas-isu yang sama persis di keempat
  *  halaman yang menyebutnya (Ocean Accounts, Sustainable Fisheries, Marine
- *  Conservation, Blue Carbon) -- jadi kontennya sengaja ditulis tetap di
- *  sini, bukan lewat props/dictionary per halaman seperti section lain. */
-export function ProgramNusacore() {
+ *  Conservation, Blue Carbon) -- jadi kontennya sengaja diambil langsung
+ *  dari dictionary lewat `locale` di sini, bukan lewat props per halaman
+ *  seperti section lain. */
+export function ProgramNusacore({ locale }: { locale: Locale }) {
+  const t = getDictionary(locale);
+  const ABOUT_POINTS = getAboutPoints(t);
+  const IMPACT_STATS = getImpactStats(t);
+  const COMMODITIES = getCommodities(t);
+
   return (
     <div className="bg-bg text-primary">
       {/* Tanpa Container/page-gutter -- section ini sengaja full-bleed sampai
@@ -64,7 +62,7 @@ export function ProgramNusacore() {
           satu), full-bleed itu justru bikin teks dan ikon menempel ke tepi
           layar -- jadi px-5 (sama besarnya dengan page-gutter) dipakai
           sampai lg, lalu dibuang lagi supaya desktop tetap full-bleed. */}
-      <div className="py-12 lg:py-16">
+      <div className="pb-12 lg:pb-16">
         <div className="grid grid-cols-1 gap-10 px-5 lg:grid-cols-[0.85fr_1.3fr_1fr] lg:px-0">
           {/* Lebar penuh mengikuti kolom, tinggi menyesuaikan rasio asli --
               object-cover di sini akan memaksa gambar (potret, sangat tinggi)
@@ -72,21 +70,18 @@ export function ProgramNusacore() {
               sehingga judul "NUSACORE" di dalam gambar terpotong. */}
           <Image
             src={banner}
-            alt="Nature-based Solutions for Advancing Coastal Resilience (NUSACORE)"
+            alt={t.nusacoreBannerAlt}
             sizes="(min-width: 1024px) 320px, 100vw"
             className="h-full w-full rounded-2xl"
           />
 
-          <div>
-            <h2 className="text-2xl font-bold md:text-3xl">ABOUT NUSACORE</h2>
+          <div className="pt-12 lg:pt-16">
+            <h2 className="text-2xl font-bold md:text-3xl">{t.nusacoreAboutHeading}</h2>
             <p className="mt-4 text-sm leading-relaxed text-black md:text-base">
-              Coastal erosion, climate change impacts, and mangrove ecosystem loss continue to
-              pressure Central Java&apos;s northern coast, while previous restoration efforts have
-              often been hindered by weak program continuity and dependence on external funding.
+              {t.nusacoreAboutP1}
             </p>
             <p className="mt-4 text-sm leading-relaxed text-black md:text-base">
-              Through a nature-based solutions approach, NUSACORE aims to strengthen coastal
-              resilience in Central Java by:
+              {t.nusacoreAboutP2}
             </p>
 
             <ul className="mt-6 flex flex-col gap-5">
@@ -104,14 +99,14 @@ export function ProgramNusacore() {
 
             <Image
               src={gallery}
-              alt="Kegiatan NUSACORE di lapangan"
+              alt={t.nusacoreGalleryAlt}
               sizes="(min-width: 1024px) 500px, 100vw"
               className="mt-8 h-auto w-full rounded-lg"
             />
           </div>
 
-          <div>
-            <h3 className="text-lg font-bold tracking-wide">IMPACT & COVERAGE</h3>
+          <div className="pt-12 lg:pt-16">
+            <h3 className="text-lg font-bold tracking-wide">{t.nusacoreImpactHeading}</h3>
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6">
               {IMPACT_STATS.map((stat) => (
                 <div key={stat.label} className="flex items-center gap-3">
@@ -126,7 +121,7 @@ export function ProgramNusacore() {
               ))}
             </div>
 
-            <h3 className="mt-8 text-lg font-bold tracking-wide">FLAGSHIP COMMODITIES</h3>
+            <h3 className="mt-8 text-lg font-bold tracking-wide">{t.nusacoreCommoditiesHeading}</h3>
             <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
               {COMMODITIES.map((item) => (
                 <div key={item.label} className="flex items-center gap-3">
@@ -139,12 +134,8 @@ export function ProgramNusacore() {
             </div>
 
             <div className="mt-8 rounded-xl bg-primary p-5 text-sm leading-relaxed text-primary-fg">
-              <span className="font-bold">
-                Nature-based Solutions for Advancing Coastal Resilience (NUSACORE)
-              </span>{' '}
-              is a project implemented by REKAM Nusantara as a partner of the Foreign,
-              Commonwealth &amp; Development Office (FCDO) – UK Government, funded through the
-              COAST Facility Indonesia grant scheme.
+              <span className="font-bold">{t.nusacoreCreditName}</span>
+              {t.nusacoreCreditText}
             </div>
           </div>
         </div>

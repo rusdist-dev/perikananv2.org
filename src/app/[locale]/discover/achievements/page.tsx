@@ -369,12 +369,15 @@ export default async function AchievementsPage({ params }: { params: Promise<{ l
             >
               {t.achievementsCtaExplorePublications}
             </AppLink>
+            {/* Tombol "Download Data" disembunyikan sementara atas permintaan --
+                belum ada berkas data yang siap diunduh di baliknya.
             <AppLink
               href="#"
               className="inline-flex w-fit items-center gap-2 bg-secondary px-6 py-3 text-xs font-bold uppercase tracking-wide text-secondary-fg hover:opacity-90"
             >
               {t.achievementsCtaDownloadData} &darr;
             </AppLink>
+            */}
           </div>
         </div>
       </div>

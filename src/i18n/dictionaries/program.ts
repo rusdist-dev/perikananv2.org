@@ -13,6 +13,39 @@ export type ProgramDictionary = {
   navBlueCarbon: string;
   readStory: string;
 
+  // NUSACORE -- section identik dipakai di 4 halaman program (Ocean
+  // Accounts, Sustainable Fisheries, Marine Conservation, Blue Carbon)
+  // lewat ProgramNusacore, jadi teksnya di sini, bukan per-halaman.
+  nusacoreBannerAlt: string;
+  nusacoreAboutHeading: string;
+  nusacoreAboutP1: string;
+  nusacoreAboutP2: string;
+  nusacorePoint1Lead: string;
+  nusacorePoint1Rest: string;
+  nusacorePoint2Lead: string;
+  nusacorePoint2Rest: string;
+  nusacorePoint3Lead: string;
+  nusacorePoint3Rest: string;
+  nusacorePoint4Lead: string;
+  nusacorePoint4Rest: string;
+  nusacoreGalleryAlt: string;
+  nusacoreImpactHeading: string;
+  nusacoreStatLocationsValue: string;
+  nusacoreStatLocationsLabel: string;
+  nusacoreStatDistrictsValue: string;
+  nusacoreStatDistrictsLabel: string;
+  nusacoreStatChangeAgentsValue: string;
+  nusacoreStatChangeAgentsLabel: string;
+  nusacoreStatAreasValue: string;
+  nusacoreStatAreasLabel: string;
+  nusacoreCommoditiesHeading: string;
+  nusacoreCommodityMangroveCrab: string;
+  nusacoreCommodityShellfish: string;
+  nusacoreCommodityMilkfish: string;
+  nusacoreCommodityShrimp: string;
+  nusacoreCreditName: string;
+  nusacoreCreditText: string;
+
   // Ocean Accounts
   oceanAccountsHeroTitle: string;
   oceanAccountsHeroLead: string;
@@ -289,6 +322,42 @@ export const programDictionary: Record<Locale, ProgramDictionary> = {
     navSpeciesConservation: 'Konservasi Spesies',
     navBlueCarbon: 'Karbon Biru',
     readStory: 'Baca Kisahnya',
+
+    nusacoreBannerAlt: 'Solusi Berbasis Alam untuk Ketahanan Pesisir (NUSACORE)',
+    nusacoreAboutHeading: 'TENTANG NUSACORE',
+    nusacoreAboutP1:
+      'Abrasi pantai, dampak perubahan iklim, dan hilangnya ekosistem mangrove terus menekan pesisir utara Jawa Tengah, sementara upaya restorasi sebelumnya kerap terkendala oleh lemahnya keberlanjutan program dan ketergantungan pada pendanaan eksternal.',
+    nusacoreAboutP2:
+      'Melalui pendekatan solusi berbasis alam, NUSACORE bertujuan memperkuat ketahanan pesisir Jawa Tengah dengan cara:',
+    nusacorePoint1Lead: 'Memulihkan ekosistem mangrove',
+    nusacorePoint1Rest: 'untuk mengatasi abrasi dan perubahan iklim.',
+    nusacorePoint2Lead: 'Memperkuat kapasitas dan kemandirian masyarakat pesisir',
+    nusacorePoint2Rest:
+      'melalui pelatihan, model bisnis berkelanjutan, dan tata kelola inklusif yang berlandaskan prinsip GEDSI dan FPIC.',
+    nusacorePoint3Lead: 'Memperkuat kapasitas kelembagaan',
+    nusacorePoint3Rest:
+      'melalui standar pengelolaan pesisir, penguatan kapasitas pemangku kepentingan, dan kebijakan perencanaan yang responsif terhadap iklim.',
+    nusacorePoint4Lead: 'Menyelaraskan konservasi dengan kesejahteraan ekonomi,',
+    nusacorePoint4Rest:
+      'dengan mengintegrasikan restorasi alam bersama peluang usaha berbasis silvofishery seperti budi daya kepiting bakau, bandeng, udang, dan kerang.',
+    nusacoreGalleryAlt: 'Kegiatan NUSACORE di lapangan',
+    nusacoreImpactHeading: 'DAMPAK & CAKUPAN',
+    nusacoreStatLocationsValue: '17',
+    nusacoreStatLocationsLabel: 'Lokasi di Jawa Tengah',
+    nusacoreStatDistrictsValue: '11',
+    nusacoreStatDistrictsLabel: 'Kabupaten/kota terjangkau',
+    nusacoreStatChangeAgentsValue: '1.700',
+    nusacoreStatChangeAgentsLabel: 'Agen perubahan terlibat',
+    nusacoreStatAreasValue: '25',
+    nusacoreStatAreasLabel: 'Wilayah yang didukung',
+    nusacoreCommoditiesHeading: 'KOMODITAS UNGGULAN',
+    nusacoreCommodityMangroveCrab: 'Kepiting Bakau',
+    nusacoreCommodityShellfish: 'Kerang',
+    nusacoreCommodityMilkfish: 'Bandeng',
+    nusacoreCommodityShrimp: 'Udang',
+    nusacoreCreditName: 'Nature-based Solutions for Advancing Coastal Resilience (NUSACORE)',
+    nusacoreCreditText:
+      ' adalah proyek yang dilaksanakan oleh REKAM Nusantara sebagai mitra Foreign, Commonwealth & Development Office (FCDO) – Pemerintah Inggris, didanai melalui skema hibah COAST Facility Indonesia.',
 
     oceanAccountsHeroTitle: 'Ocean Accounts: Mengukur apa yang menopang kehidupan kita',
     oceanAccountsHeroLead:
@@ -709,6 +778,42 @@ export const programDictionary: Record<Locale, ProgramDictionary> = {
     navSpeciesConservation: 'Species Conservation',
     navBlueCarbon: 'Blue Carbon',
     readStory: 'Read Story',
+
+    nusacoreBannerAlt: 'Nature-based Solutions for Advancing Coastal Resilience (NUSACORE)',
+    nusacoreAboutHeading: 'ABOUT NUSACORE',
+    nusacoreAboutP1:
+      "Coastal erosion, climate change impacts, and mangrove ecosystem loss continue to pressure Central Java's northern coast, while previous restoration efforts have often been hindered by weak program continuity and dependence on external funding.",
+    nusacoreAboutP2:
+      'Through a nature-based solutions approach, NUSACORE aims to strengthen coastal resilience in Central Java by:',
+    nusacorePoint1Lead: 'Restoring mangrove ecosystems',
+    nusacorePoint1Rest: 'to address erosion and climate change.',
+    nusacorePoint2Lead: 'Strengthening the capacity and self-reliance of coastal communities',
+    nusacorePoint2Rest:
+      'through training, sustainable business models, and inclusive governance grounded in GEDSI and FPIC principles.',
+    nusacorePoint3Lead: 'Strengthening institutional capacity',
+    nusacorePoint3Rest:
+      'through coastal management standards, stakeholder capacity building, and climate-responsive planning policy.',
+    nusacorePoint4Lead: 'Aligning conservation with economic wellbeing,',
+    nusacorePoint4Rest:
+      'by integrating nature restoration with silvofishery-based business opportunities such as mangrove crab, milkfish, shrimp, and shellfish farming.',
+    nusacoreGalleryAlt: 'NUSACORE field activities',
+    nusacoreImpactHeading: 'IMPACT & COVERAGE',
+    nusacoreStatLocationsValue: '17',
+    nusacoreStatLocationsLabel: 'Locations in Central Java',
+    nusacoreStatDistrictsValue: '11',
+    nusacoreStatDistrictsLabel: 'Districts reached',
+    nusacoreStatChangeAgentsValue: '1,700',
+    nusacoreStatChangeAgentsLabel: 'Change agents involved',
+    nusacoreStatAreasValue: '25',
+    nusacoreStatAreasLabel: 'Areas supported',
+    nusacoreCommoditiesHeading: 'FLAGSHIP COMMODITIES',
+    nusacoreCommodityMangroveCrab: 'Mangrove Crab',
+    nusacoreCommodityShellfish: 'Shellfish',
+    nusacoreCommodityMilkfish: 'Milkfish',
+    nusacoreCommodityShrimp: 'Shrimp',
+    nusacoreCreditName: 'Nature-based Solutions for Advancing Coastal Resilience (NUSACORE)',
+    nusacoreCreditText:
+      ' is a project implemented by REKAM Nusantara as a partner of the Foreign, Commonwealth & Development Office (FCDO) – UK Government, funded through the COAST Facility Indonesia grant scheme.',
 
     oceanAccountsHeroTitle: 'Ocean accounts: Measuring what sustains our lives',
     oceanAccountsHeroLead:

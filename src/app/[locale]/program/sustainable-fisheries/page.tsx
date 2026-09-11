@@ -157,7 +157,7 @@ export default async function SustainableFisheriesPage({
         reverse
       />
 
-      <ProgramNusacore />
+      <ProgramNusacore locale={locale} />
 
       <ProgramRelatedStories
         eyebrow={t.sustainableFisheriesRelatedStoriesEyebrow}
@@ -171,7 +171,7 @@ export default async function SustainableFisheriesPage({
         heading={t.sustainableFisheriesSupportHeading}
         subheading={t.sustainableFisheriesSupportSubheading}
         ctaLabel={t.sustainableFisheriesSupportCta}
-        ctaHref="#"
+        ctaHref="/kontak"
       />
     </>
   );

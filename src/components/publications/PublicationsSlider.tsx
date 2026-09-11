@@ -59,7 +59,7 @@ export function PublicationsSlider({
         closeLabel={closeLabel}
         onClose={() => setOpenIndex(null)}
       />
-    <div className="relative px-6 sm:px-8">
+    <div className="relative px-9 sm:px-12">
       <Swiper
         modules={[Navigation]}
         loop
@@ -139,7 +139,7 @@ export function PublicationsSlider({
       <button
         type="button"
         onClick={() => swiperRef.current?.slidePrev()}
-        className="tap-target absolute start-0 top-1/2 z-10 -translate-y-1/2 text-4xl text-secondary hover:opacity-75"
+        className="tap-target absolute start-0 top-1/2 z-10 -translate-y-1/2 text-5xl text-secondary hover:opacity-75"
       >
         <Icon id="left-arrow" />
         <span className="sr-only">{previousLabel}</span>
@@ -147,7 +147,7 @@ export function PublicationsSlider({
       <button
         type="button"
         onClick={() => swiperRef.current?.slideNext()}
-        className="tap-target absolute end-0 top-1/2 z-10 -translate-y-1/2 text-4xl text-secondary hover:opacity-75"
+        className="tap-target absolute end-0 top-1/2 z-10 -translate-y-1/2 text-5xl text-secondary hover:opacity-75"
       >
         <Icon id="right-arrow" />
         <span className="sr-only">{nextLabel}</span>

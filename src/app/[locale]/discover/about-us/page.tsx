@@ -14,8 +14,8 @@ import fotoEko from '@/assets/foto-tim/foto_eko.png';
 import wave2 from '@/assets/banner/wave2.png';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import { Container } from '@/components/layout/Container';
-import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { TeamProfileButton } from '@/components/discover/TeamProfileButton';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
@@ -184,15 +184,15 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
               <p className="text-xs font-bold uppercase tracking-wide text-primary-fg/70">{t.aboutUsTeamMemberTag}</p>
               <p className="text-sm font-bold">{member.name}</p>
               <p className="text-xs text-primary-fg/85">{member.role}</p>
-              {/* Belum ada halaman profil individu -- href="#" menyatakan itu
-                  apa adanya, sama seperti tombol placeholder lain di beranda,
-                  alih-alih menautkan ke rute yang belum dibangun. */}
-              <AppLink
-                href="#"
+              {/* Belum ada deskripsi profil individu -- untuk sementara
+                  disamakan dengan jabatannya (member.role) sampai deskripsi
+                  sungguhan ada. */}
+              <TeamProfileButton
+                member={{ ...member, description: member.role }}
+                label={t.aboutUsProfileCta}
+                closeLabel={t.close}
                 className="mt-auto inline-flex w-fit items-center rounded-md border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
-              >
-                {t.aboutUsProfileCta}
-              </AppLink>
+              />
             </div>
           </div>
         ))}

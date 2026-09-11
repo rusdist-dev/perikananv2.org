@@ -209,7 +209,7 @@ export default async function MarineConservationPage({
         />
       </div>
 
-      <ProgramNusacore />
+      <ProgramNusacore locale={locale} />
 
       <ProgramRelatedStories
         eyebrow={t.marineConservationRelatedStoriesEyebrow}
@@ -223,7 +223,7 @@ export default async function MarineConservationPage({
         heading={t.marineConservationSupportHeading}
         subheading={t.marineConservationSupportSubheading}
         ctaLabel={t.marineConservationSupportCta}
-        ctaHref="#"
+        ctaHref="/kontak"
       />
     </>
   );

@@ -125,6 +125,36 @@ export type DiscoverDictionary = {
   jogoLautHeroTitle: string;
   jogoLautHeroLead: string;
 
+  // --- publications ---
+  publicationsBadge: string;
+  publicationsHeroHeading: string;
+  publicationsHeroBody: string;
+  publicationsSearchLabel: string;
+  publicationsSearchPlaceholder: string;
+  publicationsCategoryLabel: string;
+  publicationsAllCategoriesOption: string;
+  publicationsAllTab: string;
+  publicationsDocTypeResearchReports: string;
+  publicationsDocTypePolicyBriefs: string;
+  publicationsDocTypeFieldGuides: string;
+  publicationsDocTypeDataSheets: string;
+  publicationsDocumentTypeNote: string;
+  publicationsStatAvailable: string;
+  publicationsStatDownloads: string;
+  publicationsStatCategories: string;
+  publicationsStatFmas: string;
+  publicationsFeaturedEyebrow: string;
+  publicationsFeaturedBody: string;
+  publicationsFeaturedDownloadCta: string;
+  publicationsFeaturedReadCta: string;
+  publicationsOurPublicationEyebrow: string;
+  publicationsOurPublicationHeading: string;
+  publicationsNoResults: string;
+  publicationsKnowledgeProductEyebrow: string;
+  publicationsKnowledgeProductHeading: string;
+  publicationsVideoEyebrow: string;
+  publicationsVideoHeading: string;
+
   // --- our-team ---
   ourTeamHeroBody: string;
   ourTeamHeroStatMembers: string;
@@ -315,6 +345,37 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     jogoLautHeroLead:
       'Platform pemantauan ekosistem pesisir secara real-time yang dikembangkan oleh Rekam Nusantara Foundation bersama IPB University, Kementerian Kelautan dan Perikanan, BRIN, Pemerintah Provinsi Jawa Tengah, dan Kelompok Masyarakat',
 
+    publicationsBadge: 'Publikasi Akses Terbuka',
+    publicationsHeroHeading: 'Semua angka kami terbuka untuk diakses',
+    publicationsHeroBody:
+      'Jelajahi laporan teknis, ringkasan kebijakan, panduan lapangan, dan lembar data dari kerja FRCI di seluruh perairan Indonesia.',
+    publicationsSearchLabel: 'Cari Publikasi',
+    publicationsSearchPlaceholder: 'Cari…',
+    publicationsCategoryLabel: 'Kategori',
+    publicationsAllCategoriesOption: 'Semua Kategori',
+    publicationsAllTab: 'Semua',
+    publicationsDocTypeResearchReports: 'Laporan Penelitian',
+    publicationsDocTypePolicyBriefs: 'Ringkasan Kebijakan',
+    publicationsDocTypeFieldGuides: 'Panduan Lapangan',
+    publicationsDocTypeDataSheets: 'Lembar Data',
+    publicationsDocumentTypeNote: 'Filter jenis dokumen belum tersedia.',
+    publicationsStatAvailable: 'Publikasi Tersedia',
+    publicationsStatDownloads: 'Total Unduhan',
+    publicationsStatCategories: 'Kategori Dokumen',
+    publicationsStatFmas: 'WPP Tercakup',
+    publicationsFeaturedEyebrow: 'Publikasi Unggulan',
+    publicationsFeaturedBody:
+      'Data satu tahun penuh di seluruh 8 WPP — tren tangkapan, indikator ekosistem, dan cakupan pemantauan masyarakat.',
+    publicationsFeaturedDownloadCta: 'Unduh PDF',
+    publicationsFeaturedReadCta: 'Baca Daring',
+    publicationsOurPublicationEyebrow: 'Publikasi Kami',
+    publicationsOurPublicationHeading: 'Hasil kerja dan kolaborasi kami',
+    publicationsNoResults: 'Tidak ada publikasi yang cocok dengan pencarian ini.',
+    publicationsKnowledgeProductEyebrow: 'Produk Pengetahuan',
+    publicationsKnowledgeProductHeading: 'Mengubah riset kami menjadi pengetahuan untuk semua',
+    publicationsVideoEyebrow: 'Publikasi Video',
+    publicationsVideoHeading: 'Tonton dan pelajari lebih lanjut tentang laut kita',
+
     ourTeamHeroBody:
       'terdiri dari peneliti dan aktivis konservasi perikanan dan kelautan dengan lebih dari dua dekade pengalaman bekerja bersama masyarakat, pemerintah, dan sektor swasta, melalui pengelolaan data, pengembangan pengetahuan dan kapasitas, serta advokasi kebijakan di bidang kelautan dan perikanan.',
     ourTeamHeroStatMembers: 'Anggota tim',
@@ -500,6 +561,37 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     jogoLautHeroTitle: 'Jogo Laut: Integrated Research Station - Cilacap, Central Java',
     jogoLautHeroLead:
       'A real-time coastal ecosystem monitoring platform developed by Rekam Nusantara Foundation together with IPB University, the Ministry of Marine Affairs and Fisheries, BRIN, the Central Java Provincial Government, and Community Groups',
+
+    publicationsBadge: 'Open Access Publication',
+    publicationsHeroHeading: 'All our numbers are open access',
+    publicationsHeroBody:
+      "Explore our technical reports, policy briefs, field guides, and data sheets from FRCI's work across Indonesia's seas.",
+    publicationsSearchLabel: 'Search Publications',
+    publicationsSearchPlaceholder: 'Search…',
+    publicationsCategoryLabel: 'Category',
+    publicationsAllCategoriesOption: 'All Categories',
+    publicationsAllTab: 'All',
+    publicationsDocTypeResearchReports: 'Research Reports',
+    publicationsDocTypePolicyBriefs: 'Policy Briefs',
+    publicationsDocTypeFieldGuides: 'Field Guides',
+    publicationsDocTypeDataSheets: 'Data Sheets',
+    publicationsDocumentTypeNote: 'Document type filter is not available yet.',
+    publicationsStatAvailable: 'Publications Available',
+    publicationsStatDownloads: 'Total Downloads',
+    publicationsStatCategories: 'Document Categories',
+    publicationsStatFmas: 'FMAs Covered',
+    publicationsFeaturedEyebrow: 'Featured Publication',
+    publicationsFeaturedBody:
+      'The full-year data account across all 8 FMAs — catch trends, ecosystem indicators, and community monitoring coverage.',
+    publicationsFeaturedDownloadCta: 'Download PDF',
+    publicationsFeaturedReadCta: 'Read Online',
+    publicationsOurPublicationEyebrow: 'Our Publication',
+    publicationsOurPublicationHeading: 'The results of our work and collaboration',
+    publicationsNoResults: 'No publications match this search.',
+    publicationsKnowledgeProductEyebrow: 'Knowledge Product',
+    publicationsKnowledgeProductHeading: 'Turning our research into knowledge for everyone',
+    publicationsVideoEyebrow: 'Video Publication',
+    publicationsVideoHeading: 'Watch and learn more about our ocean',
 
     ourTeamHeroBody:
       'comprises marine conservation fisheries researchers and activists with over two decades of experience working with communities, governments, and private sector, through data management, knowledge and capacity building, and policy advocacy in the marine and fisheries subject.',

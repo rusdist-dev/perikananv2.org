@@ -36,9 +36,8 @@ import fotoRegi from '@/assets/foto-tim/foto_regi.png';
 import fotoWahyu from '@/assets/foto-tim/foto_wahyu.png';
 import fotoEko from '@/assets/foto-tim/foto_eko.png';
 import { Container } from '@/components/layout/Container';
-import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { Icon } from '@/components/ui/Icon';
+import { TeamProfileButton } from '@/components/discover/TeamProfileButton';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
@@ -137,10 +136,12 @@ function TeamCard({
   member,
   tag,
   profileLabel,
+  closeLabel,
 }: {
   member: TeamMember;
   tag: string;
   profileLabel: string;
+  closeLabel: string;
 }) {
   return (
     <div className="flex flex-col">
@@ -158,15 +159,14 @@ function TeamCard({
         <p className="text-xs font-bold uppercase tracking-wide text-primary-fg/70">{tag}</p>
         <p className="text-sm font-bold">{member.name}</p>
         <p className="text-xs text-primary-fg/85">{member.role}</p>
-        {/* Belum ada halaman profil individu -- href="#" menyatakan itu apa
-            adanya, sama seperti tombol placeholder lain di beranda, alih-alih
-            menautkan ke rute yang belum dibangun. */}
-        <AppLink
-          href="#"
+        {/* Belum ada deskripsi profil individu -- untuk sementara disamakan
+            dengan jabatannya (member.role) sampai deskripsi sungguhan ada. */}
+        <TeamProfileButton
+          member={{ ...member, description: member.role }}
+          label={profileLabel}
+          closeLabel={closeLabel}
           className="mt-auto inline-flex w-fit items-center rounded-sm border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
-        >
-          {profileLabel}
-        </AppLink>
+        />
       </div>
     </div>
   );
@@ -176,7 +176,15 @@ function TeamCard({
  *  navy seperti TeamCard) -- lapisan tim yang jauh lebih banyak orangnya,
  *  jadi kartu dibuat lebih ringan/rata supaya grid delapan-belasnya tidak
  *  terasa seberat grid Advisor/Manager yang berlatar navy. */
-function OfficerCard({ member, profileLabel }: { member: TeamMember; profileLabel: string }) {
+function OfficerCard({
+  member,
+  profileLabel,
+  closeLabel,
+}: {
+  member: TeamMember;
+  profileLabel: string;
+  closeLabel: string;
+}) {
   return (
     <div className="flex flex-col overflow-hidden rounded-md bg-bg shadow-sm">
       <div className="relative aspect-square">
@@ -192,12 +200,12 @@ function OfficerCard({ member, profileLabel }: { member: TeamMember; profileLabe
       <div className="flex flex-1 flex-col gap-1 p-4">
         <p className="text-sm font-bold text-secondary">{member.name}</p>
         <p className="text-xs text-muted">{member.role}</p>
-        <AppLink
-          href="#"
+        <TeamProfileButton
+          member={{ ...member, description: member.role }}
+          label={profileLabel}
+          closeLabel={closeLabel}
           className="mt-auto inline-flex w-fit items-center rounded-sm border border-secondary px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-secondary lg:py-1.5 lg:text-[0.65rem] hover:bg-secondary hover:text-secondary-fg"
-        >
-          {profileLabel}
-        </AppLink>
+        />
       </div>
     </div>
   );
@@ -287,7 +295,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
 
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {ADVISORS.map((member) => (
-            <TeamCard key={member.name} member={member} tag={t.ourTeamAdvisorLabel} profileLabel={t.ourTeamProfileCta} />
+            <TeamCard key={member.name} member={member} tag={t.ourTeamAdvisorLabel} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
           ))}
         </div>
       </Container>
@@ -307,7 +315,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
 
         <div className="mt-8 grid gap-8 grid-cols-2 lg:grid-cols-4">
           {MANAGERS.map((member) => (
-            <TeamCard key={member.name} member={member} tag={t.ourTeamLeadershipTag} profileLabel={t.ourTeamProfileCta} />
+            <TeamCard key={member.name} member={member} tag={t.ourTeamLeadershipTag} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
           ))}
         </div>
       </Container>
@@ -353,7 +361,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
 
         <div className="mt-8 grid gap-6 grid-cols-2 lg:grid-cols-4">
           {OFFICERS.map((member) => (
-            <OfficerCard key={member.name} member={member} profileLabel={t.ourTeamProfileCta} />
+            <OfficerCard key={member.name} member={member} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
           ))}
         </div>
       </Container>
@@ -398,7 +406,13 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
       </div>
     </div>
 
-    <div className="relative isolate overflow-hidden bg-primary">
+    {/* Tinggi kontainer mengikuti rasio asli gambar (bukan tinggi kecil
+        bawaan sisa padding teks) -- sekarang tanpa teks/tombol di atasnya,
+        gambar harus tampil penuh/utuh, bukan terpotong pendek. */}
+    <div
+      className="relative isolate overflow-hidden bg-primary"
+      style={{ aspectRatio: `${fotoJoinUs.width} / ${fotoJoinUs.height}` }}
+    >
       <Image
         src={fotoJoinUs}
         alt=""
@@ -409,12 +423,10 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
       />
       <div className="absolute inset-0 bg-primary/50" />
 
-      {/* Padding horizontal simetris polos (px-4), BUKAN Container -- Container
-          selalu memakai `lg:ps-panel-gutter` (cuma sisi kiri) untuk menyisakan
-          ruang bagi panel navigasi mengambang, dan itu menggeser teks
-          `text-center` di dalamnya ke kanan dari titik tengah gambar yang
-          sebenarnya. Pita CTA ini penuh lebar tanpa konten lain yang perlu
-          sejajar dengan panel, jadi padding-nya boleh simetris. */}
+      {/* Teks + tombol disembunyikan sementara atas permintaan -- section ini
+          untuk saat ini menyisakan gambar saja. Markup aslinya dibiarkan di
+          sini (di dalam komentar) supaya gampang dikembalikan nanti:
+
       <div className="relative flex flex-col items-center gap-3 px-4 py-12 text-center text-primary-fg sm:py-14">
         <p className="text-xs font-bold uppercase tracking-wider text-primary-fg/80">{t.ourTeamJoinUsEyebrow}</p>
         <h2 className="max-w-2xl text-2xl font-bold md:text-3xl">
@@ -424,12 +436,6 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           {t.ourTeamJoinUsBody}
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-4">
-          {/* Belum ada halaman lowongan/fellowship -- href="#" menyatakan itu
-              apa adanya, sama seperti tombol placeholder lain di halaman ini.
-              border pada tombol pertama supaya tetap kelihatan sebagai tombol
-              di bagian foto mana pun di belakangnya -- bg-primary polos
-              nyaris tak terlihat begitu tone foto+overlay di baliknya senada
-              dengan navy tombol ini. */}
           <AppLink
             href="#"
             className="inline-flex w-fit items-center gap-2 rounded-md border border-primary-fg bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary-fg hover:opacity-90"
@@ -445,6 +451,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           </AppLink>
         </div>
       </div>
+      */}
     </div>
     </>
   );
