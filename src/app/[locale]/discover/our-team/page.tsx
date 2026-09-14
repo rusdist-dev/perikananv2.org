@@ -1,118 +1,29 @@
 import { notFound } from 'next/navigation';
-import Image, { type StaticImageData } from 'next/image';
+import Image from 'next/image';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import ornamentBg2 from '@/assets/banner/ornament3.png';
 import fotoEnumerator from '@/assets/about-us/ourteam1.png';
 import fotoJoinUs from '@/assets/about-us/border_ourteam.png';
-import fotoIrfan from '@/assets/foto-tim/foto_irfan.jpg';
-import fotoHeidi from '@/assets/foto-tim/foto_heidi.jpg';
-import fotoAsadatun from '@/assets/foto-tim/foto_asadatun.png';
-import fotoNatsir from '@/assets/foto-tim/foto_natsir.png';
-import fotoBudy from '@/assets/foto-tim/foto_budy.png';
-import fotoToni from '@/assets/foto-tim/foto_toni.png';
-import fotoAri from '@/assets/foto-tim/foto_ari.png';
-import fotoEffin from '@/assets/foto-tim/foto_effin.png';
-import fotoAnnisya from '@/assets/foto-tim/foto_annisya.png';
-import fotoIntan from '@/assets/foto-tim/foto_intan.png';
-import fotoJessica from '@/assets/foto-tim/foto_jessica.png';
-import fotoPrayekti from '@/assets/foto-tim/foto_prayekti.png';
-import fotoOktavianto from '@/assets/foto-tim/foto_oktavianto.png';
-import fotoLilik from '@/assets/foto-tim/foto_lilik.png';
-import fotoSoraya from '@/assets/foto-tim/foto_soraya.png';
-import fotoLailatul from '@/assets/foto-tim/foto_lailatul.png';
-import fotoRizqi from '@/assets/foto-tim/foto_rizqi.png';
-import fotoSyauqi from '@/assets/foto-tim/foto_syauqi.png';
-import fotoPeni from '@/assets/foto-tim/foto_peni.png';
-import fotoWilly from '@/assets/foto-tim/foto_willy.png';
-import fotoAyi from '@/assets/foto-tim/foto_ayi.png';
-import fotoFiki from '@/assets/foto-tim/foto_fiki.png';
-import fotoRahman from '@/assets/foto-tim/foto_rahman.png';
-import fotoNabila from '@/assets/foto-tim/foto_nabila.png';
-import fotoAisyah from '@/assets/foto-tim/foto_aisyah.png';
-import fotoNurul from '@/assets/foto-tim/foto_nurul.png';
-import fotoFilipo from '@/assets/foto-tim/foto_filipo.png';
-import fotoIbnu from '@/assets/foto-tim/foto_ibnu.png';
-import fotoRegi from '@/assets/foto-tim/foto_regi.png';
-import fotoWahyu from '@/assets/foto-tim/foto_wahyu.png';
-import fotoEko from '@/assets/foto-tim/foto_eko.png';
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { TeamProfileButton } from '@/components/discover/TeamProfileButton';
+import { getTeam, type TeamMember } from '@/lib/content';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
 
-type TeamMember = { image: StaticImageData; name: string; role: string };
-
-function getHeroStats(t: Dictionary) {
+/** "Team Members" dihitung dari jumlah anggota yang benar-benar tampil di
+ *  halaman ini (`team.length` -- Advisor + Manager + Officer dari CMS),
+ *  bukan angka tetap yang bisa menyimpang dari isi grid di bawahnya.
+ *  "Field Officers" dan "Years of Fieldwork" masih angka tetap -- belum ada
+ *  sumber data untuk keduanya (diminta dibiarkan dulu). */
+function getHeroStats(t: Dictionary, memberCount: number) {
   return [
-    { value: '48', label: t.ourTeamHeroStatMembers },
+    { value: String(memberCount), label: t.ourTeamHeroStatMembers },
     { value: '7', label: t.ourTeamHeroStatFieldOfficers },
     { value: '15', label: t.ourTeamHeroStatYearsFieldwork },
   ];
 }
-
-// Sama persis dengan TEAM_MEMBERS di halaman About Us -- satu-satunya foto tim
-// yang sudah ada sebelum foto manager diunggah.
-const ADVISORS: TeamMember[] = [
-  { image: fotoIrfan, name: 'Dr. Irfan Yulianto', role: 'Senior Advisor for Ocean Program' },
-  { image: fotoHeidi, name: 'Dr. Heidi Retnoningtyas', role: 'Director for Ocean Program' },
-  {
-    image: fotoAsadatun,
-    name: 'Prof. Dr. rer. nat. Asadatun Abdullah',
-    role: 'Adjunct Researcher',
-  },
-  { image: fotoNatsir, name: 'Mohamad Natsir Ph.D.', role: 'Adjunct Researcher' },
-  { image: fotoBudy, name: 'Prof. Budy Wiryawan', role: 'Senior Advisor' },
-  { image: fotoToni, name: 'Dr. Toni Ruchimat', role: 'Senior Advisor' },
-  { image: fotoAri, name: 'Arisetiarso Soemodinoto, Ph.D.', role: 'Senior Advisor' },
-  { image: fotoEko, name: 'Eko Rudiyanto', role: 'Senior Advisor' },
-];
-
-const MANAGERS: TeamMember[] = [
-  { image: fotoEffin, name: 'Efin Muttaqin', role: 'Mgr. for Species Conservation' },
-  { image: fotoAnnisya, name: 'Annisya Rosdiana', role: 'Mgr. for Ocean Accounts' },
-  {
-    image: fotoIntan,
-    name: 'Intan Destianis Hartati',
-    role: 'Mgr. for Sustainable Fisheries and IKAN',
-  },
-  { image: fotoJessica, name: 'Jessica Pingkan', role: 'Mgr. for Blue Carbon' },
-  { image: fotoPrayekti, name: 'Prayekti Ningtias', role: 'Mgr. for Marine Conservation' },
-  {
-    image: fotoOktavianto,
-    name: 'Oktavianto Prastyo Darmono',
-    role: 'Mgr. for Central Java Program',
-  },
-  {
-    image: fotoLilik,
-    name: 'Dr. Lilik Teguh Pambudi',
-    role: 'Private Sector, Business and Partnership Specialist',
-  },
-  { image: fotoSoraya, name: 'Dr. Soraya Gigentika', role: 'West Nusa Tenggara Program Coordinator' },
-];
-
-const OFFICERS: TeamMember[] = [
-  {
-    image: fotoLailatul,
-    name: 'Lailatul Rokhmah',
-    role: 'National Coordinator of Ocean for Development Program',
-  },
-  { image: fotoRizqi, name: 'Rizqi Aimmatul Maulidiyah', role: 'Marine Policy Coordinator' },
-  { image: fotoSyauqi, name: 'Ahmad Syauqi Jafani', role: 'Pelagic Fisheries Assessment Coordinator' },
-  { image: fotoPeni, name: 'W. Peni Lestari', role: 'Social Safeguard and Gender Specialist' },
-  { image: fotoWilly, name: 'Willy Puspa Irawan', role: 'FRCI Program Officer' },
-  { image: fotoAyi, name: 'Ayi Warmia', role: 'FRCI Program Officer' },
-  { image: fotoFiki, name: 'Fiki Hidayati', role: 'FRCI Program Officer' },
-  { image: fotoRahman, name: 'Rahman Firdaus', role: 'Community Officer' },
-  { image: fotoNabila, name: 'Nabila Nur Septiani', role: 'FRCI Program Officer' },
-  { image: fotoAisyah, name: 'Siti Zanuba Aisyah', role: 'FRCI Program Officer' },
-  { image: fotoNurul, name: 'Nurul WQ Manik', role: 'FRCI Program Officer' },
-  { image: fotoFilipo, name: 'Fillipo Aiman Inzaghi', role: 'FRCI Program Officer' },
-  { image: fotoIbnu, name: 'Ibnu Rusdi', role: 'FRCI IT Officer' },
-  { image: fotoRegi, name: 'Regi Darmawan', role: 'FRCI Fisheries Specialist' },
-  { image: fotoWahyu, name: 'Wahyu Putri Fajar Rahmalinda', role: 'FRCI Program Officer' },
-];
 
 function getEnumeratorStats(t: Dictionary) {
   return [
@@ -145,24 +56,24 @@ function TeamCard({
 }) {
   return (
     <div className="flex flex-col">
-      <div className="relative aspect-[3/4]">
-        <Image
-          src={member.image}
-          alt=""
-          aria-hidden
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover"
-        />
-      </div>
+      {member.image ? (
+        <div className="relative aspect-[3/4]">
+          <Image
+            src={member.image}
+            alt=""
+            aria-hidden
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        </div>
+      ) : null}
       <div className="flex flex-1 flex-col gap-1 bg-primary p-4 text-primary-fg">
         <p className="text-xs font-bold uppercase tracking-wide text-primary-fg/70">{tag}</p>
         <p className="text-sm font-bold">{member.name}</p>
-        <p className="text-xs text-primary-fg/85">{member.role}</p>
-        {/* Belum ada deskripsi profil individu -- untuk sementara disamakan
-            dengan jabatannya (member.role) sampai deskripsi sungguhan ada. */}
+        <p className="text-xs text-primary-fg/85">{member.position}</p>
         <TeamProfileButton
-          member={{ ...member, description: member.role }}
+          member={{ ...member, description: member.bio }}
           label={profileLabel}
           closeLabel={closeLabel}
           className="mt-auto inline-flex w-fit items-center rounded-sm border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"
@@ -187,21 +98,23 @@ function OfficerCard({
 }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-md bg-bg shadow-sm">
-      <div className="relative aspect-square">
-        <Image
-          src={member.image}
-          alt=""
-          aria-hidden
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover"
-        />
-      </div>
+      {member.image ? (
+        <div className="relative aspect-square">
+          <Image
+            src={member.image}
+            alt=""
+            aria-hidden
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        </div>
+      ) : null}
       <div className="flex flex-1 flex-col gap-1 p-4">
         <p className="text-sm font-bold text-secondary">{member.name}</p>
-        <p className="text-xs text-muted">{member.role}</p>
+        <p className="text-xs text-muted">{member.position}</p>
         <TeamProfileButton
-          member={{ ...member, description: member.role }}
+          member={{ ...member, description: member.bio }}
           label={profileLabel}
           closeLabel={closeLabel}
           className="mt-auto inline-flex w-fit items-center rounded-sm border border-secondary px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-secondary lg:py-1.5 lg:text-[0.65rem] hover:bg-secondary hover:text-secondary-fg"
@@ -216,6 +129,12 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  // Halaman ini menampilkan SEMUA jenjang -- beda dari /discover/about-us
+  // yang cuma menampilkan Dewan Penasihat (lihat getAdvisors di lib/content).
+  const team = await getTeam(locale);
+  const advisors = team.filter((member) => member.level === 'penasihat');
+  const managers = team.filter((member) => member.level === 'manajer');
+  const officers = team.filter((member) => member.level === 'staff');
 
   return (
     <>
@@ -262,7 +181,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           </div>
 
           <div className="grid grid-cols-3 gap-4 rounded-md bg-primary p-6 text-primary-fg lg:mt-1">
-            {getHeroStats(t).map((stat, index) => (
+            {getHeroStats(t, team.length).map((stat, index) => (
               <div key={stat.label} className="relative text-center">
                 {index > 0 ? (
                   <span
@@ -294,8 +213,8 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
         </p>
 
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {ADVISORS.map((member) => (
-            <TeamCard key={member.name} member={member} tag={t.ourTeamAdvisorLabel} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
+          {advisors.map((member) => (
+            <TeamCard key={member.slug} member={member} tag={t.ourTeamAdvisorLabel} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
           ))}
         </div>
       </Container>
@@ -314,8 +233,8 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
         </p>
 
         <div className="mt-8 grid gap-8 grid-cols-2 lg:grid-cols-4">
-          {MANAGERS.map((member) => (
-            <TeamCard key={member.name} member={member} tag={t.ourTeamLeadershipTag} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
+          {managers.map((member) => (
+            <TeamCard key={member.slug} member={member} tag={t.ourTeamLeadershipTag} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
           ))}
         </div>
       </Container>
@@ -360,8 +279,8 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
         </p>
 
         <div className="mt-8 grid gap-6 grid-cols-2 lg:grid-cols-4">
-          {OFFICERS.map((member) => (
-            <OfficerCard key={member.name} member={member} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
+          {officers.map((member) => (
+            <OfficerCard key={member.slug} member={member} profileLabel={t.ourTeamProfileCta} closeLabel={t.close} />
           ))}
         </div>
       </Container>

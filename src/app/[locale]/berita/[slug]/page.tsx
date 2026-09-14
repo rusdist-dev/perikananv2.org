@@ -6,14 +6,15 @@ import { ShareAndTags } from '@/components/news/ShareAndTags';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { resolveArticleImage } from '@/data/article-images';
-import { getArticle, getArticles, getArticleSlugs, type Article } from '@/lib/content';
+import { getArticle, getArticles, getArticleLocaleSlugs, getArticleRouteParams, type Article } from '@/lib/content';
 import { getBodyParagraphs } from '@/lib/article-body';
 import { formatArticleDate } from '@/lib/date';
 import { stripHtml } from '@/lib/html';
 import { estimateReadingMinutes } from '@/lib/reading-time';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
-import { isLocale, locales, type Locale } from '@/i18n/config';
+import { SetArticleLocaleAlternates } from '@/i18n/article-locale-alternates';
+import { isLocale, type Locale } from '@/i18n/config';
 
 /**
  * Rute dinamis yang href-nya dibangun dari data -- persis kasus yang
@@ -30,7 +31,7 @@ const RELATED_COUNT = 3;
  *  karena hanya satu tempat lagi yang memakainya sekarang. */
 function RelatedCard({ article, locale, t }: { article: Article; locale: Locale; t: ReturnType<typeof getDictionary> }) {
   const image = resolveArticleImage(article.image);
-  const category = article.tags[0];
+  const category = article.program?.name ?? article.tags[0];
 
   return (
     <article className="flex flex-col border border-border">
@@ -69,8 +70,7 @@ function RelatedCard({ article, locale, t }: { article: Article; locale: Locale;
 }
 
 export async function generateStaticParams() {
-  const slugs = await getArticleSlugs();
-  return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
+  return getArticleRouteParams();
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
@@ -93,9 +93,11 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
   const article = await getArticle(slug, locale);
   if (!article) notFound();
 
+  const localeSlugs = await getArticleLocaleSlugs(article);
+
   const t = getDictionary(locale);
   const image = resolveArticleImage(article.image);
-  const category = article.tags[0];
+  const category = article.program?.name ?? article.tags[0];
   const readingMinutes = estimateReadingMinutes(stripHtml(article.body));
   const bodyParagraphs = getBodyParagraphs(article.body);
 
@@ -114,6 +116,8 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
     // lang di elemen artikel, bukan di <html>: kalau ini versi fallback,
     // isinya memang bahasa lain daripada sisa halaman.
     <article lang={article.lang !== locale ? article.lang : undefined}>
+      <SetArticleLocaleAlternates alternates={localeSlugs} />
+
       {/* Latar biru + ornament4.png, sama seperti hero /berita (NewsHero). */}
       <section className="relative isolate overflow-hidden bg-primary text-primary-fg">
         <Image

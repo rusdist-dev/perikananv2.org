@@ -18,7 +18,11 @@ const COLLAPSED_MAX_HEIGHT = 140;
 export type MilestoneCardProps = {
   year: string;
   title: string;
-  image: StaticImageData;
+  // string = URL absolut (cover_url dari CMS); StaticImageData tidak lagi
+  // dipakai sejak koleksi "milestones" cuma datang dari CMS (lihat komentar
+  // Article.image di schema.ts soal kapan dua bentuk itu masih relevan).
+  // null = belum ada foto -- kartu melewati blok gambarnya (§4j).
+  image: StaticImageData | string | null;
   description?: string;
   bullets?: string[];
   showMoreLabel: string;
@@ -72,16 +76,18 @@ export function MilestoneCard({
 
   return (
     <div className="flex flex-col border border-border bg-surface">
-      <div className="relative aspect-[3/2]">
-        <Image
-          src={image}
-          alt=""
-          aria-hidden
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover"
-        />
-      </div>
+      {image ? (
+        <div className="relative aspect-[3/2]">
+          <Image
+            src={image}
+            alt=""
+            aria-hidden
+            fill
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        </div>
+      ) : null}
       <div className="flex flex-col gap-2 p-4">
         <p className="text-xs font-bold uppercase tracking-wide text-secondary">{year}</p>
         <h3 className="text-base font-semibold text-primary">{title}</h3>

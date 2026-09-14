@@ -3,33 +3,15 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import ornamentBg1 from '@/assets/banner/ornament3.png';
 import ornamentBg2 from '@/assets/banner/ornament3.png';
-import fotoAri from '@/assets/foto-tim/foto_ari.png';
-import fotoAsadatun from '@/assets/foto-tim/foto_asadatun.png';
-import fotoBudy from '@/assets/foto-tim/foto_budy.png';
-import fotoHeidi from '@/assets/foto-tim/foto_heidi.jpg';
-import fotoIrfan from '@/assets/foto-tim/foto_irfan.jpg';
-import fotoNatsir from '@/assets/foto-tim/foto_natsir.png';
-import fotoToni from '@/assets/foto-tim/foto_toni.png';
-import fotoEko from '@/assets/foto-tim/foto_eko.png';
 import wave2 from '@/assets/banner/wave2.png';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { TeamProfileButton } from '@/components/discover/TeamProfileButton';
+import { getAdvisors } from '@/lib/content';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
-
-const TEAM_MEMBERS = [
-  { image: fotoIrfan, role: 'Senior Advisor for Ocean Program', name: 'Dr. Irfan Yulianto' },
-  { image: fotoHeidi, role: 'Director for Ocean Program', name: 'Dr. Heidi Retnoningtyas' },
-  { image: fotoAsadatun, role: 'Peneliti Tamu', name: 'Prof. Dr. rer. nat. Asadatun Abdullah' },
-  { image: fotoNatsir, role: 'Peneliti Tamu', name: 'Mohamad Natsir Ph.D.' },
-  { image: fotoBudy, role: 'Penasihat Senior', name: 'Prof. Budy Wiryawan' },
-  { image: fotoToni, role: 'Penasihat Senior', name: 'Dr. Toni Ruchimat' },
-  { image: fotoAri, role: 'Senior Advisor', name: 'Arisetiarso Soemodinoto, Ph.D.' },
-  { image: fotoEko, role: 'Senior Advisor', name: 'Eko Rudiyanto' },
-];
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -42,6 +24,9 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  // Halaman ini HANYA menampilkan Dewan Penasihat -- daftar lengkap tiga
+  // jenjang (Advisor/Manager/Officer) ada di /discover/our-team.
+  const advisors = await getAdvisors(locale);
 
   return (
     <>
@@ -168,27 +153,26 @@ export default async function AboutUsPage({ params }: { params: Promise<{ locale
       <h2 className="mb-8 text-3xl font-semibold text-primary">{t.aboutUsTeamHeading}</h2>
 
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {TEAM_MEMBERS.map((member) => (
-          <div key={member.name} className="flex flex-col">
-            <div className="relative aspect-[3/4]">
-              <Image
-                src={member.image}
-                alt=""
-                aria-hidden
-                fill
-                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                className="object-cover"
-              />
-            </div>
+        {advisors.map((member) => (
+          <div key={member.slug} className="flex flex-col">
+            {member.image ? (
+              <div className="relative aspect-[3/4]">
+                <Image
+                  src={member.image}
+                  alt=""
+                  aria-hidden
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
             <div className="flex flex-1 flex-col gap-1 bg-primary p-4 text-primary-fg">
               <p className="text-xs font-bold uppercase tracking-wide text-primary-fg/70">{t.aboutUsTeamMemberTag}</p>
               <p className="text-sm font-bold">{member.name}</p>
-              <p className="text-xs text-primary-fg/85">{member.role}</p>
-              {/* Belum ada deskripsi profil individu -- untuk sementara
-                  disamakan dengan jabatannya (member.role) sampai deskripsi
-                  sungguhan ada. */}
+              <p className="text-xs text-primary-fg/85">{member.position}</p>
               <TeamProfileButton
-                member={{ ...member, description: member.role }}
+                member={{ ...member, description: member.bio }}
                 label={t.aboutUsProfileCta}
                 closeLabel={t.close}
                 className="mt-auto inline-flex w-fit items-center rounded-md border border-primary-fg px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg lg:py-1.5 lg:text-[0.65rem] hover:bg-primary-fg hover:text-primary"

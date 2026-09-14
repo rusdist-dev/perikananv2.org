@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { AppLink } from '@/components/ui/AppLink';
 import { locales, localeLabel, htmlLang, type Locale } from '@/i18n/config';
 import { stripLocale } from '@/i18n/routing';
+import { useArticleLocaleAlternates } from '@/i18n/article-locale-alternates';
 import { cn } from '@/lib/cn';
 
 /**
@@ -26,16 +27,28 @@ export function LanguageSwitcher({
 }) {
   const pathname = usePathname();
   const bare = stripLocale(pathname);
+  // Diisi hanya oleh /berita/[slug] (lihat article-locale-alternates.tsx):
+  // path yang sama tidak cukup di sana karena CMS bisa memberi slug berbeda
+  // per bahasa untuk artikel yang sama. null di halaman lain -- switcher
+  // pakai `bare` seperti biasa.
+  const articleAlternates = useArticleLocaleAlternates();
 
   return (
     <nav aria-label={label} className={className}>
       <ul className="flex items-center gap-1">
         {locales.map((l) => {
           const current = l === locale;
+          // Di halaman artikel, slug locale ini mungkin tidak ada (belum
+          // diterjemahkan) -- daripada menebak dan berakhir di 404, tombolnya
+          // menuju indeks /berita untuk locale itu.
+          const href = articleAlternates
+            ? (articleAlternates[l] ? `/berita/${articleAlternates[l]}` : '/berita')
+            : bare;
+
           return (
             <li key={l}>
               <AppLink
-                href={bare}
+                href={href}
                 localeOverride={l}
                 hrefLang={htmlLang[l]}
                 // scroll={false}: berganti bahasa tetap di posisi baca saat ini,

@@ -6,10 +6,6 @@ import fotoPulau2 from '@/assets/marine-conservation/foto_pulau2.png';
 import bgMarineConservation from '@/assets/banner/bg_marine.png';
 import marineConservationIcon from '@/assets/marine-conservation.svg';
 import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
-import cpSf1 from '@/assets/sustainable-fisheries/cp1_sf.png';
-import cpSf2 from '@/assets/sustainable-fisheries/cp2_sf.png';
-import cpSf3 from '@/assets/sustainable-fisheries/cp3_sf.png';
-import cpSf4 from '@/assets/sustainable-fisheries/cp4_sf.png';
 import slider1 from '@/assets/marine-conservation/slider1.png';
 import slider2 from '@/assets/marine-conservation/slider2.png';
 import slider3 from '@/assets/marine-conservation/slider3.png';
@@ -25,9 +21,15 @@ import { ProgramNusacore } from '@/components/program/ProgramNusacore';
 import { ProgramObjectives } from '@/components/program/ProgramObjectives';
 import { ProgramRelatedStories, type RelatedStory } from '@/components/program/ProgramRelatedStories';
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
+import { resolveArticleImage } from '@/data/article-images';
+import { getArticlesByProgram, type Article } from '@/lib/content';
+import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
-import { isLocale } from '@/i18n/config';
+import { isLocale, type Locale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
+
+const FRONTEND_PROGRAM_SLUG = 'marine-conservation';
+const RELATED_STORIES_COUNT = 3;
 
 // Nama program diambil dari panelNav (lib/nav.ts), satu-satunya sumber
 // kebenaran untuk rute dan label -- bukan diketik ulang di sini.
@@ -82,36 +84,17 @@ function getKeyActivitiesBullets(t: Dictionary) {
   ];
 }
 
-// Sama seperti RELATED_STORIES di Ocean Accounts/Sustainable Fisheries --
-// masih contoh, tapi fotonya dipinjam dari Sustainable Fisheries atas
-// permintaan, sampai foto berita Marine Conservation sendiri tersedia.
-function getRelatedStories(t: Dictionary): RelatedStory[] {
-  return [
-    {
-      image: cpSf1,
-      date: '28 Jul 2026',
-      category: 'Policy',
-      title: t.marineConservationRelatedStory1Title,
-      excerpt: t.marineConservationRelatedStory1Excerpt,
-      href: '#',
-    },
-    {
-      image: cpSf2,
-      date: '14 Jul 2026',
-      category: 'Ocean Accounts',
-      title: t.marineConservationRelatedStory2Title,
-      excerpt: t.marineConservationRelatedStory2Excerpt,
-      href: '#',
-    },
-    {
-      image: cpSf3,
-      date: '10 Jul 2026',
-      category: 'Conservation',
-      title: t.marineConservationRelatedStory3Title,
-      excerpt: t.marineConservationRelatedStory3Excerpt,
-      href: '#',
-    },
-  ];
+/** Berita sungguhan dari CMS yang ditandai taksonomi program ini
+ *  (related_programs) -- lihat getArticlesByProgram (lib/content). */
+function toRelatedStories(articles: Article[], locale: Locale, t: Dictionary): RelatedStory[] {
+  return articles.slice(0, RELATED_STORIES_COUNT).map((article) => ({
+    image: resolveArticleImage(article.image),
+    date: formatArticleDate(article.publishedAt, locale),
+    category: article.program?.name ?? article.tags[0] ?? t.news,
+    title: article.title,
+    excerpt: article.excerpt,
+    href: `/berita/${article.slug}`,
+  }));
 }
 
 export default async function MarineConservationPage({
@@ -124,6 +107,8 @@ export default async function MarineConservationPage({
 
   const t = getDictionary(locale);
   const programLabel = NAV_ITEM.labelKey ? t[NAV_ITEM.labelKey] : NAV_ITEM.label;
+  const programArticles = await getArticlesByProgram(locale, FRONTEND_PROGRAM_SLUG);
+  const relatedStories = toRelatedStories(programArticles, locale, t);
 
   return (
     <>
@@ -211,12 +196,14 @@ export default async function MarineConservationPage({
 
       <ProgramNusacore locale={locale} />
 
-      <ProgramRelatedStories
-        eyebrow={t.marineConservationRelatedStoriesEyebrow}
-        heading={t.marineConservationRelatedStoriesHeading}
-        stories={getRelatedStories(t)}
-        readStoryLabel={t.readStory}
-      />
+      {relatedStories.length > 0 ? (
+        <ProgramRelatedStories
+          eyebrow={t.marineConservationRelatedStoriesEyebrow}
+          heading={t.marineConservationRelatedStoriesHeading}
+          stories={relatedStories}
+          readStoryLabel={t.readStory}
+        />
+      ) : null}
 
       <ProgramSupportCta
         image={fotoPulau2}

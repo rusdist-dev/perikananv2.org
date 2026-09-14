@@ -1,6 +1,7 @@
-import { defaultLocale, type Locale } from '@/i18n/config';
+import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import { loadCollection } from './source';
-import type { Article, Publication } from './schema';
+import { getCmsSlugByFrontendSlug } from './program-taxonomy';
+import type { Article, Publication, TeamMember, Milestone } from './schema';
 
 /**
  * Barrel: satu-satunya modul yang boleh diimpor halaman.
@@ -9,10 +10,21 @@ import type { Article, Publication } from './schema';
  * itu yang membuat sumber data bisa diganti tanpa menyentuh satu pun halaman.
  */
 
-export type { Article, Publication } from './schema';
+export type { Article, Publication, TeamMember, Milestone } from './schema';
 
 function byNewest(a: Article, b: Article): number {
   return b.publishedAt.localeCompare(a.publishedAt);
+}
+
+/** Kunci gabung varian id/en dari artikel yang sama. CMS Rekam menerbitkan
+ *  slug yang di-generate dari judul per bahasa -- begitu judulnya
+ *  diterjemahkan, slug-nya ikut berubah, jadi slug TIDAK bisa dipakai sebagai
+ *  identitas lintas bahasa (lihat komentar `cmsId` di schema.ts). `cmsId`
+ *  yang jadi identitas sesungguhnya di mode CMS; mode lokal tidak
+ *  mengenalnya (JSON tidak membawa ID CMS), jadi jatuh balik ke slug --
+ *  aman di sana karena data lokal memang satu slug per artikel. */
+function mergeKey(article: Article): string {
+  return article.cmsId !== null ? `id:${article.cmsId}` : `slug:${article.slug}`;
 }
 
 /**
@@ -24,21 +36,22 @@ function byNewest(a: Article, b: Article): number {
  * separuhnya akan lupa.
  */
 function pickForLocale(all: Article[], locale: Locale): Article[] {
-  const bySlug = new Map<string, Article>();
+  const byKey = new Map<string, Article>();
 
   for (const article of all) {
-    const existing = bySlug.get(article.slug);
+    const key = mergeKey(article);
+    const existing = byKey.get(key);
     if (!existing) {
-      bySlug.set(article.slug, article);
+      byKey.set(key, article);
       continue;
     }
     // Versi locale yang diminta selalu menang atas versi fallback.
     if (article.lang === locale && existing.lang !== locale) {
-      bySlug.set(article.slug, article);
+      byKey.set(key, article);
     }
   }
 
-  return [...bySlug.values()]
+  return [...byKey.values()]
     .filter((a) => a.lang === locale || a.lang === defaultLocale)
     .sort(byNewest);
 }
@@ -53,11 +66,58 @@ export async function getArticle(slug: string, locale: Locale): Promise<Article 
   return articles.find((a) => a.slug === slug) ?? null;
 }
 
-/** Dipakai generateStaticParams dan sitemap. Slug unik lintas bahasa: satu
- *  artikel yang sama punya satu slug, apa pun bahasanya. */
+/** Slug artikel yang sama (lihat mergeKey) di tiap locale -- dipakai
+ *  LanguageSwitcher HANYA di halaman detail berita, supaya tombol ganti
+ *  bahasa menuju artikel yang sama alih-alih menukar prefiks locale pada
+ *  slug yang sama persis (yang 404 begitu slug-nya berbeda per bahasa,
+ *  lihat komentar `cmsId` di schema.ts). Locale yang tidak muncul di hasil
+ *  berarti CMS memang tidak mengembalikan varian untuk locale itu. */
+export async function getArticleLocaleSlugs(article: Article): Promise<Partial<Record<Locale, string>>> {
+  const all = await loadCollection('articles');
+  const key = mergeKey(article);
+  const slugs: Partial<Record<Locale, string>> = {};
+
+  for (const candidate of all) {
+    if (mergeKey(candidate) === key) slugs[candidate.lang] = candidate.slug;
+  }
+
+  return slugs;
+}
+
+/** Dipakai sitemap (satu path kanonik per artikel, lihat app/sitemap.ts). */
 export async function getArticleSlugs(): Promise<string[]> {
   const all = await loadCollection('articles');
   return [...new Set(all.map((a) => a.slug))];
+}
+
+/** Dipakai generateStaticParams /berita/[slug] -- BUKAN cross product locale x
+ *  slug (perkalian setiap locale dengan getArticleSlugs()), karena sejak
+ *  slug bisa berbeda antara varian id/en artikel yang sama (lihat komentar
+ *  mergeKey), cross product itu membuat kombinasi (locale, slug) yang tidak
+ *  pernah cocok dengan artikel manapun di locale itu. Ini membangun pasangan
+ *  yang benar-benar valid, langsung dari slug hasil getArticles per locale. */
+export async function getArticleRouteParams(): Promise<{ locale: Locale; slug: string }[]> {
+  const params: { locale: Locale; slug: string }[] = [];
+  for (const locale of locales) {
+    const articles = await getArticles(locale);
+    for (const article of articles) params.push({ locale, slug: article.slug });
+  }
+  return params;
+}
+
+/** Dipakai halaman /program/<slug> untuk seksi "Related Stories" -- filter
+ *  dilakukan di sini (bukan query CMS terpisah) karena getArticles() sudah
+ *  menarik seluruh koleksi via seam yang sama, dengan cache tag yang sama.
+ *  `frontendProgramSlug` adalah slug rute (mis. "species-conservation"),
+ *  dikonversi ke slug taksonomi CMS lewat program-taxonomy.ts. Slug yang
+ *  tidak dikenal menghasilkan daftar kosong, bukan error -- halaman program
+ *  tetap bisa dirender tanpa berita terkait. */
+export async function getArticlesByProgram(locale: Locale, frontendProgramSlug: string): Promise<Article[]> {
+  const cmsSlug = getCmsSlugByFrontendSlug(frontendProgramSlug);
+  if (!cmsSlug) return [];
+
+  const articles = await getArticles(locale);
+  return articles.filter((article) => article.program?.slug === cmsSlug);
 }
 
 /** Tidak ada pickForLocale di sini -- publikasi tidak diterjemahkan per
@@ -65,4 +125,86 @@ export async function getArticleSlugs(): Promise<string[]> {
  *  adanya untuk /id maupun /en. */
 export async function getPublications(): Promise<Publication[]> {
   return loadCollection('publications');
+}
+
+/** Urutan section /discover/our-team: Advisor -> Manager -> Officer, tak
+ *  peduli urutan grup yang dikembalikan CMS. */
+const TEAM_LEVEL_ORDER: Record<TeamMember['level'], number> = {
+  penasihat: 0,
+  manajer: 1,
+  staff: 2,
+};
+
+function byTeamOrder(a: TeamMember, b: TeamMember): number {
+  return TEAM_LEVEL_ORDER[a.level] - TEAM_LEVEL_ORDER[b.level];
+}
+
+/** Sama seperti pickForLocale, tapi kunci gabungnya `slug` -- bukan cmsId.
+ *  Nama orang tidak diterjemahkan seperti judul artikel, jadi slug anggota
+ *  tim SAMA di id maupun en (diverifikasi langsung ke CMS, lihat komentar
+ *  `slug` di teamMemberSchema), tidak butuh akal-akalan cmsId seperti
+ *  Article. */
+function pickTeamForLocale(all: TeamMember[], locale: Locale): TeamMember[] {
+  const bySlug = new Map<string, TeamMember>();
+
+  for (const member of all) {
+    const existing = bySlug.get(member.slug);
+    if (!existing) {
+      bySlug.set(member.slug, member);
+      continue;
+    }
+    if (member.lang === locale && existing.lang !== locale) {
+      bySlug.set(member.slug, member);
+    }
+  }
+
+  return [...bySlug.values()]
+    .filter((m) => m.lang === locale || m.lang === defaultLocale)
+    .sort(byTeamOrder);
+}
+
+/** Seluruh tim, tiga jenjang sekaligus -- dipakai /discover/our-team. */
+export async function getTeam(locale: Locale): Promise<TeamMember[]> {
+  const all = await loadCollection('team');
+  return pickTeamForLocale(all, locale);
+}
+
+/** Hanya Dewan Penasihat -- dipakai /discover/about-us, yang cuma
+ *  menampilkan jenjang ini (beda dari /discover/our-team yang menampilkan
+ *  ketiganya). */
+export async function getAdvisors(locale: Locale): Promise<TeamMember[]> {
+  return (await getTeam(locale)).filter((m) => m.level === 'penasihat');
+}
+
+function byMilestoneYear(a: Milestone, b: Milestone): number {
+  return a.year - b.year;
+}
+
+/** Sama seperti pickTeamForLocale, tapi kunci gabungnya `year` -- angka
+ *  tahun tidak diterjemahkan, jadi aman dipakai sebagai identitas lintas
+ *  bahasa (diverifikasi langsung ke CMS: satu milestone punya `year` yang
+ *  sama persis di kedua locale). */
+function pickMilestonesForLocale(all: Milestone[], locale: Locale): Milestone[] {
+  const byYear = new Map<number, Milestone>();
+
+  for (const milestone of all) {
+    const existing = byYear.get(milestone.year);
+    if (!existing) {
+      byYear.set(milestone.year, milestone);
+      continue;
+    }
+    if (milestone.lang === locale && existing.lang !== locale) {
+      byYear.set(milestone.year, milestone);
+    }
+  }
+
+  return [...byYear.values()]
+    .filter((m) => m.lang === locale || m.lang === defaultLocale)
+    .sort(byMilestoneYear);
+}
+
+/** Dipakai /discover/achievements untuk grid timeline milestone. */
+export async function getMilestones(locale: Locale): Promise<Milestone[]> {
+  const all = await loadCollection('milestones');
+  return pickMilestonesForLocale(all, locale);
 }

@@ -9,14 +9,6 @@ import yt1 from '@/assets/publication/yt1.png';
 import yt2 from '@/assets/publication/yt2.png';
 import yt3 from '@/assets/publication/yt3.png';
 import yt4 from '@/assets/publication/yt4.png';
-// Sampulnya render halaman pertama PDF-nya sendiri (belum ada aset sampul
-// terpisah untuk keempat produk ini), pola yang sama dengan
-// panduan-lepas-pantai.jpg -- dirender sekali lewat pdfjs-dist +
-// @napi-rs/canvas di luar repo.
-import liukangTangayaEncyclopedia from '@/assets/publication/liukang-tangaya-encyclopedia.jpg';
-import seagrassEcosystemModule from '@/assets/publication/seagrass-ecosystem-module.jpg';
-import turtleSeagrassStoryBook from '@/assets/publication/turtle-seagrass-story-book.jpg';
-import liukangTangayaMpaPoster from '@/assets/publication/liukang-tangaya-mpa-poster.jpg';
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { PublicationsSlider, type PublicationSlide } from '@/components/publications/PublicationsSlider';
@@ -90,42 +82,6 @@ const VIDEOS = [
   },
 ];
 
-/** Sampul, kategori, dan judul diambil langsung dari isi asli tiap PDF di
- *  public/documents/ (lihat komentar di atas soal render sampulnya).
- *
- *  Tetap statis dengan sengaja, BUKAN lupa disambungkan ke CMS: koleksi
- *  "publications" CMS Rekam (lib/content/source.ts) sudah dicek satu per
- *  satu dan keempat dokumen ini (Liukang Tangaya encyclopedia, seagrass
- *  ecosystem module, turtle/seagrass story book, MPA poster) tidak ada di
- *  sana -- menghapus PDF-nya dari public/documents/ berarti kehilangan
- *  dokumen ini sepenuhnya, bukan sekadar pindah sumber. */
-const KNOWLEDGE_PRODUCTS: PublicationSlide[] = [
-  {
-    image: liukangTangayaEncyclopedia,
-    category: 'Education Book',
-    title: 'Liukang Tangaya at a Glance',
-    pdfUrl: '/documents/liukang-tangaya-encyclopedia.pdf',
-  },
-  {
-    image: seagrassEcosystemModule,
-    category: 'Education Book',
-    title: 'Introduction to Seagrass Ecosystem',
-    pdfUrl: '/documents/seagrass-ecosystem-module.pdf',
-  },
-  {
-    image: turtleSeagrassStoryBook,
-    category: 'Story Book',
-    title: "Documenting the Turtle's Steps in the Deep Blue Sea",
-    pdfUrl: '/documents/turtle-seagrass-story-book.pdf',
-  },
-  {
-    image: liukangTangayaMpaPoster,
-    category: 'Poster',
-    title: 'Liukang Tangaya Marine Protected Area Zones',
-    pdfUrl: '/documents/liukang-tangaya-mpa-poster.pdf',
-  },
-];
-
 /** Membuang diakritik dan menyeragamkan kapital, sama seperti SearchableSelect/lib/search. */
 function normalize(text: string): string {
   return text
@@ -172,16 +128,18 @@ type Labels = {
   noResults: string;
   knowledgeProductEyebrow: string;
   knowledgeProductHeading: string;
+  knowledgeProductEmpty: string;
   videoEyebrow: string;
   videoHeading: string;
 };
 
 type Props = {
   publications: PublicationSlide[];
+  knowledgeProducts: PublicationSlide[];
   labels: Labels;
 };
 
-export function PublicationsExplorer({ publications, labels: t }: Props) {
+export function PublicationsExplorer({ publications, knowledgeProducts, labels: t }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
 
@@ -429,15 +387,19 @@ export function PublicationsExplorer({ publications, labels: t }: Props) {
             {t.knowledgeProductHeading}
           </h2>
 
-          <PublicationsSlider
-            publications={KNOWLEDGE_PRODUCTS}
-            downloadLabel={t.download}
-            readLabel={t.read}
-            previousLabel={t.galleryPrevious}
-            nextLabel={t.galleryNext}
-            pdfUnavailableLabel={t.pdfUnavailable}
-            closeLabel={t.close}
-          />
+          {knowledgeProducts.length === 0 ? (
+            <p className="text-muted">{t.knowledgeProductEmpty}</p>
+          ) : (
+            <PublicationsSlider
+              publications={knowledgeProducts}
+              downloadLabel={t.download}
+              readLabel={t.read}
+              previousLabel={t.galleryPrevious}
+              nextLabel={t.galleryNext}
+              pdfUnavailableLabel={t.pdfUnavailable}
+              closeLabel={t.close}
+            />
+          )}
         </Container>
       </div>
 

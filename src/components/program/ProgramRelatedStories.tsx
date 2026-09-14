@@ -6,7 +6,7 @@ export type RelatedStory = {
   /** Opsional dengan sengaja: kartu tanpa foto tetap dirender lengkap dengan
    *  teksnya, sama seperti kartu artikel di beranda saat `article.image`
    *  tidak dikenal -- bukan kotak next/image kosong yang menunggu aset. */
-  image?: StaticImageData;
+  image?: StaticImageData | string;
   date: string;
   category: string;
   title: string;

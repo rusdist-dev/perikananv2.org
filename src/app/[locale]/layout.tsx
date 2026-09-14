@@ -4,6 +4,7 @@ import { Nunito_Sans } from 'next/font/google';
 import '../globals.css';
 import { SiteShell } from '@/components/chrome/SiteShell';
 import { buildMetadata } from '@/i18n/metadata';
+import { ArticleLocaleAlternatesProvider } from '@/i18n/article-locale-alternates';
 import { locales, htmlLang, isLocale, type Locale } from '@/i18n/config';
 
 /**
@@ -72,7 +73,9 @@ export default async function LocaleLayout({
   return (
     <html lang={htmlLang[typed]} className={sans.variable}>
       <body className="overflow-x-clip">
-        <SiteShell locale={typed}>{children}</SiteShell>
+        <ArticleLocaleAlternatesProvider>
+          <SiteShell locale={typed}>{children}</SiteShell>
+        </ArticleLocaleAlternatesProvider>
       </body>
     </html>
   );

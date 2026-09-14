@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation';
 import bgSupport from '@/assets/ocean-accounts/bg_support.png';
 import bgOceanAccounts from '@/assets/banner/bg_ocean.png';
-import cb1 from '@/assets/ocean-accounts/cb1.jpg';
-import cb2 from '@/assets/ocean-accounts/cb2.jpg';
-import cb3 from '@/assets/ocean-accounts/cb3.jpg';
 import fotoFdtp from '@/assets/ocean-accounts/foto_fdtp.png';
 import fotokey from '@/assets/ocean-accounts/key_ocean.png';
 import slider1 from '@/assets/ocean-accounts/slider1.png';
@@ -19,9 +16,15 @@ import { ProgramNusacore } from '@/components/program/ProgramNusacore';
 import { ProgramObjectives } from '@/components/program/ProgramObjectives';
 import { ProgramRelatedStories, type RelatedStory } from '@/components/program/ProgramRelatedStories';
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
+import { resolveArticleImage } from '@/data/article-images';
+import { getArticlesByProgram, type Article } from '@/lib/content';
+import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
-import { isLocale } from '@/i18n/config';
+import { isLocale, type Locale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
+
+const FRONTEND_PROGRAM_SLUG = 'ocean-accounts';
+const RELATED_STORIES_COUNT = 3;
 
 // Nama program diambil dari panelNav (lib/nav.ts), satu-satunya sumber
 // kebenaran untuk rute dan label -- bukan diketik ulang di sini.
@@ -69,33 +72,17 @@ function getDataToPolicyBullets(t: Dictionary) {
   ];
 }
 
-function getRelatedStories(t: Dictionary): RelatedStory[] {
-  return [
-    {
-      image: cb1,
-      date: '28 Jul 2026',
-      category: 'Policy',
-      title: t.oceanAccountsRelatedStory1Title,
-      excerpt: t.oceanAccountsRelatedStory1Excerpt,
-      href: '#',
-    },
-    {
-      image: cb2,
-      date: '14 Jul 2026',
-      category: 'Ocean Accounts',
-      title: t.oceanAccountsRelatedStory2Title,
-      excerpt: t.oceanAccountsRelatedStory2Excerpt,
-      href: '#',
-    },
-    {
-      image: cb3,
-      date: '10 Jul 2026',
-      category: 'Conservation',
-      title: t.oceanAccountsRelatedStory3Title,
-      excerpt: t.oceanAccountsRelatedStory3Excerpt,
-      href: '#',
-    },
-  ];
+/** Berita sungguhan dari CMS yang ditandai taksonomi program ini
+ *  (related_programs) -- lihat getArticlesByProgram (lib/content). */
+function toRelatedStories(articles: Article[], locale: Locale, t: Dictionary): RelatedStory[] {
+  return articles.slice(0, RELATED_STORIES_COUNT).map((article) => ({
+    image: resolveArticleImage(article.image),
+    date: formatArticleDate(article.publishedAt, locale),
+    category: article.program?.name ?? article.tags[0] ?? t.news,
+    title: article.title,
+    excerpt: article.excerpt,
+    href: `/berita/${article.slug}`,
+  }));
 }
 
 export default async function OceanAccountsPage({
@@ -108,6 +95,8 @@ export default async function OceanAccountsPage({
 
   const t = getDictionary(locale);
   const programLabel = NAV_ITEM.labelKey ? t[NAV_ITEM.labelKey] : NAV_ITEM.label;
+  const programArticles = await getArticlesByProgram(locale, FRONTEND_PROGRAM_SLUG);
+  const relatedStories = toRelatedStories(programArticles, locale, t);
 
   return (
     <>
@@ -171,12 +160,14 @@ export default async function OceanAccountsPage({
 
       <ProgramNusacore locale={locale} />
 
-      <ProgramRelatedStories
-        eyebrow={t.oceanAccountsRelatedStoriesEyebrow}
-        heading={t.oceanAccountsRelatedStoriesHeading}
-        stories={getRelatedStories(t)}
-        readStoryLabel={t.readStory}
-      />
+      {relatedStories.length > 0 ? (
+        <ProgramRelatedStories
+          eyebrow={t.oceanAccountsRelatedStoriesEyebrow}
+          heading={t.oceanAccountsRelatedStoriesHeading}
+          stories={relatedStories}
+          readStoryLabel={t.readStory}
+        />
+      ) : null}
 
       <ProgramSupportCta
         image={bgSupport}

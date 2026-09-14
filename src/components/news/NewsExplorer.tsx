@@ -18,6 +18,7 @@ export type NewsArticleItem = {
   publishedAt: string;
   tags: string[];
   image: string | null;
+  program: { name: string; slug: string } | null;
 };
 
 type Labels = {
@@ -241,7 +242,7 @@ export function NewsExplorer({
               <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {pageItems.map((article) => {
                   const image = resolveArticleImage(article.image);
-                  const category = article.tags[0];
+                  const category = article.program?.name ?? article.tags[0];
 
                   return (
                     <article key={article.slug} className="flex flex-col border border-border">

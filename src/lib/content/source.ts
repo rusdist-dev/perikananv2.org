@@ -4,6 +4,7 @@ import DOMPurify from 'isomorphic-dompurify';
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import { stripHtml } from '@/lib/html';
 import { collections, type CollectionName } from './schema';
+import { getProgramNameByCmsSlug } from './program-taxonomy';
 
 /**
  * Satu-satunya tempat yang tahu DARI MANA konten datang.
@@ -57,14 +58,31 @@ function mapNewsItem(raw: Record<string, unknown>, lang: Locale): unknown {
   const bodyText = stripHtml(bodyHtml);
   const rawExcerpt = typeof raw.excerpt === 'string' ? stripHtml(raw.excerpt) : '';
 
-  const relatedPrograms = Array.isArray(raw.related_programs) ? raw.related_programs : [];
-  const tags = [raw.category, ...relatedPrograms]
-    .map((tag) => {
-      if (typeof tag === 'string') return tag;
-      if (tag && typeof tag === 'object' && 'name' in tag) return String((tag as { name: unknown }).name);
-      return null;
-    })
-    .filter((tag): tag is string => Boolean(tag));
+  // `related_programs` CMS Rekam adalah array slug taksonomi program mentah
+  // (contoh: "konservasi-spesies"), bukan nama yang sudah diterjemahkan --
+  // program-taxonomy.ts yang tahu cara melokalkannya per `lang`.
+  const relatedProgramSlugs = Array.isArray(raw.related_programs)
+    ? raw.related_programs.filter((slug): slug is string => typeof slug === 'string')
+    : [];
+  const programNames = relatedProgramSlugs
+    .map((slug) => getProgramNameByCmsSlug(slug, lang))
+    .filter((name): name is string => Boolean(name));
+
+  const categoryName =
+    raw.category && typeof raw.category === 'object' && 'name' in raw.category
+      ? String((raw.category as { name: unknown }).name)
+      : typeof raw.category === 'string'
+        ? raw.category
+        : null;
+
+  const tags = [categoryName, ...programNames].filter((tag): tag is string => Boolean(tag));
+
+  // Program pertama saja: kartu/detail berita menampilkan satu label, bukan
+  // daftar -- lihat komentar `program` di schema.ts.
+  const primaryProgramSlug = relatedProgramSlugs[0];
+  const program = primaryProgramSlug
+    ? { name: getProgramNameByCmsSlug(primaryProgramSlug, lang) ?? primaryProgramSlug, slug: primaryProgramSlug }
+    : null;
 
   return {
     lang,
@@ -77,6 +95,8 @@ function mapNewsItem(raw: Record<string, unknown>, lang: Locale): unknown {
     publishedAt: typeof raw.published_at === 'string' ? raw.published_at.slice(0, 10) : raw.published_at,
     tags,
     image: typeof raw.cover_url === 'string' && raw.cover_url ? raw.cover_url : null,
+    program,
+    cmsId: typeof raw.id === 'string' || typeof raw.id === 'number' ? raw.id : null,
   };
 }
 
@@ -95,6 +115,65 @@ function mapPublicationItem(raw: Record<string, unknown>): unknown {
   };
 }
 
+/** Satu anggota tim di dalam satu grup "team" CMS -> bentuk mentah yang
+ *  divalidasi teamMemberSchema. `level` datang dari grup pembungkusnya
+ *  (mapTeamGroup), bukan dari entri anggota itu sendiri. */
+function mapTeamMember(raw: Record<string, unknown>, lang: Locale, level: unknown): unknown {
+  const socials = (raw.socials as Record<string, unknown> | null | undefined) ?? {};
+
+  return {
+    lang,
+    level,
+    slug: raw.slug,
+    name: raw.name,
+    position: raw.position,
+    bio: typeof raw.bio === 'string' ? DOMPurify.sanitize(raw.bio) : '',
+    image: typeof raw.photo_url === 'string' && raw.photo_url ? raw.photo_url : null,
+    email: typeof raw.email === 'string' && raw.email ? raw.email : null,
+    socials: {
+      linkedin: typeof socials.linkedin === 'string' && socials.linkedin ? socials.linkedin : null,
+      instagram: typeof socials.instagram === 'string' && socials.instagram ? socials.instagram : null,
+    },
+  };
+}
+
+/** Entri "team" CMS dikelompokkan per jenjang (`{ level: {value,label},
+ *  members: [...] }`), BUKAN array flat seperti "news"/"publications" --
+ *  satu entri di `json.data` menghasilkan BANYAK anggota tim sekaligus.
+ *  Itu sebabnya mapItem di ApiCollectionConfig mengembalikan array, bukan
+ *  satu item, supaya koleksi "team" bisa lewat jalur yang sama dengan
+ *  koleksi lain di fetchApi. */
+function mapTeamGroup(raw: Record<string, unknown>, lang: Locale): unknown[] {
+  const level = (raw.level as { value?: unknown } | null | undefined)?.value;
+  const members = Array.isArray(raw.members) ? raw.members : [];
+  return members.map((member) => mapTeamMember(member as Record<string, unknown>, lang, level));
+}
+
+/** Entri "milestones" CMS -> bentuk mentah yang divalidasi milestoneSchema.
+ *  CMS Rekam mengirim isinya sebagai satu field teks (`body`) berbaris-baris
+ *  (dipisah \r\n), bukan dua field terpisah -- baris tunggal jadi paragraf
+ *  (`description`), lebih dari satu baris jadi daftar poin (`bullets`),
+ *  meniru persis union Milestone yang dulu ditulis manual di
+ *  achievements/page.tsx per tahun. */
+function mapMilestoneItem(raw: Record<string, unknown>, lang: Locale): unknown {
+  const lines =
+    typeof raw.body === 'string'
+      ? raw.body
+          .split(/\r\n|\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+      : [];
+
+  return {
+    lang,
+    year: raw.year,
+    title: raw.title,
+    description: lines.length === 1 ? lines[0] : null,
+    bullets: lines.length > 1 ? lines : [],
+    image: typeof raw.cover_url === 'string' && raw.cover_url ? raw.cover_url : null,
+  };
+}
+
 type ApiPage = { data?: unknown[]; meta?: { current_page: number; last_page: number } };
 
 /** Satu koleksi kita bisa jadi nama resource yang berbeda di CMS (kita
@@ -107,12 +186,17 @@ type ApiCollectionConfig = {
    *  hasilnya digabung -- lihat komentar mapNewsItem soal kenapa. false:
    *  fetch dipanggil sekali saja, tanpa parameter lang. */
   perLocale: boolean;
-  mapItem: (raw: Record<string, unknown>, lang: Locale) => unknown;
+  /** Array, bukan satu item -- satu entri mentah CMS bisa memetakan ke
+   *  banyak (team, lihat mapTeamGroup) atau satu (news/publications, yang
+   *  cukup membungkusnya sendiri dalam array satu elemen). */
+  mapItem: (raw: Record<string, unknown>, lang: Locale) => unknown[];
 };
 
 const apiCollections: Record<CollectionName, ApiCollectionConfig> = {
-  articles: { resource: 'news', perLocale: true, mapItem: mapNewsItem },
-  publications: { resource: 'publications', perLocale: false, mapItem: (raw) => mapPublicationItem(raw) },
+  articles: { resource: 'news', perLocale: true, mapItem: (raw, lang) => [mapNewsItem(raw, lang)] },
+  publications: { resource: 'publications', perLocale: false, mapItem: (raw) => [mapPublicationItem(raw)] },
+  team: { resource: 'team', perLocale: true, mapItem: mapTeamGroup },
+  milestones: { resource: 'milestones', perLocale: true, mapItem: (raw, lang) => [mapMilestoneItem(raw, lang)] },
 };
 
 /** Menarik satu resource sampai habis, mengikuti `meta.current_page` /
@@ -185,7 +269,7 @@ async function fetchApi(name: CollectionName): Promise<unknown> {
     url.searchParams.set('per_page', String(API_PAGE_SIZE));
 
     const raw = await fetchAllPages(url, headers, name);
-    for (const item of raw) items.push(config.mapItem(item, lang));
+    for (const item of raw) items.push(...config.mapItem(item, lang));
   }
 
   return items;

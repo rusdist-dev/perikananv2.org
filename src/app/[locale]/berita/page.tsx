@@ -57,7 +57,7 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
               // lagi dipasang tetap seperti saat kontennya masih contoh JSON.
               image: resolveArticleImage(featured.image) ?? berita1,
               date: featured.publishedAt,
-              category: featured.tags[0] ?? t.news,
+              category: featured.program?.name ?? featured.tags[0] ?? t.news,
               title: featured.title,
               excerpt: featured.excerpt,
               href: `/berita/${featured.slug}`,
@@ -71,6 +71,7 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
         publishedAt: article.publishedAt,
         tags: article.tags,
         image: article.image,
+        program: article.program,
       }))}
       programOptions={programOptions()}
       locale={locale}

@@ -1,144 +1,17 @@
 import { notFound } from 'next/navigation';
-import Image, { type StaticImageData } from 'next/image';
+import Image from 'next/image';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import ornamentBg2 from '@/assets/banner/ornament3.png';
-import achievements1 from '@/assets/achievements/achievements1.png';
-import achievements2 from '@/assets/achievements/achievements2.png';
-import achievements3 from '@/assets/achievements/achievements3.png';
 import achievements4 from '@/assets/achievements/achievements4.png';
 import fotoPulau2 from '@/assets/marine-conservation/foto_pulau2.png';
 import { Container } from '@/components/layout/Container';
 import { MilestoneCard } from '@/components/discover/MilestoneCard';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { getMilestones } from '@/lib/content';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
-
-/** Baru ada 3 foto dokumentasi nyata (lihat src/assets/achievements) --
- *  dipakai bergantian di 9 milestone alih-alih mengarang 9 foto placeholder
- *  baru. Union description/bullets meniru pola yang sama dengan
- *  ProgramObjectives: sebagian milestone (2018, 2019) cukup satu paragraf,
- *  sisanya daftar poin. */
-type Milestone = {
-  year: string;
-  title: string;
-  image: StaticImageData;
-} & (
-  | { description: string; bullets?: never }
-  | { bullets: string[]; description?: never }
-);
-
-function getMilestones(t: Dictionary): Milestone[] {
-  return [
-    {
-      year: '2018',
-      title: t.achievementsMilestone2018Title,
-      image: achievements1,
-      description: t.achievementsMilestone2018Description,
-    },
-    {
-      year: '2019',
-      title: t.achievementsMilestone2019Title,
-      image: achievements2,
-      description: t.achievementsMilestone2019Description,
-    },
-    {
-      year: '2020',
-      title: t.achievementsMilestone2020Title,
-      image: achievements3,
-      bullets: [t.achievementsMilestone2020Bullet1, t.achievementsMilestone2020Bullet2],
-    },
-    {
-      year: '2021',
-      title: t.achievementsMilestone2021Title,
-      image: achievements1,
-      bullets: [
-        t.achievementsMilestone2021Bullet1,
-        t.achievementsMilestone2021Bullet2,
-        t.achievementsMilestone2021Bullet3,
-        t.achievementsMilestone2021Bullet4,
-        t.achievementsMilestone2021Bullet5,
-        t.achievementsMilestone2021Bullet6,
-      ],
-    },
-    {
-      year: '2022',
-      title: t.achievementsMilestone2022Title,
-      image: achievements1,
-      bullets: [
-        t.achievementsMilestone2022Bullet1,
-        t.achievementsMilestone2022Bullet2,
-        t.achievementsMilestone2022Bullet3,
-        t.achievementsMilestone2022Bullet4,
-      ],
-    },
-    {
-      year: '2023',
-      title: t.achievementsMilestone2023Title,
-      image: achievements3,
-      bullets: [
-        t.achievementsMilestone2023Bullet1,
-        t.achievementsMilestone2023Bullet2,
-        t.achievementsMilestone2023Bullet3,
-        t.achievementsMilestone2023Bullet4,
-        t.achievementsMilestone2023Bullet5,
-        t.achievementsMilestone2023Bullet6,
-        t.achievementsMilestone2023Bullet7,
-        t.achievementsMilestone2023Bullet8,
-        t.achievementsMilestone2023Bullet9,
-        t.achievementsMilestone2023Bullet10,
-        t.achievementsMilestone2023Bullet11,
-      ],
-    },
-    {
-      year: '2024',
-      title: t.achievementsMilestone2024Title,
-      image: achievements3,
-      bullets: [
-        t.achievementsMilestone2024Bullet1,
-        t.achievementsMilestone2024Bullet2,
-        t.achievementsMilestone2024Bullet3,
-        t.achievementsMilestone2024Bullet4,
-        t.achievementsMilestone2024Bullet5,
-        t.achievementsMilestone2024Bullet6,
-        t.achievementsMilestone2024Bullet7,
-        t.achievementsMilestone2024Bullet8,
-        t.achievementsMilestone2024Bullet9,
-        t.achievementsMilestone2024Bullet10,
-      ],
-    },
-    {
-      year: '2025',
-      title: t.achievementsMilestone2025Title,
-      image: achievements1,
-      bullets: [
-        t.achievementsMilestone2025Bullet1,
-        t.achievementsMilestone2025Bullet2,
-        t.achievementsMilestone2025Bullet3,
-        t.achievementsMilestone2025Bullet4,
-        t.achievementsMilestone2025Bullet5,
-        t.achievementsMilestone2025Bullet6,
-        t.achievementsMilestone2025Bullet7,
-        t.achievementsMilestone2025Bullet8,
-        t.achievementsMilestone2025Bullet9,
-        t.achievementsMilestone2025Bullet10,
-      ],
-    },
-    {
-      year: '2026',
-      title: t.achievementsMilestone2026Title,
-      image: achievements1,
-      bullets: [
-        t.achievementsMilestone2026Bullet1,
-        t.achievementsMilestone2026Bullet2,
-        t.achievementsMilestone2026Bullet3,
-        t.achievementsMilestone2026Bullet4,
-        t.achievementsMilestone2026Bullet5,
-      ],
-    },
-  ];
-}
 
 /** Dikelompokkan per baris (bukan array datar) supaya tiap baris jadi anak
  *  langsung dari pembungkus `divide-y` -- divide-y Tailwind menaruh border
@@ -190,6 +63,7 @@ export default async function AchievementsPage({ params }: { params: Promise<{ l
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  const milestones = await getMilestones(locale);
 
   return (
     <div className="relative isolate overflow-hidden bg-bg">
@@ -272,14 +146,14 @@ export default async function AchievementsPage({ params }: { params: Promise<{ l
             2026 sengaja dibiarkan sendirian di baris terakhir (auto-placement
             grid apa adanya) alih-alih diisi kartu kosong. */}
         <div className="mt-8 grid grid-cols-1 items-start gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {getMilestones(t).map((milestone) => (
+          {milestones.map((milestone) => (
             <MilestoneCard
               key={milestone.year}
-              year={milestone.year}
+              year={String(milestone.year)}
               title={milestone.title}
               image={milestone.image}
-              description={milestone.description}
-              bullets={milestone.bullets}
+              description={milestone.description ?? undefined}
+              bullets={milestone.bullets.length > 0 ? milestone.bullets : undefined}
               showMoreLabel={t.showMore}
               showLessLabel={t.showLess}
             />

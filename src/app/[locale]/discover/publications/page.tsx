@@ -20,11 +20,18 @@ export default async function PublicationsPage({ params }: { params: Promise<{ l
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const publications = await getPublications();
+  const allPublications = await getPublications();
+  // "produk-pengetahuan" adalah kategori CMS untuk Knowledge Product --
+  // dipisah dari daftar "Publikasi Kami" di atasnya (yang sudah punya filter
+  // kategori/pencarian sendiri) supaya keempatnya tidak tampil dobel di dua
+  // seksi sekaligus.
+  const knowledgeProducts = allPublications.filter((p) => p.category === 'produk-pengetahuan');
+  const publications = allPublications.filter((p) => p.category !== 'produk-pengetahuan');
 
   return (
     <PublicationsExplorer
       publications={publications}
+      knowledgeProducts={knowledgeProducts}
       labels={{
         home: t.home,
         navDiscover: t.navDiscover,
@@ -63,6 +70,7 @@ export default async function PublicationsPage({ params }: { params: Promise<{ l
         noResults: t.publicationsNoResults,
         knowledgeProductEyebrow: t.publicationsKnowledgeProductEyebrow,
         knowledgeProductHeading: t.publicationsKnowledgeProductHeading,
+        knowledgeProductEmpty: t.publicationsKnowledgeProductEmpty,
         videoEyebrow: t.publicationsVideoEyebrow,
         videoHeading: t.publicationsVideoHeading,
       }}

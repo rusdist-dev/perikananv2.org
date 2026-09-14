@@ -17,7 +17,11 @@ export function TeamProfileButton({
   closeLabel,
   className,
 }: {
-  member: { image: StaticImageData; name: string; role: string; description: string };
+  // string = URL absolut (photo_url dari CMS); StaticImageData tidak lagi
+  // dipakai di jalur ini (koleksi "team" cuma datang dari CMS, lihat
+  // komentar Article.image di schema.ts soal kapan dua bentuk itu masih
+  // relevan) tapi tetap diterima untuk kompatibilitas pemanggil lama.
+  member: { image: StaticImageData | string | null; name: string; position: string; description: string };
   label: string;
   closeLabel: string;
   className: string;

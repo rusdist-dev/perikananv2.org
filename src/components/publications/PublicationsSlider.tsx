@@ -1,6 +1,6 @@
 'use client';
 
-import Image, { type StaticImageData } from 'next/image';
+import Image from 'next/image';
 import { useRef, useState } from 'react';
 import type { Swiper as SwiperInstance } from 'swiper';
 import { Navigation } from 'swiper/modules';
@@ -13,13 +13,11 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 
 export type PublicationSlide = {
-  // string = URL absolut (cover_url dari CMS); StaticImageData = foto lokal
-  // yang di-import statis (dipakai KNOWLEDGE_PRODUCTS di PublicationsExplorer,
-  // yang berkasnya belum ada di CMS). next/image menerima keduanya sebagai
-  // src, sama seperti FeaturedArticle.image di NewsHero. null = publikasi
-  // itu belum punya cover di CMS -- kartu melewati gambarnya (§4j), bukan
-  // menampilkan kotak kosong.
-  image: StaticImageData | string | null;
+  // URL absolut (cover_url dari CMS Rekam) -- lihat Publication.image di
+  // lib/content/schema.ts, satu-satunya sumber isi field ini sekarang. null =
+  // publikasi itu belum punya cover di CMS -- kartu melewati gambarnya
+  // (§4j), bukan menampilkan kotak kosong.
+  image: string | null;
   /** null = belum dikategorikan di CMS. */
   category: string | null;
   title: string;

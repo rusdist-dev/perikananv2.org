@@ -4,6 +4,7 @@ import Image, { type StaticImageData } from 'next/image';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@/components/ui/Icon';
+import { getBodyParagraphs } from '@/lib/article-body';
 
 /**
  * Sama pola portal-nya dengan PdfViewerModal/VideoModal (lihat komentar di
@@ -27,7 +28,10 @@ export function TeamProfileModal({
   onClose,
 }: {
   isOpen: boolean;
-  member: { image: StaticImageData; name: string; role: string; description: string };
+  // Sama seperti TeamProfileButton: image URL absolut dari CMS (photo_url),
+  // null kalau anggota itu belum punya foto -- kartu profil lewat blok foto
+  // (§4j), bukan menampilkan kotak next/image kosong.
+  member: { image: StaticImageData | string | null; name: string; position: string; description: string };
   closeLabel: string;
   onClose: () => void;
 }) {
@@ -61,18 +65,30 @@ export function TeamProfileModal({
         className="relative flex max-h-full w-full max-w-md flex-col overflow-y-auto rounded-lg bg-bg shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <Image
-          src={member.image}
-          alt=""
-          aria-hidden
-          sizes="(min-width: 640px) 28rem, 100vw"
-          className="h-auto w-full"
-        />
+        {member.image ? (
+          <Image
+            src={member.image}
+            alt=""
+            aria-hidden
+            sizes="(min-width: 640px) 28rem, 100vw"
+            className="h-auto w-full"
+          />
+        ) : null}
 
         <div className="flex flex-col gap-2 p-6">
           <p className="text-lg font-bold text-primary">{member.name}</p>
-          <p className="text-xs font-bold uppercase tracking-wide text-secondary">{member.role}</p>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{member.description}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-secondary">{member.position}</p>
+          {/* description = bio CMS (HTML tersanitasi di lib/content/source.ts)
+              atau jabatan sebagai fallback lama -- getBodyParagraphs
+              menangani keduanya sama seperti body artikel di
+              /berita/[slug]. */}
+          {getBodyParagraphs(member.description).map((paragraph, index) => (
+            <p
+              key={index}
+              className="mt-2 text-sm leading-relaxed text-muted"
+              dangerouslySetInnerHTML={{ __html: paragraph }}
+            />
+          ))}
         </div>
 
         <button

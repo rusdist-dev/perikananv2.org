@@ -48,65 +48,6 @@ export type DiscoverDictionary = {
   achievementsMilestoneEyebrow: string;
   achievementsMilestoneHeading: string;
   achievementsMilestoneSubheading: string;
-  achievementsMilestone2018Title: string;
-  achievementsMilestone2018Description: string;
-  achievementsMilestone2019Title: string;
-  achievementsMilestone2019Description: string;
-  achievementsMilestone2020Title: string;
-  achievementsMilestone2020Bullet1: string;
-  achievementsMilestone2020Bullet2: string;
-  achievementsMilestone2021Title: string;
-  achievementsMilestone2021Bullet1: string;
-  achievementsMilestone2021Bullet2: string;
-  achievementsMilestone2021Bullet3: string;
-  achievementsMilestone2021Bullet4: string;
-  achievementsMilestone2021Bullet5: string;
-  achievementsMilestone2021Bullet6: string;
-  achievementsMilestone2022Title: string;
-  achievementsMilestone2022Bullet1: string;
-  achievementsMilestone2022Bullet2: string;
-  achievementsMilestone2022Bullet3: string;
-  achievementsMilestone2022Bullet4: string;
-  achievementsMilestone2023Title: string;
-  achievementsMilestone2023Bullet1: string;
-  achievementsMilestone2023Bullet2: string;
-  achievementsMilestone2023Bullet3: string;
-  achievementsMilestone2023Bullet4: string;
-  achievementsMilestone2023Bullet5: string;
-  achievementsMilestone2023Bullet6: string;
-  achievementsMilestone2023Bullet7: string;
-  achievementsMilestone2023Bullet8: string;
-  achievementsMilestone2023Bullet9: string;
-  achievementsMilestone2023Bullet10: string;
-  achievementsMilestone2023Bullet11: string;
-  achievementsMilestone2024Title: string;
-  achievementsMilestone2024Bullet1: string;
-  achievementsMilestone2024Bullet2: string;
-  achievementsMilestone2024Bullet3: string;
-  achievementsMilestone2024Bullet4: string;
-  achievementsMilestone2024Bullet5: string;
-  achievementsMilestone2024Bullet6: string;
-  achievementsMilestone2024Bullet7: string;
-  achievementsMilestone2024Bullet8: string;
-  achievementsMilestone2024Bullet9: string;
-  achievementsMilestone2024Bullet10: string;
-  achievementsMilestone2025Title: string;
-  achievementsMilestone2025Bullet1: string;
-  achievementsMilestone2025Bullet2: string;
-  achievementsMilestone2025Bullet3: string;
-  achievementsMilestone2025Bullet4: string;
-  achievementsMilestone2025Bullet5: string;
-  achievementsMilestone2025Bullet6: string;
-  achievementsMilestone2025Bullet7: string;
-  achievementsMilestone2025Bullet8: string;
-  achievementsMilestone2025Bullet9: string;
-  achievementsMilestone2025Bullet10: string;
-  achievementsMilestone2026Title: string;
-  achievementsMilestone2026Bullet1: string;
-  achievementsMilestone2026Bullet2: string;
-  achievementsMilestone2026Bullet3: string;
-  achievementsMilestone2026Bullet4: string;
-  achievementsMilestone2026Bullet5: string;
   achievementsPolicyEyebrow: string;
   achievementsPolicyHeading: string;
   achievementsPolicySubheading: string;
@@ -152,6 +93,7 @@ export type DiscoverDictionary = {
   publicationsNoResults: string;
   publicationsKnowledgeProductEyebrow: string;
   publicationsKnowledgeProductHeading: string;
+  publicationsKnowledgeProductEmpty: string;
   publicationsVideoEyebrow: string;
   publicationsVideoHeading: string;
 
@@ -236,93 +178,6 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     achievementsMilestoneEyebrow: 'Tonggak Capaian',
     achievementsMilestoneHeading: 'Dari akar hingga pengakuan global',
     achievementsMilestoneSubheading: 'Perjalanan kami dari awal hingga kini',
-    achievementsMilestone2018Title: 'Berdirinya Program FRCI',
-    achievementsMilestone2018Description:
-      'FRCI resmi didirikan di bawah Rekam Nusantara Foundation, memulai kerjanya dalam konservasi perikanan dengan fokus pada perlindungan hiu dan pari.',
-    achievementsMilestone2019Title: 'Meluncurkan program konservasi hiu dan pari pertama di Jawa Tengah.',
-    achievementsMilestone2019Description:
-      'FRCI menjalankan program Konservasi Hiu dan Pari pertamanya, diluncurkan di Jawa Tengah untuk memantau dan melindungi habitat mereka.',
-    achievementsMilestone2020Title: 'Kemitraan baru dengan akademisi dan pemerintah',
-    achievementsMilestone2020Bullet1: 'Kesepakatan dengan IPB University, Universitas Diponegoro, dan DKP Jawa Tengah',
-    achievementsMilestone2020Bullet2:
-      'Menyusun bersama Rencana Pengelolaan Perikanan untuk Wilayah Pengelolaan Perikanan (WPP) 572, 712, 713, dan 714',
-    achievementsMilestone2021Title:
-      'Memperluas dampak lewat riset baru, peluncuran buku, inisiatif kebijakan, dan kolaborasi',
-    achievementsMilestone2021Bullet1: 'Peluncuran buku: Kerapu di Indonesia',
-    achievementsMilestone2021Bullet2: 'Uji coba Neraca Sumber Daya Laut pertama dan lokakarya nasional',
-    achievementsMilestone2021Bullet3: 'Peluncuran IKAN generasi pertama',
-    achievementsMilestone2021Bullet4: 'Peluncuran Program Magang Perikanan Berkelanjutan pertama',
-    achievementsMilestone2021Bullet5:
-      'Peluncuran laporan Komunikasi Strategis untuk Pengelolaan KKP di Indonesia',
-    achievementsMilestone2021Bullet6:
-      'Kesepakatan dengan Direktorat Konservasi dan Keanekaragaman Hayati Laut, KKP',
-    achievementsMilestone2022Title:
-      'Meraih pengakuan global sambil memperluas program neraca sumber daya laut dan pengelolaan perikanan',
-    achievementsMilestone2022Bullet1: 'Menjadi anggota Global Ocean Accounts Partnership (GOAP)',
-    achievementsMilestone2022Bullet2: 'Turut menyelenggarakan Dialog Global Ketiga tentang Neraca Sumber Daya Laut',
-    achievementsMilestone2022Bullet3: 'Pelaksanaan program KKP Liukang Tangaya',
-    achievementsMilestone2022Bullet4: 'Peluncuran Fishery Improvement Project Kakap-Kerapu',
-    achievementsMilestone2023Title:
-      'Meluncurkan program karbon biru pertama, riset global, dan teknologi baru berbasis AI',
-    achievementsMilestone2023Bullet1: 'Program Karbon Biru pertama di Jawa Tengah dan Nusa Tenggara Barat',
-    achievementsMilestone2023Bullet2:
-      'Diseminasi makalah indikator stok Kakap-Kerapu di Lokakarya Regional FAO',
-    achievementsMilestone2023Bullet3: 'Dukungan bagi pengembangan Neraca Sumber Daya Laut internasional',
-    achievementsMilestone2023Bullet4:
-      'Turut menyelenggarakan lokakarya neraca sumber daya laut untuk pengelolaan ekosistem karbon biru',
-    achievementsMilestone2023Bullet5:
-      'Turut menyelenggarakan Pertemuan Dewan Asian Fisheries Society (AFS) ke-64',
-    achievementsMilestone2023Bullet6:
-      'Peluncuran studi Pengelolaan Perikanan Berbasis Ekosistem pertama: Ecopath with Ecosim',
-    achievementsMilestone2023Bullet7:
-      'Peluncuran data perikanan independen berbasis AI melalui platform Crowd Data Crawling (CDC)',
-    achievementsMilestone2023Bullet8: 'Menelusuri rantai pasok hiu dan pari di Jawa Tengah, Aceh, dan Lombok',
-    achievementsMilestone2023Bullet9: 'Turut menyusun dokumen strategi Indonesia untuk target KKP 30x45',
-    achievementsMilestone2023Bullet10:
-      'Peningkatan kapasitas pemberantasan pencucian uang di sektor kelautan dan perikanan',
-    achievementsMilestone2023Bullet11: 'Kesepakatan dengan DJPSDKP, KKP',
-    achievementsMilestone2024Title:
-      'Pengakuan internasional beriringan dengan pertumbuhan berkelanjutan dalam pelatihan, teknologi, dan kemitraan',
-    achievementsMilestone2024Bullet1: 'Penerima Penghargaan EUTECH SDG 14',
-    achievementsMilestone2024Bullet2: 'Kesepakatan dengan Universitas Mataram',
-    achievementsMilestone2024Bullet3: 'Peluncuran Dasbor Neraca Sumber Daya Laut Indonesia',
-    achievementsMilestone2024Bullet4:
-      'Turut menyelenggarakan Dialog Global Kelima tentang Pembangunan Laut Berkelanjutan',
-    achievementsMilestone2024Bullet5:
-      'Pembicara undangan di World Fisheries Congress ke-9 di Amerika Serikat',
-    achievementsMilestone2024Bullet6:
-      'Turut menyelenggarakan lokakarya teknis internasional tentang pasar karbon biru berintegritas tinggi',
-    achievementsMilestone2024Bullet7:
-      'Turut menyelenggarakan pelatihan forensik digital untuk memberantas kejahatan kelautan dan perikanan',
-    achievementsMilestone2024Bullet8: 'Turut menyelenggarakan pelatihan KKP 101',
-    achievementsMilestone2024Bullet9:
-      'Memfasilitasi penyusunan zonasi, rencana pengelolaan, dan SOP untuk KKP Liukang Tangaya',
-    achievementsMilestone2024Bullet10: 'Kesepakatan dengan DJPT KKP dan DKP Sulawesi Selatan',
-    achievementsMilestone2025Title:
-      'Berdampak di panggung global lewat fellowship, perangkat, dan kemitraan baru.',
-    achievementsMilestone2025Bullet1: 'Peluncuran Ocean Accounts Fellowship',
-    achievementsMilestone2025Bullet2: 'Peluncuran NUSACORE',
-    achievementsMilestone2025Bullet3:
-      'Kesepakatan dengan Universitas Brawijaya, Pusat Riset Ekologi BRIN, dan Pusat Riset Perikanan BRIN',
-    achievementsMilestone2025Bullet4:
-      'Komitmen pengembangan Neraca Sumber Daya Laut 2030 di UNOC ke-3 dan Our Ocean Conference 2025',
-    achievementsMilestone2025Bullet5:
-      "Peluncuran film Ocean's Tale of Nusantara: Upaya Kolektif Menghadapi Krisis Iklim",
-    achievementsMilestone2025Bullet6:
-      'Turut menyelenggarakan side event tentang Integrasi Kualitas Habitat di CITES CoP-20',
-    achievementsMilestone2025Bullet7: 'Peluncuran pedoman KKP Lepas Pantai dan Analisis Biaya-Manfaat',
-    achievementsMilestone2025Bullet8:
-      'Peluncuran inisiatif Biodiversity Beyond National Jurisdiction (BBNJ) Indonesia',
-    achievementsMilestone2025Bullet9: 'Peluncuran buku: Kakap di Indonesia',
-    achievementsMilestone2025Bullet10: 'Juru bicara di Maritime Illegal Wildlife Trade Conference 2025',
-    achievementsMilestone2026Title:
-      'Memperkuat sains berbasis bukti lewat stasiun riset baru, perluasan dasbor, dan presentasi riset global',
-    achievementsMilestone2026Bullet1: 'Memperkuat pengelolaan berbasis bukti di KKP Liukang Tangaya',
-    achievementsMilestone2026Bullet2: 'Peluncuran Dasbor Dampak Kami',
-    achievementsMilestone2026Bullet3: 'Peluncuran Stasiun Riset Terpadu JOGO LAUT',
-    achievementsMilestone2026Bullet4: 'Penerapan neraca sumber daya laut untuk karbon biru berintegritas tinggi',
-    achievementsMilestone2026Bullet5:
-      'Presentasi kelompok di Sharks International 2026 dan International Coral Reef Symposium 2026',
     achievementsPolicyEyebrow: 'Dampak Kebijakan',
     achievementsPolicyHeading: 'Tempat bukti membentuk masa depan',
     achievementsPolicySubheading: 'Lihat di mana data FRCI telah memberi dampak',
@@ -373,6 +228,7 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     publicationsNoResults: 'Tidak ada publikasi yang cocok dengan pencarian ini.',
     publicationsKnowledgeProductEyebrow: 'Produk Pengetahuan',
     publicationsKnowledgeProductHeading: 'Mengubah riset kami menjadi pengetahuan untuk semua',
+    publicationsKnowledgeProductEmpty: 'Belum ada produk pengetahuan yang cocok dengan kategori ini.',
     publicationsVideoEyebrow: 'Publikasi Video',
     publicationsVideoHeading: 'Tonton dan pelajari lebih lanjut tentang laut kita',
 
@@ -458,88 +314,6 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     achievementsMilestoneEyebrow: 'Milestone',
     achievementsMilestoneHeading: 'From the roots to global recognition',
     achievementsMilestoneSubheading: 'Our journey from the beginning until now',
-    achievementsMilestone2018Title: 'Establishment of FRCI Program',
-    achievementsMilestone2018Description:
-      'FRCI was formally established under Rekam Nusantara Foundation, launching its work in fisheries conservation with a focus on protecting sharks and rays.',
-    achievementsMilestone2019Title: 'Launched first shark and ray conservation program in Central Java.',
-    achievementsMilestone2019Description:
-      'FRCI ran its first Shark and Ray Conservation program, launched in Central Java to monitor and protect their habitats.',
-    achievementsMilestone2020Title: 'New academic and government partnerships',
-    achievementsMilestone2020Bullet1: 'Agreements with IPB University, Diponegoro University, and DKP Jawa Tengah',
-    achievementsMilestone2020Bullet2:
-      'Co-develop Fisheries Management Plan for Fisheries Management Area (FMA) 572, 712, 713, and 714',
-    achievementsMilestone2021Title:
-      'Broadened impact through new research, book launch, policy initiatives, and collaboration',
-    achievementsMilestone2021Bullet1: 'Book launch: Grouper in Indonesia',
-    achievementsMilestone2021Bullet2: 'The first Ocean Accounts pilot and national workshop',
-    achievementsMilestone2021Bullet3: 'Launch of the first generation of IKAN',
-    achievementsMilestone2021Bullet4: 'Launch of the first Sustainable Fisheries Internship Program',
-    achievementsMilestone2021Bullet5:
-      'Launch of the Strategic Communication for MPA Management in Indonesia report',
-    achievementsMilestone2021Bullet6:
-      'Agreement with the Directorate of Marine Conservation and Biodiversity, MMAF',
-    achievementsMilestone2022Title:
-      'Gained global recognition while expanding ocean accounting and fisheries management programs',
-    achievementsMilestone2022Bullet1: 'Became a member of the Global Ocean Accounts Partnership (GOAP)',
-    achievementsMilestone2022Bullet2: 'Co-hosted the Third Global Dialogue on Ocean Accounting',
-    achievementsMilestone2022Bullet3: 'Implementation of the Liukang Tangaya MPA program',
-    achievementsMilestone2022Bullet4: 'Launch of the Snapper–Grouper Fishery Improvement Project',
-    achievementsMilestone2023Title:
-      'Launched the first blue carbon program, global research, and new AI-based technology',
-    achievementsMilestone2023Bullet1: 'The first Blue Carbon program in Central Java and West Nusa Tenggara',
-    achievementsMilestone2023Bullet2:
-      'Dissemination of the Snapper-grouper stock indicators paper at the FAO Regional Workshop',
-    achievementsMilestone2023Bullet3: 'Support for international Ocean Accounts development',
-    achievementsMilestone2023Bullet4:
-      'Co-organized a workshop on ocean accounting for blue carbon ecosystem management',
-    achievementsMilestone2023Bullet5: 'Co-hosted the 64th Asian Fisheries Society (AFS) Council Meeting',
-    achievementsMilestone2023Bullet6:
-      'Launch of the first Ecosystem-Based Fisheries Management study: Ecopath with Ecosim',
-    achievementsMilestone2023Bullet7:
-      'Launch of AI-based independent fisheries data through the Crowd Data Crawling (CDC) platform',
-    achievementsMilestone2023Bullet8: 'Traced the supply chains of sharks and rays in Central Java, Aceh, and Lombok',
-    achievementsMilestone2023Bullet9: 'Co-development of the Indonesian strategy document for the MPA 30x45 target',
-    achievementsMilestone2023Bullet10:
-      'Capacity building on eradicating money laundering in the marine and fisheries sector',
-    achievementsMilestone2023Bullet11: 'Agreement with DJPSDKP, MMAF',
-    achievementsMilestone2024Title:
-      'International recognition met continued growth in training, technology, and partnerships',
-    achievementsMilestone2024Bullet1: 'Recipient of the EUTECH SDG 14 Award',
-    achievementsMilestone2024Bullet2: 'Agreement with the University of Mataram',
-    achievementsMilestone2024Bullet3: 'Launch of the Ocean Accounts Indonesia Dashboard',
-    achievementsMilestone2024Bullet4: 'Co-hosted the Fifth Global Dialogue on Sustainable Ocean Development',
-    achievementsMilestone2024Bullet5: 'Invited presenter at the 9th World Fisheries Congress in the United States',
-    achievementsMilestone2024Bullet6:
-      'Co-organized an International technical workshop on high-integrity blue carbon markets',
-    achievementsMilestone2024Bullet7:
-      'Co-organized digital forensics training on combating marine and fisheries crimes',
-    achievementsMilestone2024Bullet8: 'Co-organized MPA 101 training',
-    achievementsMilestone2024Bullet9:
-      'Facilitated the development of zonation, management plans, and SOPs for the Liukang Tangaya MPA',
-    achievementsMilestone2024Bullet10: 'Agreements with DJPT, MMAF and DKP Sulawesi Selatan',
-    achievementsMilestone2025Title: 'Impact on global stage through new fellowships, tools, and partnerships.',
-    achievementsMilestone2025Bullet1: 'Launch of the Ocean Accounts Fellowship',
-    achievementsMilestone2025Bullet2: 'Launch of NUSACORE',
-    achievementsMilestone2025Bullet3:
-      'Agreements with Brawijaya University, the BRIN Research Center for Ecology, and the BRIN Research Center for Fisheries',
-    achievementsMilestone2025Bullet4:
-      'Pledge for 2030 Ocean Accounts development at the 3rd UNOC and the Our Ocean Conference 2025',
-    achievementsMilestone2025Bullet5:
-      "Launch of the film Ocean's Tale of Nusantara: Collective Efforts Against the Climate Crisis",
-    achievementsMilestone2025Bullet6: 'Co-hosted a side event on Integrating Habitat Quality at CITES CoP-20',
-    achievementsMilestone2025Bullet7: 'Launch of the Offshore MPA and Cost-Benefit Analysis guidelines',
-    achievementsMilestone2025Bullet8:
-      'Launch of the Biodiversity Beyond National Jurisdiction (BBNJ) Indonesia initiative',
-    achievementsMilestone2025Bullet9: 'Book launch: Snapper in Indonesia',
-    achievementsMilestone2025Bullet10: 'Spokesperson at the Maritime Illegal Wildlife Trade Conference 2025',
-    achievementsMilestone2026Title:
-      'Strengthened evidence-based science with a new research station, expanded dashboards, and global research presentations',
-    achievementsMilestone2026Bullet1: 'Strengthening evidence-based management in the Liukang Tangaya MPA',
-    achievementsMilestone2026Bullet2: 'Launch of the Our Impacts Dashboard',
-    achievementsMilestone2026Bullet3: 'Launch of the JOGO LAUT Integrated Research Station',
-    achievementsMilestone2026Bullet4: 'Implementation of ocean accounts for high-integrity blue carbon',
-    achievementsMilestone2026Bullet5:
-      'Group presentation at Sharks International 2026 and International Coral Reef Symposium 2026',
     achievementsPolicyEyebrow: 'Policy Impact',
     achievementsPolicyHeading: 'Where the evidence shape the future',
     achievementsPolicySubheading: "See where FRCI's data has made an impact",
@@ -590,6 +364,7 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     publicationsNoResults: 'No publications match this search.',
     publicationsKnowledgeProductEyebrow: 'Knowledge Product',
     publicationsKnowledgeProductHeading: 'Turning our research into knowledge for everyone',
+    publicationsKnowledgeProductEmpty: 'No knowledge products match this category yet.',
     publicationsVideoEyebrow: 'Video Publication',
     publicationsVideoHeading: 'Watch and learn more about our ocean',
 
