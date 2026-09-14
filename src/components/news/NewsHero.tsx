@@ -7,7 +7,10 @@ import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { Icon } from '@/components/ui/Icon';
 
 export type FeaturedArticle = {
-  image: StaticImageData;
+  // string = URL absolut (cover_url dari CMS); StaticImageData = foto lokal
+  // yang di-import statis (lihat berita/page.tsx). next/image menerima
+  // keduanya sebagai src.
+  image: StaticImageData | string;
   date: string;
   category: string;
   title: string;

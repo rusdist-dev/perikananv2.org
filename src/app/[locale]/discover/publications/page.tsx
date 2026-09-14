@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { publications } from '@/data/publications';
+import { getPublications } from '@/lib/content';
 import { PublicationsExplorer } from '@/components/publications/PublicationsExplorer';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
@@ -20,6 +20,7 @@ export default async function PublicationsPage({ params }: { params: Promise<{ l
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  const publications = await getPublications();
 
   return (
     <PublicationsExplorer

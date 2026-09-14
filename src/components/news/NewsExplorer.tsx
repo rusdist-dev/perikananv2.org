@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
-import { articleImages } from '@/data/article-images';
+import { resolveArticleImage } from '@/data/article-images';
 import { AppLink } from '@/components/ui/AppLink';
 import { Container } from '@/components/layout/Container';
 import type { BreadcrumbItem } from '@/components/ui/Breadcrumb';
@@ -58,6 +58,38 @@ type Props = {
 type Filters = { search: string; program: string; category: string; year: string };
 
 const PAGE_SIZE = 9;
+
+/** Di bawah ini, semua nomor halaman ditampilkan -- tidak ada yang perlu
+ *  dipersingkat kalau daftarnya sendiri sudah pendek. */
+const MAX_PAGE_BUTTONS_WITHOUT_ELLIPSIS = 7;
+
+/**
+ * Nomor mana yang tampil di navigasi halaman: selalu halaman pertama, halaman
+ * terakhir, halaman aktif, dan tetangga langsungnya (±1) -- sisanya diringkas
+ * jadi satu penanda "..." per celah. Daftar 18 halaman di halaman 1 jadi
+ * "1 2 … 18", bukan 18 tombol berjejer.
+ */
+function getPageNumbers(currentPage: number, totalPages: number): (number | 'ellipsis')[] {
+  if (totalPages <= MAX_PAGE_BUTTONS_WITHOUT_ELLIPSIS) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const keep = new Set(
+    [1, totalPages, currentPage - 1, currentPage, currentPage + 1].filter(
+      (p) => p >= 1 && p <= totalPages,
+    ),
+  );
+  const sorted = [...keep].sort((a, b) => a - b);
+
+  const result: (number | 'ellipsis')[] = [];
+  let previous = 0;
+  for (const p of sorted) {
+    if (previous && p - previous > 1) result.push('ellipsis');
+    result.push(p);
+    previous = p;
+  }
+  return result;
+}
 
 /** Membuang diakritik dan menyeragamkan kapital, sama seperti SearchableSelect/lib/search. */
 function normalize(text: string): string {
@@ -208,7 +240,7 @@ export function NewsExplorer({
             ) : (
               <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {pageItems.map((article) => {
-                  const image = article.image ? articleImages[article.image] : undefined;
+                  const image = resolveArticleImage(article.image);
                   const category = article.tags[0];
 
                   return (
@@ -262,20 +294,30 @@ export function NewsExplorer({
                 >
                   {labels.paginationPrevious}
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-                  <button
-                    key={pageNumber}
-                    type="button"
-                    onClick={() => setPage(pageNumber)}
-                    aria-current={pageNumber === currentPage ? 'page' : undefined}
-                    className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold',
-                      pageNumber === currentPage ? 'border-secondary text-secondary' : 'border-border text-muted',
-                    )}
-                  >
-                    {pageNumber}
-                  </button>
-                ))}
+                {getPageNumbers(currentPage, totalPages).map((pageNumber, index) =>
+                  pageNumber === 'ellipsis' ? (
+                    <span
+                      key={`ellipsis-${index}`}
+                      aria-hidden
+                      className="flex h-8 w-8 items-center justify-center text-xs font-bold text-muted"
+                    >
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setPage(pageNumber)}
+                      aria-current={pageNumber === currentPage ? 'page' : undefined}
+                      className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold',
+                        pageNumber === currentPage ? 'border-secondary text-secondary' : 'border-border text-muted',
+                      )}
+                    >
+                      {pageNumber}
+                    </button>
+                  ),
+                )}
                 <button
                   type="button"
                   disabled={currentPage === totalPages}

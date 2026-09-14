@@ -1,12 +1,11 @@
 import { panelNav } from '@/lib/nav';
 import { programMeta } from '@/data/programs';
-import { publications } from '@/data/publications';
-import { getArticles } from '@/lib/content';
+import { getArticles, getPublications } from '@/lib/content';
 import type { Locale } from '@/i18n/config';
 
 /**
  * Pencarian nyata di atas data yang benar-benar ada: program (panelNav +
- * programMeta), publikasi (src/data/publications.ts), dan berita
+ * programMeta), publikasi (lib/content, koleksi CMS), dan berita
  * (lib/content). TIDAK ada kategori "Dataset" -- rute /data/* di panelNav
  * belum punya halaman maupun data sungguhan di baliknya (lihat §4j di
  * site.ts), jadi mengarang hasil dataset di sini akan melanggar aturan yang
@@ -77,18 +76,19 @@ export async function searchContent(locale: Locale, query: string): Promise<Sear
     }
   }
 
+  const publications = await getPublications();
   for (const pub of publications) {
-    if (matchesAllTerms(`${pub.title} ${pub.category}`, terms)) {
+    if (matchesAllTerms(`${pub.title} ${pub.category ?? ''}`, terms)) {
       results.push({
         type: 'publication',
         title: pub.title,
-        description: pub.category,
+        description: pub.category ?? '',
         href: '/discover/publications',
         meta: pub.category,
         hasPdf: pub.pdfUrl !== null,
         publishedAt: null,
         year: null,
-        tags: [pub.category],
+        tags: pub.category ? [pub.category] : [],
       });
     }
   }
@@ -139,20 +139,23 @@ function levenshtein(a: string, b: string): number {
  * Tag berita tidak ditambahkan terpisah -- semuanya sudah persis nama
  * program yang sama.
  */
-function suggestionCorpus(): string[] {
+async function suggestionCorpus(): Promise<string[]> {
   const phrases = new Set<string>();
   for (const { label } of programLabels()) phrases.add(label);
-  for (const pub of publications) phrases.add(pub.category);
+  const publications = await getPublications();
+  for (const pub of publications) {
+    if (pub.category) phrases.add(pub.category);
+  }
   return [...phrases];
 }
 
 /** null kalau tidak ada frasa yang cukup dekat -- UI lalu menampilkan pesan generik, bukan saran karangan. */
-export function suggestCorrection(query: string): string | null {
+export async function suggestCorrection(query: string): Promise<string | null> {
   const q = normalize(query).replace(/\s+/g, '');
   if (!q) return null;
 
   let best: { phrase: string; distance: number } | null = null;
-  for (const phrase of suggestionCorpus()) {
+  for (const phrase of await suggestionCorpus()) {
     const normalizedPhrase = normalize(phrase).replace(/\s+/g, '');
     const distance = levenshtein(q, normalizedPhrase);
     if (!best || distance < best.distance) best = { phrase, distance };

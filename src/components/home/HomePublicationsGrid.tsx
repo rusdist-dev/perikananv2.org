@@ -6,8 +6,9 @@ import { AppLink } from '@/components/ui/AppLink';
 import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 type Publication = {
-  image: StaticImageData;
-  category: string;
+  // Sama seperti PublicationSlide di PublicationsSlider.tsx.
+  image: StaticImageData | string | null;
+  category: string | null;
   title: string;
   pdfUrl: string | null;
 };
@@ -46,16 +47,18 @@ export function HomePublicationsGrid({
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {publications.map((publication, index) => (
           <article key={index} className="flex flex-col border border-border">
-            <div className="relative aspect-[3/4]">
-              <Image
-                src={publication.image}
-                alt=""
-                aria-hidden
-                fill
-                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                className="object-cover"
-              />
-            </div>
+            {publication.image ? (
+              <div className="relative aspect-[3/4]">
+                <Image
+                  src={publication.image}
+                  alt=""
+                  aria-hidden
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : null}
             <div className="flex flex-1 flex-col gap-2 p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-secondary">{publication.category}</p>
               <h3 className="text-base font-semibold text-primary">{publication.title}</h3>

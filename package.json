@@ -16,6 +16,7 @@
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
     "clsx": "^2.1.1",
+    "isomorphic-dompurify": "^4.2.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "next": "16.3.0",
