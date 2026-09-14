@@ -5,9 +5,11 @@ import { Container } from '@/components/layout/Container';
 import { ShareAndTags } from '@/components/news/ShareAndTags';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
-import { articleImages } from '@/data/article-images';
+import { resolveArticleImage } from '@/data/article-images';
 import { getArticle, getArticles, getArticleSlugs, type Article } from '@/lib/content';
+import { getBodyParagraphs } from '@/lib/article-body';
 import { formatArticleDate } from '@/lib/date';
+import { stripHtml } from '@/lib/html';
 import { estimateReadingMinutes } from '@/lib/reading-time';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
@@ -27,7 +29,7 @@ const RELATED_COUNT = 3;
  *  bentuknya sama seperti kartu grid /berita, tapi diulang lokal di sini
  *  karena hanya satu tempat lagi yang memakainya sekarang. */
 function RelatedCard({ article, locale, t }: { article: Article; locale: Locale; t: ReturnType<typeof getDictionary> }) {
-  const image = article.image ? articleImages[article.image] : undefined;
+  const image = resolveArticleImage(article.image);
   const category = article.tags[0];
 
   return (
@@ -92,14 +94,11 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
   if (!article) notFound();
 
   const t = getDictionary(locale);
-  const image = article.image ? articleImages[article.image] : undefined;
+  const image = resolveArticleImage(article.image);
   const category = article.tags[0];
-  const readingMinutes = estimateReadingMinutes(article.body);
-  const bodyParagraphs = article.body.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  const readingMinutes = estimateReadingMinutes(stripHtml(article.body));
+  const bodyParagraphs = getBodyParagraphs(article.body);
 
-  // Baris kosong ganda = batas paragraf, sama seperti markdown -- artikel
-  // contoh saat ini hanya satu kalimat, jadi ini akan tetap satu paragraf
-  // sampai src/data/articles.json diisi teks yang lebih panjang.
   const allArticles = await getArticles(locale);
   const otherArticles = allArticles.filter((a) => a.slug !== article.slug);
   // Baru 3 artikel contoh yang ada (src/data/articles.json) -- kalau kurang
@@ -172,9 +171,14 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
           <div className="max-w-content">
             <p className="text-lg text-muted">{article.excerpt}</p>
             {bodyParagraphs.map((paragraph, index) => (
-              <p key={index} className="mt-6 leading-relaxed text-fg">
-                {paragraph}
-              </p>
+              // body sudah disanitasi di lib/content/source.ts (mode CMS)
+              // atau memang teks polos tanpa tag (mode lokal) -- dijamin
+              // aman sebelum sampai sini, lihat komentar schema.ts `body`.
+              <p
+                key={index}
+                className="mt-6 leading-relaxed text-fg"
+                dangerouslySetInnerHTML={{ __html: paragraph }}
+              />
             ))}
 
             <p className="mt-12">

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import berita1 from '@/assets/berita/berita1.png';
+import { resolveArticleImage } from '@/data/article-images';
 import { NewsExplorer } from '@/components/news/NewsExplorer';
 import { getArticles } from '@/lib/content';
 import { panelNav } from '@/lib/nav';
@@ -51,10 +52,10 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
       featured={
         featured
           ? {
-              // berita1.png dipasang langsung sebagai foto kartu unggulan --
-              // bukan lewat ARTICLE_IMAGES, karena itu jembatan khusus foto
-              // yang datang dari JSON, bukan foto hero yang ditata di sini.
-              image: berita1,
+              // Foto asli artikel (cover_url dari CMS) kalau ada; berita1.png
+              // cuma jatuh balik untuk artikel yang belum punya cover, bukan
+              // lagi dipasang tetap seperti saat kontennya masih contoh JSON.
+              image: resolveArticleImage(featured.image) ?? berita1,
               date: featured.publishedAt,
               category: featured.tags[0] ?? t.news,
               title: featured.title,

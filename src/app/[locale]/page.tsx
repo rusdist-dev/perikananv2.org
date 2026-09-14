@@ -10,15 +10,14 @@ import { HomePublicationsGrid } from '@/components/home/HomePublicationsGrid';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
-import { getArticles } from '@/lib/content';
+import { getArticles, getPublications } from '@/lib/content';
 import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
 import { panelNav } from '@/lib/nav';
 import { programMeta } from '@/data/programs';
-import { articleImages } from '@/data/article-images';
-import { publications } from '@/data/publications';
+import { resolveArticleImage } from '@/data/article-images';
 import { site } from '@/lib/site';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -46,6 +45,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const t = getDictionary(locale);
   const articles = (await getArticles(locale)).slice(0, 3);
+  const publications = (await getPublications()).slice(0, 3);
 
   // Urutan & label slide ikut panelNav (lib/nav.ts) apa adanya -- programMeta
   // cuma menambahkan ikon dan deskripsi yang tidak dimiliki data navigasi.
@@ -220,7 +220,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {articles.map((article) => {
-              const image = article.image ? articleImages[article.image] : undefined;
+              const image = resolveArticleImage(article.image);
               const category = article.tags[0];
 
               return (
@@ -333,7 +333,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         {/* Beranda cuma menonjolkan 3 -- daftar lengkapnya (termasuk yang
             tidak tampil di sini) ada di /discover/publications. */}
         <HomePublicationsGrid
-          publications={publications.slice(0, 3)}
+          publications={publications}
           downloadLabel={t.download}
           readLabel={t.read}
           pdfUnavailableLabel={t.pdfUnavailable}

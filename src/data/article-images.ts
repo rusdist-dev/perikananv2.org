@@ -15,3 +15,18 @@ export const articleImages: Record<string, StaticImageData> = {
   kegiatan2,
   kegiatan3,
 };
+
+/**
+ * Satu-satunya tempat yang membedakan dua arti `Article.image`.
+ *
+ * Mode lokal: kunci ke peta di atas. Mode CMS (lib/content/source.ts, saat
+ * CONTENT_SOURCE=api): URL absolut ke `cover_url` yang dikembalikan API --
+ * next/image menerima StaticImageData maupun string src, jadi cukup
+ * dikembalikan apa adanya kalau bukan kunci yang dikenal. `null`/kunci tak
+ * dikenal (tipo) sama-sama berarti "lewati gambarnya", bukan merender kotak
+ * kosong -- lihat komentar `image` di schema.ts.
+ */
+export function resolveArticleImage(image: string | null): StaticImageData | string | undefined {
+  if (!image) return undefined;
+  return articleImages[image] ?? image;
+}

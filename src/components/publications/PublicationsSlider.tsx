@@ -13,8 +13,15 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 
 export type PublicationSlide = {
-  image: StaticImageData;
-  category: string;
+  // string = URL absolut (cover_url dari CMS); StaticImageData = foto lokal
+  // yang di-import statis (dipakai KNOWLEDGE_PRODUCTS di PublicationsExplorer,
+  // yang berkasnya belum ada di CMS). next/image menerima keduanya sebagai
+  // src, sama seperti FeaturedArticle.image di NewsHero. null = publikasi
+  // itu belum punya cover di CMS -- kartu melewati gambarnya (§4j), bukan
+  // menampilkan kotak kosong.
+  image: StaticImageData | string | null;
+  /** null = belum dikategorikan di CMS. */
+  category: string | null;
   title: string;
   pdfUrl: string | null;
 };
@@ -76,16 +83,18 @@ export function PublicationsSlider({
         {publications.map((publication, index) => (
           <SwiperSlide key={index} className="h-auto py-1">
             <article className="flex h-full flex-col overflow-hidden rounded-lg bg-bg shadow-md">
-              <div className="relative aspect-[3/4]">
-                <Image
-                  src={publication.image}
-                  alt=""
-                  aria-hidden
-                  fill
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
+              {publication.image ? (
+                <div className="relative aspect-[3/4]">
+                  <Image
+                    src={publication.image}
+                    alt=""
+                    aria-hidden
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                </div>
+              ) : null}
               <div className="flex flex-1 flex-col gap-2 p-4">
                 {/* min-h + line-clamp dipasang di DUA field ini (bukan cuma
                     title) supaya tinggi kartu seragam terlepas dari panjang

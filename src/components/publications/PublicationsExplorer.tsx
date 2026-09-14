@@ -91,7 +91,14 @@ const VIDEOS = [
 ];
 
 /** Sampul, kategori, dan judul diambil langsung dari isi asli tiap PDF di
- *  public/documents/ (lihat komentar di atas soal render sampulnya). */
+ *  public/documents/ (lihat komentar di atas soal render sampulnya).
+ *
+ *  Tetap statis dengan sengaja, BUKAN lupa disambungkan ke CMS: koleksi
+ *  "publications" CMS Rekam (lib/content/source.ts) sudah dicek satu per
+ *  satu dan keempat dokumen ini (Liukang Tangaya encyclopedia, seagrass
+ *  ecosystem module, turtle/seagrass story book, MPA poster) tidak ada di
+ *  sana -- menghapus PDF-nya dari public/documents/ berarti kehilangan
+ *  dokumen ini sepenuhnya, bukan sekadar pindah sumber. */
 const KNOWLEDGE_PRODUCTS: PublicationSlide[] = [
   {
     image: liukangTangayaEncyclopedia,
@@ -178,14 +185,19 @@ export function PublicationsExplorer({ publications, labels: t }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
 
-  const categoryOptions = useMemo(() => [...new Set(publications.map((p) => p.category))], [publications]);
+  // §4j: publikasi yang category-nya null (belum dikategorikan di CMS)
+  // dilewati di sini -- opsi filter tidak boleh punya entri "null" karangan.
+  const categoryOptions = useMemo(
+    () => [...new Set(publications.map((p) => p.category).filter((c): c is string => c !== null))],
+    [publications],
+  );
 
   const filtered = useMemo(() => {
     const terms = normalize(search).split(/\s+/).filter(Boolean);
     return publications.filter((pub) => {
       if (category !== 'all' && pub.category !== category) return false;
       if (terms.length === 0) return true;
-      const haystack = normalize(`${pub.title} ${pub.category}`);
+      const haystack = normalize(`${pub.title} ${pub.category ?? ''}`);
       return terms.every((term) => haystack.includes(term));
     });
   }, [publications, search, category]);
@@ -366,6 +378,9 @@ export function PublicationsExplorer({ publications, labels: t }: Props) {
                 {t.featuredBody}
               </p>
 
+              {/* pdfUrl statis dengan sengaja: dokumen ini juga tidak ada di
+                  koleksi "publications" CMS (lihat komentar KNOWLEDGE_PRODUCTS
+                  di atas untuk alasan yang sama). */}
               <FeaturedPublicationActions
                 pdfUrl="/documents/state-of-indonesia.pdf"
                 title="State of Indonesia's fisheries management areas — Annual Report 2025"

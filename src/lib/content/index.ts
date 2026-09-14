@@ -1,6 +1,6 @@
 import { defaultLocale, type Locale } from '@/i18n/config';
 import { loadCollection } from './source';
-import type { Article } from './schema';
+import type { Article, Publication } from './schema';
 
 /**
  * Barrel: satu-satunya modul yang boleh diimpor halaman.
@@ -9,7 +9,7 @@ import type { Article } from './schema';
  * itu yang membuat sumber data bisa diganti tanpa menyentuh satu pun halaman.
  */
 
-export type { Article } from './schema';
+export type { Article, Publication } from './schema';
 
 function byNewest(a: Article, b: Article): number {
   return b.publishedAt.localeCompare(a.publishedAt);
@@ -58,4 +58,11 @@ export async function getArticle(slug: string, locale: Locale): Promise<Article 
 export async function getArticleSlugs(): Promise<string[]> {
   const all = await loadCollection('articles');
   return [...new Set(all.map((a) => a.slug))];
+}
+
+/** Tidak ada pickForLocale di sini -- publikasi tidak diterjemahkan per
+ *  locale (lihat komentar publicationSchema), jadi satu daftar dipakai apa
+ *  adanya untuk /id maupun /en. */
+export async function getPublications(): Promise<Publication[]> {
+  return loadCollection('publications');
 }
