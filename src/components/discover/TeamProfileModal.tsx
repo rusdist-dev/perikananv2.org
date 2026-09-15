@@ -14,12 +14,18 @@ import { getBodyParagraphs } from '@/lib/article-body';
  * bg-primary solid + pola ikan) supaya halaman di baliknya tetap kelihatan --
  * popup ini cuma menumpuk di atas halaman, bukan berpindah ke "halaman" lain.
  *
- * Foto di kolom kiri, teks (nama/jabatan/deskripsi) di kolom kanan -- BUKAN
+ * Foto di atas, teks (nama/jabatan/deskripsi) di bawahnya -- BUKAN
  * `object-cover` (yang memotong foto supaya pas mengisi kotak) tapi
- * `object-contain` di dalam kotak beraspek [2/3] (rasio umum foto tim di
- * proyek ini) supaya foto selalu tampil utuh tanpa terpotong. Kalau
- * deskripsinya panjang, yang scroll cuma kolom teksnya sendiri
+ * `object-contain` di dalam kotak beraspek [3/4] (rasio kartu tim di
+ * halaman our-team/about-us) supaya foto selalu tampil utuh tanpa
+ * terpotong. Kalau deskripsinya panjang, yang scroll cuma isi modalnya
  * (overflow-y-auto) -- ukuran foto tidak ikut berubah.
+ *
+ * Kotak beraspek + `fill` itu wajib, bukan pilihan gaya: `member.image`
+ * datang sebagai URL absolut CMS (string), dan next/image tidak tahu
+ * dimensi intrinsik gambar remote -- tanpa `fill` (atau width/height
+ * eksplisit) render-nya gagal dengan "missing required width property".
+ * Pola yang sama dipakai kartu tim dan MilestoneCard.
  */
 export function TeamProfileModal({
   isOpen,
@@ -66,13 +72,16 @@ export function TeamProfileModal({
         onClick={(event) => event.stopPropagation()}
       >
         {member.image ? (
-          <Image
-            src={member.image}
-            alt=""
-            aria-hidden
-            sizes="(min-width: 640px) 28rem, 100vw"
-            className="h-auto w-full"
-          />
+          <div className="relative aspect-[3/4] w-full">
+            <Image
+              src={member.image}
+              alt=""
+              aria-hidden
+              fill
+              sizes="(min-width: 640px) 28rem, 100vw"
+              className="object-contain"
+            />
+          </div>
         ) : null}
 
         <div className="flex flex-col gap-2 p-6">
