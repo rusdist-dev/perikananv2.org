@@ -2,8 +2,7 @@ import { notFound } from 'next/navigation';
 import berita1 from '@/assets/berita/berita1.png';
 import { resolveArticleImage } from '@/data/article-images';
 import { NewsExplorer } from '@/components/news/NewsExplorer';
-import { getArticles } from '@/lib/content';
-import { panelNav } from '@/lib/nav';
+import { getArticles, getNewsCategories, getProgramOptions } from '@/lib/content';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
@@ -21,20 +20,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return buildMetadata({ locale, path: '/berita', title: t.news });
 }
 
-function programOptions(): string[] {
-  const section = panelNav.find((s) => s.id === 'nav-program');
-  if (!section) return [];
-  return section.items
-    .map((item) => item.label)
-    .filter((label): label is string => typeof label === 'string');
-}
-
 export default async function NewsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const articles = await getArticles(locale);
+  // Opsi filter datang dari taksonomi CMS (/programs, /news-categories),
+  // bukan diturunkan dari artikel yang kebetulan sudah ditarik: program atau
+  // kategori yang belum punya berita pun tetap muncul, dan daftarnya tidak
+  // ikut menyusut saat filter lain dipakai.
+  const [articles, programOptions, newsCategories] = await Promise.all([
+    getArticles(locale),
+    getProgramOptions(locale),
+    getNewsCategories(locale),
+  ]);
   const [featured] = articles;
 
   return (
@@ -57,7 +56,7 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
               // lagi dipasang tetap seperti saat kontennya masih contoh JSON.
               image: resolveArticleImage(featured.image) ?? berita1,
               date: featured.publishedAt,
-              category: featured.program?.name ?? featured.tags[0] ?? t.news,
+              category: featured.category ?? t.news,
               title: featured.title,
               excerpt: featured.excerpt,
               href: `/berita/${featured.slug}`,
@@ -71,9 +70,17 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
         publishedAt: article.publishedAt,
         tags: article.tags,
         image: article.image,
-        program: article.program,
+        category: article.category,
+        // Slug, bukan nama: itu yang dicocokkan dengan nilai dropdown --
+        // lihat komentar `categorySlug`/`programs` di lib/content/schema.ts.
+        categorySlug: article.categorySlug,
+        programs: article.programs,
       }))}
-      programOptions={programOptions()}
+      programOptions={programOptions.map((option) => ({ value: option.value, label: option.label }))}
+      categoryOptions={newsCategories.map((category) => ({
+        value: category.slug,
+        label: category.name,
+      }))}
       locale={locale}
       labels={{
         filterTitle: t.filterTitle,
@@ -84,7 +91,6 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
         filterAllCategory: t.filterAllCategory,
         filterYear: t.filterYear,
         filterAllYear: t.filterAllYear,
-        filterPopularTags: t.filterPopularTags,
         filterApply: t.filterApply,
         readStory: t.readStory,
         navNewsAndActivity: t.navNewsAndActivity,

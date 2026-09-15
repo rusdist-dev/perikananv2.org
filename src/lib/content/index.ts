@@ -1,7 +1,7 @@
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
-import { loadCollection } from './source';
+import { loadArticlesByProgram, loadCollection } from './source';
 import { getCmsSlugByFrontendSlug } from './program-taxonomy';
-import type { Article, Publication, TeamMember, Milestone } from './schema';
+import type { Article, Publication, TeamMember, Milestone, ProgramOption, NewsCategory } from './schema';
 
 /**
  * Barrel: satu-satunya modul yang boleh diimpor halaman.
@@ -10,7 +10,7 @@ import type { Article, Publication, TeamMember, Milestone } from './schema';
  * itu yang membuat sumber data bisa diganti tanpa menyentuh satu pun halaman.
  */
 
-export type { Article, Publication, TeamMember, Milestone } from './schema';
+export type { Article, Publication, TeamMember, Milestone, ProgramOption, NewsCategory } from './schema';
 
 function byNewest(a: Article, b: Article): number {
   return b.publishedAt.localeCompare(a.publishedAt);
@@ -105,19 +105,60 @@ export async function getArticleRouteParams(): Promise<{ locale: Locale; slug: s
   return params;
 }
 
-/** Dipakai halaman /program/<slug> untuk seksi "Related Stories" -- filter
- *  dilakukan di sini (bukan query CMS terpisah) karena getArticles() sudah
- *  menarik seluruh koleksi via seam yang sama, dengan cache tag yang sama.
+/** Dipakai halaman /program/<slug> untuk seksi "Related Stories".
  *  `frontendProgramSlug` adalah slug rute (mis. "species-conservation"),
  *  dikonversi ke slug taksonomi CMS lewat program-taxonomy.ts. Slug yang
  *  tidak dikenal menghasilkan daftar kosong, bukan error -- halaman program
- *  tetap bisa dirender tanpa berita terkait. */
+ *  tetap bisa dirender tanpa berita terkait.
+ *
+ *  Penyaringannya diserahkan ke CMS (loadArticlesByProgram), bukan menyaring
+ *  hasil getArticles() di sini. Versi lama melakukan yang kedua dan
+ *  membandingkan `article.program?.slug` -- program pertama saja -- sehingga
+ *  berita yang ditandai beberapa program sekaligus cuma tampil di satu
+ *  halaman program. Fallback locale tetap di sini, karena CMS menyaring per
+ *  program, bukan menggabungkan varian bahasa. */
 export async function getArticlesByProgram(locale: Locale, frontendProgramSlug: string): Promise<Article[]> {
   const cmsSlug = getCmsSlugByFrontendSlug(frontendProgramSlug);
   if (!cmsSlug) return [];
 
-  const articles = await getArticles(locale);
-  return articles.filter((article) => article.program?.slug === cmsSlug);
+  const articles = await loadArticlesByProgram(cmsSlug);
+  return pickForLocale(articles, locale);
+}
+
+/** Menggabungkan varian id/en sebuah daftar opsi filter: kunci gabungnya
+ *  nilai yang TIDAK diterjemahkan (slug/value), versi locale yang diminta
+ *  menang, sisanya jatuh balik ke bahasa default. Pola yang sama dengan
+ *  pickForLocale/pickTeamForLocale, cuma tanpa pengurutan -- urutan dropdown
+ *  mengikuti urutan CMS, yang memang sudah diatur di Pengaturan › Taksonomi. */
+function pickOptionsForLocale<T extends { lang: Locale }>(all: T[], locale: Locale, keyOf: (item: T) => string): T[] {
+  const byKey = new Map<string, T>();
+
+  for (const item of all) {
+    const key = keyOf(item);
+    const existing = byKey.get(key);
+    if (!existing || (item.lang === locale && existing.lang !== locale)) {
+      byKey.set(key, item);
+    }
+  }
+
+  return [...byKey.values()].filter((item) => item.lang === locale || item.lang === defaultLocale);
+}
+
+/** Opsi dropdown "Program" di /berita, langsung dari taksonomi CMS
+ *  (`/programs`) -- bukan diturunkan dari artikel yang kebetulan sudah
+ *  ditarik, dan bukan pula dari panelNav. Program tanpa berita pun tetap
+ *  muncul, dan menambah program baru di CMS tidak perlu menyentuh kode. */
+export async function getProgramOptions(locale: Locale): Promise<ProgramOption[]> {
+  const all = await loadCollection('programOptions');
+  return pickOptionsForLocale(all, locale, (option) => option.value);
+}
+
+/** Opsi dropdown "Category" di /berita, dari `/news-categories` CMS. Daftar
+ *  kategori sesungguhnya -- sebelumnya dropdown ini diisi tag artikel, yang
+ *  mencampur nama kategori dengan nama program. */
+export async function getNewsCategories(locale: Locale): Promise<NewsCategory[]> {
+  const all = await loadCollection('newsCategories');
+  return pickOptionsForLocale(all, locale, (category) => category.slug);
 }
 
 /** Tidak ada pickForLocale di sini -- publikasi tidak diterjemahkan per

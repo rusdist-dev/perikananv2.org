@@ -31,7 +31,7 @@ const RELATED_COUNT = 3;
  *  karena hanya satu tempat lagi yang memakainya sekarang. */
 function RelatedCard({ article, locale, t }: { article: Article; locale: Locale; t: ReturnType<typeof getDictionary> }) {
   const image = resolveArticleImage(article.image);
-  const category = article.program?.name ?? article.tags[0];
+  const category = article.category;
 
   return (
     <article className="flex flex-col border border-border">
@@ -97,7 +97,7 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
 
   const t = getDictionary(locale);
   const image = resolveArticleImage(article.image);
-  const category = article.program?.name ?? article.tags[0];
+  const category = article.category;
   const readingMinutes = estimateReadingMinutes(stripHtml(article.body));
   const bodyParagraphs = getBodyParagraphs(article.body);
 

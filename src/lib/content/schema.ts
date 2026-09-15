@@ -43,10 +43,31 @@ export const articleSchema = z.object({
    *  satunya tempat yang membedakan keduanya. null = belum ada foto; kartu
    *  artikel melewati gambarnya, bukan menampilkan kotak kosong. */
   image: z.string().nullable().default(null),
-  /** Field relasional `related_programs` CMS (taksonomi program), dipetakan
-   *  ke nama yang sudah dilokalkan lewat lib/content/program-taxonomy.ts.
-   *  null kalau artikelnya belum ditandai program apa pun -- kartu/detail
-   *  berita jatuh balik ke `tags[0]` (nama kategori CMS), bukan menebak. */
+  /** Nama kategori CMS (`category.name`) apa adanya -- SATU-SATUNYA sumber
+   *  label kategori di seluruh kartu berita, di halaman mana pun.
+   *
+   *  Dulu tiap kartu menurunkan labelnya sendiri (`program?.name ?? tags[0]`),
+   *  jadi artikel yang sama bisa berlabel "Ocean Accounts" di satu halaman dan
+   *  sesuatu yang lain di halaman berikutnya -- tergantung program mana yang
+   *  kebetulan disebut pertama oleh CMS. Satu field, satu jawaban.
+   *
+   *  null kalau CMS belum mengategorikan artikelnya; pemanggil jatuh balik ke
+   *  label "News" miliknya sendiri, bukan menebak dari field lain. */
+  category: z.string().nullable().default(null),
+  /** Slug kategori CMS (`category.slug`) -- yang DICOCOKKAN saat memfilter,
+   *  bukan `category` di atas. Nama kategori ikut bahasa artikelnya, jadi
+   *  artikel yang tampil sebagai fallback bahasa lain akan meleset dari opsi
+   *  filter kalau dicocokkan lewat nama; slug tidak diterjemahkan. */
+  categorySlug: z.string().nullable().default(null),
+  /** Program PERTAMA saja, sudah dilokalkan. Dipakai kalau suatu saat sebuah
+   *  tampilan butuh menyebut satu program -- BUKAN label kategori kartu, yang
+   *  sekarang selalu `category` di atas. null kalau artikelnya belum ditandai
+   *  program apa pun.
+   *
+   *  BUKAN untuk memfilter: satu berita boleh ditandai banyak program
+   *  sekaligus, dan menyaring lewat field ini membuat artikel cuma muncul di
+   *  halaman program yang kebetulan disebut pertama oleh CMS. `programs` di
+   *  bawah yang menyimpan himpunan lengkapnya. */
   program: z
     .object({
       name: z.string(),
@@ -54,6 +75,16 @@ export const articleSchema = z.object({
     })
     .nullable()
     .default(null),
+  /** SELURUH `related_programs` CMS sebagai slug taksonomi mentah (contoh:
+   *  ["konservasi-spesies", "karbon-biru"]) -- bentuk jamaknya memang jamak,
+   *  dan menyimpan cuma satu di `program` dulu membuat berita lintas-program
+   *  hilang dari semua halaman program kecuali satu.
+   *
+   *  Mentah, bukan dilokalkan, karena inilah yang dicocokkan dengan
+   *  `?program=<slug>` CMS (docs/api-public.md) dan dengan
+   *  getCmsSlugByFrontendSlug() -- nama terjemahan tidak bisa dipakai untuk
+   *  keduanya. */
+  programs: z.array(z.string()).default([]),
   /** ID numerik mentah dari CMS Rekam (`id`), dipakai HANYA untuk
    *  menggabungkan varian id/en dari artikel yang sama di lib/content/index.ts
    *  (pickForLocale) -- bukan `slug`, karena CMS menerbitkan slug HASIL
@@ -157,6 +188,45 @@ export type Milestone = z.output<typeof milestoneSchema>;
 
 export const milestonesSchema = z.array(milestoneSchema);
 
+/** Opsi filter program di /berita, dari `/programs` CMS (docs/api-public.md).
+ *  Datang dari CMS, bukan diturunkan dari artikel yang kebetulan sudah
+ *  ditarik: program yang belum punya berita pun tetap muncul di dropdown,
+ *  dan daftarnya tidak berubah-ubah mengikuti halaman yang sedang dibuka.
+ *
+ *  `value` adalah slug taksonomi yang sama persis dengan isi
+ *  `Article.programs` -- itu yang dicocokkan saat memfilter. `label` cuma
+ *  untuk ditampilkan dan memang berbeda per bahasa (CMS menerjemahkannya
+ *  lewat `?lang=`), karena itu koleksi ini per-locale. */
+export const programOptionSchema = z.object({
+  ...localized,
+  value: z.string().min(1),
+  label: z.string().min(1),
+});
+
+export type ProgramOption = z.output<typeof programOptionSchema>;
+
+export const programOptionsSchema = z.array(programOptionSchema);
+
+/** Opsi filter kategori di /berita, dari `/news-categories` CMS.
+ *
+ *  Ditarik per-locale (`?lang=`) meski hari ini CMS mengembalikan nama yang
+ *  sama persis untuk id maupun en: `name` ADALAH field yang bisa
+ *  diterjemahkan, jadi begitu editor mengisi terjemahannya, dropdown ikut
+ *  berubah tanpa perlu menyentuh kode. Memilih jalur non-locale sekarang
+ *  berarti bug diam-diam nanti -- dropdown yang tetap berbahasa Indonesia di
+ *  /en tanpa ada yang tahu kenapa. Penggabungan varian bahasanya lewat
+ *  `slug`, yang tidak diterjemahkan. */
+export const newsCategorySchema = z.object({
+  ...localized,
+  /** Yang dicocokkan dengan `Article.categorySlug`. */
+  slug: z.string().min(1),
+  name: z.string().min(1),
+});
+
+export type NewsCategory = z.output<typeof newsCategorySchema>;
+
+export const newsCategoriesSchema = z.array(newsCategorySchema);
+
 /** Daftar koleksi yang dikenal. Kunci di sini menentukan nama file
  *  (src/data/<key>.json) dan cache tag revalidasi. Nama resource CMS yang
  *  sesungguhnya (kalau berbeda, seperti "articles" -> "news") dipetakan
@@ -166,6 +236,8 @@ export const collections = {
   publications: publicationsSchema,
   team: teamMembersSchema,
   milestones: milestonesSchema,
+  programOptions: programOptionsSchema,
+  newsCategories: newsCategoriesSchema,
 } as const;
 
 export type CollectionName = keyof typeof collections;

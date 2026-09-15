@@ -1,0 +1,62 @@
+[
+  {
+    "lang": "id",
+    "value": "neraca-sumber-daya-laut",
+    "label": "Neraca Sumber Daya Laut"
+  },
+  {
+    "lang": "en",
+    "value": "neraca-sumber-daya-laut",
+    "label": "Ocean Accounts"
+  },
+  {
+    "lang": "id",
+    "value": "perikanan-berkelanjutan",
+    "label": "Perikanan Berkelanjutan"
+  },
+  {
+    "lang": "en",
+    "value": "perikanan-berkelanjutan",
+    "label": "Sustainable Fisheries"
+  },
+  {
+    "lang": "id",
+    "value": "kawasan-konservasi",
+    "label": "Kawasan Konservasi"
+  },
+  {
+    "lang": "en",
+    "value": "kawasan-konservasi",
+    "label": "Marine Conservation"
+  },
+  {
+    "lang": "id",
+    "value": "konservasi-spesies",
+    "label": "Konservasi Spesies"
+  },
+  {
+    "lang": "en",
+    "value": "konservasi-spesies",
+    "label": "Species Conservation"
+  },
+  {
+    "lang": "id",
+    "value": "karbon-biru",
+    "label": "Karbon Biru"
+  },
+  {
+    "lang": "en",
+    "value": "karbon-biru",
+    "label": "Blue Carbon"
+  },
+  {
+    "lang": "id",
+    "value": "ikan",
+    "label": "IKAN"
+  },
+  {
+    "lang": "en",
+    "value": "ikan",
+    "label": "IKAN"
+  }
+]

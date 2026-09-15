@@ -6,7 +6,7 @@ import { resolveArticleImage } from '@/data/article-images';
 import { AppLink } from '@/components/ui/AppLink';
 import { Container } from '@/components/layout/Container';
 import type { BreadcrumbItem } from '@/components/ui/Breadcrumb';
-import { NewsHero, type FeaturedArticle } from './NewsHero';
+import { NewsHero, type FeaturedArticle, type FilterOption } from './NewsHero';
 import { formatArticleDate } from '@/lib/date';
 import { cn } from '@/lib/cn';
 import type { Locale } from '@/i18n/config';
@@ -18,7 +18,15 @@ export type NewsArticleItem = {
   publishedAt: string;
   tags: string[];
   image: string | null;
-  program: { name: string; slug: string } | null;
+  /** Label kategori siap pakai dari CMS (lihat `category` di
+   *  lib/content/schema.ts) -- bukan `program`, yang dulu dipakai di sini dan
+   *  membuat kartu yang sama berlabel lain di halaman lain. */
+  category: string | null;
+  /** Dua field slug di bawah yang dipakai MEMFILTER; `category` di atas cuma
+   *  untuk ditampilkan. Slug tidak diterjemahkan, jadi artikel yang muncul
+   *  sebagai fallback bahasa tetap kena filter dengan benar. */
+  categorySlug: string | null;
+  programs: string[];
 };
 
 type Labels = {
@@ -30,7 +38,6 @@ type Labels = {
   filterAllCategory: string;
   filterYear: string;
   filterAllYear: string;
-  filterPopularTags: string;
   filterApply: string;
   readStory: string;
   navNewsAndActivity: string;
@@ -51,11 +58,13 @@ type Props = {
   readFullStoryLabel: string;
   featured: FeaturedArticle | null;
   articles: NewsArticleItem[];
-  programOptions: string[];
+  programOptions: FilterOption[];
+  categoryOptions: FilterOption[];
   locale: Locale;
   labels: Labels;
 };
 
+/** Nilainya slug (atau "all"), bukan label. */
 type Filters = { search: string; program: string; category: string; year: string };
 
 const PAGE_SIZE = 9;
@@ -108,6 +117,7 @@ export function NewsExplorer({
   featured,
   articles,
   programOptions,
+  categoryOptions,
   locale,
   labels,
 }: Props) {
@@ -115,9 +125,9 @@ export function NewsExplorer({
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest');
   const [page, setPage] = useState(1);
 
-  // Tag "populer" diturunkan dari tag artikel sungguhan yang ada, bukan daftar karangan.
-  const categoryOptions = useMemo(() => [...new Set(articles.flatMap((a) => a.tags))], [articles]);
-  const popularTags = categoryOptions.slice(0, 5);
+  // Opsi program & kategori sekarang datang sebagai props dari taksonomi CMS.
+  // Tahun tetap diturunkan dari artikel -- CMS tidak menerbitkan daftar tahun,
+  // dan tahun yang tidak punya satu pun berita memang tidak berguna difilter.
   const yearOptions = useMemo(
     () => [...new Set(articles.map((a) => new Date(a.publishedAt).getFullYear()))].sort((a, b) => b - a),
     [articles],
@@ -128,15 +138,15 @@ export function NewsExplorer({
     setPage(1);
   };
 
-  const handleTagClick = (tag: string) => {
-    updateFilters({ category: filters.category === tag ? 'all' : tag });
-  };
-
   const filtered = useMemo(() => {
     const terms = normalize(filters.search).split(/\s+/).filter(Boolean);
     return articles.filter((article) => {
-      if (filters.program !== 'all' && !article.tags.includes(filters.program)) return false;
-      if (filters.category !== 'all' && !article.tags.includes(filters.category)) return false;
+      // Dicocokkan lewat slug, bukan nama: nilai dropdown adalah slug
+      // taksonomi CMS, dan `programs` memuat SEMUA program artikel -- versi
+      // lama mencocokkan nama ke `tags`, yang ikut memuat nama program
+      // sehingga filter Kategori juga cocok dengan nama program.
+      if (filters.program !== 'all' && !article.programs.includes(filters.program)) return false;
+      if (filters.category !== 'all' && article.categorySlug !== filters.category) return false;
       if (
         filters.year !== 'all' &&
         new Date(article.publishedAt).getFullYear() !== Number(filters.year)
@@ -182,19 +192,16 @@ export function NewsExplorer({
           allCategoryLabel: labels.filterAllCategory,
           yearLabel: labels.filterYear,
           allYearLabel: labels.filterAllYear,
-          popularTagsLabel: labels.filterPopularTags,
           applyLabel: labels.filterApply,
         }}
         filterValues={filters}
         programOptions={programOptions}
         categoryOptions={categoryOptions}
         yearOptions={yearOptions}
-        popularTags={popularTags}
         onSearchChange={(value) => updateFilters({ search: value })}
         onProgramChange={(value) => updateFilters({ program: value })}
         onCategoryChange={(value) => updateFilters({ category: value })}
         onYearChange={(value) => updateFilters({ year: value })}
-        onTagClick={handleTagClick}
         onApply={(event) => event.preventDefault()}
       />
 
@@ -242,7 +249,7 @@ export function NewsExplorer({
               <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {pageItems.map((article) => {
                   const image = resolveArticleImage(article.image);
-                  const category = article.program?.name ?? article.tags[0];
+                  const category = article.category;
 
                   return (
                     <article key={article.slug} className="flex flex-col border border-border">

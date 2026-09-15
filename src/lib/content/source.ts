@@ -3,7 +3,7 @@ import path from 'node:path';
 import DOMPurify from 'isomorphic-dompurify';
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import { stripHtml } from '@/lib/html';
-import { collections, type CollectionName } from './schema';
+import { collections, type Article, type CollectionName } from './schema';
 import { getProgramNameByCmsSlug } from './program-taxonomy';
 
 /**
@@ -11,9 +11,8 @@ import { getProgramNameByCmsSlug } from './program-taxonomy';
  *
  * Halaman tidak pernah mengimpor file ini; ia mengimpor lib/content (barrel).
  * Rantainya source -> schema -> index, dan pindah dari JSON lokal ke CMS adalah
- * perubahan satu file di sini plus webhook yang memanggil revalidateTag(nama
- * koleksi). Tanpa seam ini, alamat sumber data tersebar ke setiap halaman dan
- * migrasi berubah jadi cari-ganti lintas repo.
+ * perubahan satu file di sini. Tanpa seam ini, alamat sumber data tersebar ke
+ * setiap halaman dan migrasi berubah jadi cari-ganti lintas repo.
  *
  * File ini server-only lewat impor node:fs -- menariknya ke komponen klien
  * menggagalkan build alih-alih membocorkan pembacaan filesystem ke browser.
@@ -33,10 +32,32 @@ async function fetchLocal(name: CollectionName): Promise<unknown> {
   return JSON.parse(raw);
 }
 
-/** Lebih dari ini, CMS Rekam diam-diam memotong ke 100 -- lebih baik eksplisit
- *  di sini daripada mengira sedang meminta lebih banyak dari yang sebenarnya
- *  didapat. */
+/** Batas atasnya ditentukan server (`cms.max_per_page`, docs/api-public.md) dan
+ *  permintaan yang melebihinya dipotong diam-diam -- lebih baik eksplisit di
+ *  sini daripada mengira sedang meminta lebih banyak dari yang sebenarnya
+ *  didapat. Kalau server memotong lebih rendah dari ini pun tidak ada yang
+ *  hilang: fetchAllPages mengikuti `meta.last_page`, bukan mengasumsikan satu
+ *  halaman sudah memuat semuanya. */
 const API_PAGE_SIZE = 100;
+
+/** Satu-satunya hal yang membuat konten CMS pernah berubah tanpa deploy ulang.
+ *  Tanpa umur hidup, halaman /berita dibangun sekali saat build dan berita
+ *  baru tidak akan pernah muncul -- kegagalan diam yang sama yang dicegah
+ *  lemparan CONTENT_API_URL kosong di bawah, dan tidak ada webhook CMS yang
+ *  bisa menutupinya (lihat komentar `tags` di fetchAllPages).
+ *  Angka ini menurunkan interval revalidasi RUTE yang memakainya (lihat
+ *  docs/01-app/02-guides/caching-without-cache-components.md di node_modules/next),
+ *  jadi halamannya ikut dibangun ulang, bukan cuma datanya yang kedaluwarsa.
+ *
+ *  Lima menit, bukan satu jam, karena API-nya punya cache sendiri: permintaan
+ *  BERHALAMAN (yang ini -- selalu membawa page & per_page) mengikuti masa
+ *  berlaku cache "beberapa menit" per company, bukan jalur tanpa filter yang
+ *  diperbarui seketika saat konten disimpan (docs/api-public.md §Cache).
+ *  Artinya satu putaran refetch bisa saja masih menerima salinan lama dari
+ *  CMS; TTL sependek ini yang membatasi berapa lama salinan itu ikut terkunci
+ *  di sisi kita -- dua putaran 5 menit masih jauh lebih cepat daripada satu
+ *  putaran 1 jam. */
+const CACHE_TTL_SECONDS = 300;
 
 const EXCERPT_LENGTH = 200;
 
@@ -68,17 +89,25 @@ function mapNewsItem(raw: Record<string, unknown>, lang: Locale): unknown {
     .map((slug) => getProgramNameByCmsSlug(slug, lang))
     .filter((name): name is string => Boolean(name));
 
-  const categoryName =
-    raw.category && typeof raw.category === 'object' && 'name' in raw.category
-      ? String((raw.category as { name: unknown }).name)
-      : typeof raw.category === 'string'
-        ? raw.category
-        : null;
+  // CMS mengirim `category` sebagai objek {slug, name}; bentuk string dipakai
+  // sebagai jaring pengaman untuk entri lama yang belum bermigrasi.
+  const categoryObject =
+    raw.category && typeof raw.category === 'object' ? (raw.category as Record<string, unknown>) : null;
+  const categoryName = categoryObject
+    ? typeof categoryObject.name === 'string'
+      ? categoryObject.name
+      : null
+    : typeof raw.category === 'string'
+      ? raw.category
+      : null;
+  const categorySlug =
+    categoryObject && typeof categoryObject.slug === 'string' ? categoryObject.slug : null;
 
   const tags = [categoryName, ...programNames].filter((tag): tag is string => Boolean(tag));
 
-  // Program pertama saja: kartu/detail berita menampilkan satu label, bukan
-  // daftar -- lihat komentar `program` di schema.ts.
+  // Program pertama HANYA untuk label yang ruangnya satu baris; himpunan
+  // lengkapnya ikut sebagai `programs` supaya berita lintas-program tidak
+  // hilang dari halaman program lain -- lihat komentar keduanya di schema.ts.
   const primaryProgramSlug = relatedProgramSlugs[0];
   const program = primaryProgramSlug
     ? { name: getProgramNameByCmsSlug(primaryProgramSlug, lang) ?? primaryProgramSlug, slug: primaryProgramSlug }
@@ -95,7 +124,10 @@ function mapNewsItem(raw: Record<string, unknown>, lang: Locale): unknown {
     publishedAt: typeof raw.published_at === 'string' ? raw.published_at.slice(0, 10) : raw.published_at,
     tags,
     image: typeof raw.cover_url === 'string' && raw.cover_url ? raw.cover_url : null,
+    category: categoryName,
+    categorySlug,
     program,
+    programs: relatedProgramSlugs,
     cmsId: typeof raw.id === 'string' || typeof raw.id === 'number' ? raw.id : null,
   };
 }
@@ -174,6 +206,20 @@ function mapMilestoneItem(raw: Record<string, unknown>, lang: Locale): unknown {
   };
 }
 
+/** Entri "programs" CMS (`{value, label}`) -> programOptionSchema. `lang`
+ *  ikut disematkan karena label-nya diterjemahkan, sementara `value` sama di
+ *  kedua bahasa -- itu yang jadi kunci gabung locale di index.ts. */
+function mapProgramOptionItem(raw: Record<string, unknown>, lang: Locale): unknown {
+  return { lang, value: raw.value, label: raw.label };
+}
+
+/** Entri "news-categories" CMS (`{id, slug, name}`) -> newsCategorySchema.
+ *  `id` CMS dibuang: tidak ada yang memakainya, dan menyimpannya cuma
+ *  mengundang orang memakainya sebagai kunci padahal `slug` yang stabil. */
+function mapNewsCategoryItem(raw: Record<string, unknown>, lang: Locale): unknown {
+  return { lang, slug: raw.slug, name: raw.name };
+}
+
 type ApiPage = { data?: unknown[]; meta?: { current_page: number; last_page: number } };
 
 /** Satu koleksi kita bisa jadi nama resource yang berbeda di CMS (kita
@@ -197,6 +243,16 @@ const apiCollections: Record<CollectionName, ApiCollectionConfig> = {
   publications: { resource: 'publications', perLocale: false, mapItem: (raw) => [mapPublicationItem(raw)] },
   team: { resource: 'team', perLocale: true, mapItem: mapTeamGroup },
   milestones: { resource: 'milestones', perLocale: true, mapItem: (raw, lang) => [mapMilestoneItem(raw, lang)] },
+  programOptions: {
+    resource: 'programs',
+    perLocale: true,
+    mapItem: (raw, lang) => [mapProgramOptionItem(raw, lang)],
+  },
+  newsCategories: {
+    resource: 'news-categories',
+    perLocale: true,
+    mapItem: (raw, lang) => [mapNewsCategoryItem(raw, lang)],
+  },
 };
 
 /** Menarik satu resource sampai habis, mengikuti `meta.current_page` /
@@ -216,13 +272,38 @@ async function fetchAllPages(
 
     const res = await fetch(url, {
       headers,
-      // Tag inilah alasan seam ini ada: webhook CMS memanggil
-      // revalidateTag(nama koleksi) dan seluruh situs ikut segar tanpa rebuild.
-      next: { tags: [tag] },
+      // Caching fetch di Next 16 itu opt-in (default "auto no cache"), dan
+      // "tidak di-cache" di sini TIDAK berarti selalu segar: halaman yang
+      // memakainya tetap di-prerender sekali saat build, lalu isinya beku
+      // sampai deploy berikutnya. `revalidate` di bawah yang mencairkannya --
+      // dan ia butuh entri cache untuk diberi umur hidup, jadi baris ini
+      // syarat, bukan optimasi. Header X-Api-Key tidak menghalangi:
+      // force-cache eksplisit meng-cache request yang membawa kredensial.
+      cache: 'force-cache',
+      // Tag-nya disiapkan, tapi BELUM ada yang memanggil revalidateTag():
+      // API CMS Rekam baca-saja dan tidak punya webhook yang bisa memberi
+      // tahu kita saat konten terbit (docs/api-public.md). Jadi kesegaran
+      // konten sepenuhnya bertumpu pada `revalidate`, bukan pada invalidasi
+      // on-demand. Kalau webhook itu suatu saat ada, tag inilah sasarannya
+      // dan yang perlu ditambah cuma route handler pemanggilnya.
+      next: { tags: [tag], revalidate: CACHE_TTL_SECONDS },
     });
 
     if (!res.ok) {
-      throw new Error(`Gagal memuat "${url.pathname}" dari CMS (page=${page}): HTTP ${res.status}`);
+      // 404 di sini hampir tidak pernah berarti "salah alamat": endpoint yang
+      // modulnya nonaktif untuk company ini memang tidak terdaftar sama sekali
+      // (docs/api-public.md §Endpoint), dan 401 berarti X_API_KEY salah atau
+      // company-nya dinonaktifkan. Menyebutnya di pesan menghemat satu putaran
+      // penyelidikan yang salah arah.
+      const hint =
+        res.status === 404
+          ? ' -- modul untuk resource ini kemungkinan nonaktif di CMS'
+          : res.status === 401
+            ? ' -- X_API_KEY tidak valid atau company-nya nonaktif'
+            : '';
+      throw new Error(
+        `Gagal memuat "${url.pathname}" dari CMS (page=${page}): HTTP ${res.status}${hint}`,
+      );
     }
 
     const json = (await res.json()) as ApiPage;
@@ -236,7 +317,15 @@ async function fetchAllPages(
   return items;
 }
 
-async function fetchApi(name: CollectionName): Promise<unknown> {
+/** `extraQuery` menempel ke SETIAP putaran locale dan halaman -- dipakai
+ *  loadArticlesByProgram untuk `?program=<slug>`. Sengaja dibiarkan generik
+ *  (bukan parameter `program` khusus) karena CMS punya filter lain dengan
+ *  bentuk yang sama persis (`category`, `upcoming`, docs/api-public.md), dan
+ *  yang membedakannya cuma nama kuncinya. */
+async function fetchApi(
+  name: CollectionName,
+  extraQuery: Record<string, string> = {},
+): Promise<unknown> {
   const base = process.env.CONTENT_API_URL;
   if (!base) {
     // Berisik, bukan diam-diam jatuh balik ke JSON lokal: deploy yang mengira
@@ -267,6 +356,7 @@ async function fetchApi(name: CollectionName): Promise<unknown> {
     const url = new URL(`${base.replace(/\/$/, '')}/${config.resource}`);
     if (config.perLocale) url.searchParams.set('lang', lang);
     url.searchParams.set('per_page', String(API_PAGE_SIZE));
+    for (const [key, value] of Object.entries(extraQuery)) url.searchParams.set(key, value);
 
     const raw = await fetchAllPages(url, headers, name);
     for (const item of raw) items.push(...config.mapItem(item, lang));
@@ -275,11 +365,10 @@ async function fetchApi(name: CollectionName): Promise<unknown> {
   return items;
 }
 
-/** Ambil + validasi satu koleksi. Melempar kalau bentuknya tidak sesuai skema. */
-export async function loadCollection<K extends CollectionName>(
+function validate<K extends CollectionName>(
   name: K,
-): Promise<ReturnType<(typeof collections)[K]['parse']>> {
-  const raw = mode === 'api' ? await fetchApi(name) : await fetchLocal(name);
+  raw: unknown,
+): ReturnType<(typeof collections)[K]['parse']> {
   const parsed = collections[name].safeParse(raw);
 
   if (!parsed.success) {
@@ -290,4 +379,41 @@ export async function loadCollection<K extends CollectionName>(
   }
 
   return parsed.data as ReturnType<(typeof collections)[K]['parse']>;
+}
+
+/** Ambil + validasi satu koleksi. Melempar kalau bentuknya tidak sesuai skema. */
+export async function loadCollection<K extends CollectionName>(
+  name: K,
+): Promise<ReturnType<(typeof collections)[K]['parse']>> {
+  const raw = mode === 'api' ? await fetchApi(name) : await fetchLocal(name);
+  return validate(name, raw);
+}
+
+/**
+ * Berita satu program saja, disaring DI CMS lewat `?program=<slug>`
+ * (docs/api-public.md §Berita) -- bukan menarik seluruh koleksi lalu memilah
+ * di sini.
+ *
+ * Bukan cuma soal hemat: penyaringan lokal yang digantikannya membandingkan
+ * `article.program?.slug`, yaitu program PERTAMA saja, sehingga satu berita
+ * yang ditandai banyak program cuma muncul di satu halaman program dan hilang
+ * dari sisanya. CMS mencocokkan ke seluruh `related_programs`, jadi
+ * menyerahkan penyaringan ke sana sekaligus menutup celah itu.
+ *
+ * `cmsProgramSlug` adalah slug taksonomi CMS (lihat program-taxonomy.ts),
+ * bukan slug rute frontend. Tag cache-nya tetap "articles", sama dengan
+ * koleksi penuhnya.
+ */
+export async function loadArticlesByProgram(cmsProgramSlug: string): Promise<Article[]> {
+  if (mode !== 'api') {
+    // Mode lokal tidak punya server yang bisa menyaring, jadi disaring di
+    // sini -- lewat `programs` (himpunan lengkap), bukan `program`, supaya
+    // hasilnya sama persis dengan yang dikembalikan CMS. Dua mode yang
+    // diam-diam menjawab berbeda untuk kueri yang sama adalah bug yang baru
+    // ketahuan setelah deploy.
+    const all = validate('articles', await fetchLocal('articles'));
+    return all.filter((article) => article.programs.includes(cmsProgramSlug));
+  }
+
+  return validate('articles', await fetchApi('articles', { program: cmsProgramSlug }));
 }

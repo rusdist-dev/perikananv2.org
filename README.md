@@ -143,8 +143,22 @@ melempar pembaca `/en` ke versi Indonesia — `check:links` yang menangkapnya.
 **Konten.** Halaman hanya boleh `import { ... } from '@/lib/content'`. Tidak
 pernah dari `src/data/*.json` maupun `lib/content/source` langsung. Rantainya
 `source.ts` (bytes) → `schema.ts` (zod) → `index.ts` (kueri). Pindah ke CMS =
-set `CONTENT_SOURCE=api` + `CONTENT_API_URL`; webhook memanggil
-`revalidateTag('articles')`.
+set `CONTENT_SOURCE=api` + `CONTENT_API_URL` + `X_API_KEY`.
+
+**Kesegaran konten.** Fetch ke CMS memakai `cache: 'force-cache'` +
+`next: { revalidate: 300 }` (`CACHE_TTL_SECONDS` di `source.ts`). Keduanya
+sepasang: caching fetch di Next 16 itu opt-in, dan tanpa entri cache tidak ada
+yang bisa diberi umur hidup — halaman jadi di-prerender sekali saat build lalu
+beku sampai deploy. Dengan ini, berita baru muncul paling lambat 5 menit.
+
+Angkanya sengaja pendek karena API CMS meng-cache permintaan berhalaman
+beberapa menit di sisinya sendiri (`docs/api-public.md` §Cache), jadi satu
+putaran refetch belum tentu langsung membawa yang terbaru.
+
+> Tidak ada revalidasi on-demand: API CMS Rekam baca-saja dan **tidak punya
+> webhook** yang memberi tahu situs ini saat konten terbit. `next.tags` tetap
+> dipasang supaya kalau webhook itu ada nanti, yang perlu ditambah cuma route
+> handler yang memanggil `revalidateTag`.
 
 **Ikon.** Taruh `.svg` di `src/icons/`, jalankan `npm run icons`.
 `src/icons/generated.tsx` bertanda GENERATED — jangan disunting tangan.

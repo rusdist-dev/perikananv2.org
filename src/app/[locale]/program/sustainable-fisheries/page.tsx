@@ -75,7 +75,7 @@ function toRelatedStories(articles: Article[], locale: Locale, t: Dictionary): R
   return articles.slice(0, RELATED_STORIES_COUNT).map((article) => ({
     image: resolveArticleImage(article.image),
     date: formatArticleDate(article.publishedAt, locale),
-    category: article.program?.name ?? article.tags[0] ?? t.news,
+    category: article.category ?? t.news,
     title: article.title,
     excerpt: article.excerpt,
     href: `/berita/${article.slug}`,

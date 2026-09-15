@@ -101,7 +101,7 @@ export async function searchContent(locale: Locale, query: string): Promise<Sear
         title: article.title,
         description: article.excerpt,
         href: `/berita/${article.slug}`,
-        meta: article.tags[0] ?? null,
+        meta: article.category,
         hasPdf: false,
         publishedAt: article.publishedAt,
         year: new Date(article.publishedAt).getFullYear(),

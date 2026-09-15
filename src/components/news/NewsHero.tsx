@@ -18,6 +18,11 @@ export type FeaturedArticle = {
   href: string;
 };
 
+/** Opsi dropdown filter. `value` selalu slug taksonomi CMS -- yang
+ *  dicocokkan dengan artikel; `label` yang dibaca pengunjung. Dulu keduanya
+ *  satu string yang sama (nama program), yang memaksa pencocokan lewat nama. */
+export type FilterOption = { value: string; label: string };
+
 type FilterLabels = {
   title: string;
   searchLabel: string;
@@ -27,7 +32,6 @@ type FilterLabels = {
   allCategoryLabel: string;
   yearLabel: string;
   allYearLabel: string;
-  popularTagsLabel: string;
   applyLabel: string;
 };
 
@@ -46,15 +50,13 @@ type NewsHeroProps = {
   readFullStoryLabel: string;
   filter: FilterLabels;
   filterValues: FilterValues;
-  programOptions: string[];
-  categoryOptions: string[];
+  programOptions: FilterOption[];
+  categoryOptions: FilterOption[];
   yearOptions: number[];
-  popularTags: string[];
   onSearchChange: (value: string) => void;
   onProgramChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onYearChange: (value: string) => void;
-  onTagClick: (tag: string) => void;
   onApply: (event: SubmitEvent<HTMLFormElement>) => void;
 };
 
@@ -73,12 +75,10 @@ export function NewsHero({
   programOptions,
   categoryOptions,
   yearOptions,
-  popularTags,
   onSearchChange,
   onProgramChange,
   onCategoryChange,
   onYearChange,
-  onTagClick,
   onApply,
 }: NewsHeroProps) {
   return (
@@ -171,9 +171,9 @@ export function NewsHero({
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
                   <option value="all">{filter.allProgramsLabel}</option>
-                  {programOptions.map((label) => (
-                    <option key={label} value={label}>
-                      {label}
+                  {programOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
@@ -193,9 +193,9 @@ export function NewsHero({
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
                   <option value="all">{filter.allCategoryLabel}</option>
-                  {categoryOptions.map((label) => (
-                    <option key={label} value={label}>
-                      {label}
+                  {categoryOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
@@ -223,26 +223,10 @@ export function NewsHero({
                 </select>
               </div>
 
-              {popularTags.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  <p className="text-xs font-bold tracking-wide text-muted uppercase">
-                    {filter.popularTagsLabel}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {popularTags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => onTagClick(tag)}
-                        aria-pressed={filterValues.category === tag}
-                        className="rounded-full border border-border px-3 py-1 text-xs text-muted hover:border-secondary hover:text-secondary aria-pressed:border-secondary aria-pressed:bg-secondary aria-pressed:text-secondary-fg"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+              {/* Blok "Popular Tags" sengaja dilepas: isinya diturunkan dari
+                  tag artikel, yang sama persis dengan isi dropdown Program dan
+                  Kategori di atas -- dua kendali untuk pekerjaan yang sama.
+                  Kalau suatu saat dibutuhkan lagi, ambil dari riwayat git. */}
 
               <button
                 type="submit"
