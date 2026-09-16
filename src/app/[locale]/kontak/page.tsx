@@ -87,6 +87,12 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
               message: t.contactFormMessage,
               messagePlaceholder: t.contactFormMessagePlaceholder,
               submit: t.contactFormSubmit,
+            sending: t.contactFormSending,
+            success: t.contactFormSuccess,
+            errorInvalid: t.contactFormErrorInvalid,
+            errorRateLimit: t.contactFormErrorRateLimit,
+            errorUnavailable: t.contactFormErrorUnavailable,
+            errorFallback: t.contactFormErrorFallback,
             }}
           />
 

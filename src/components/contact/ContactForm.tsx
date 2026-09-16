@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import type { SubmitEvent } from 'react';
+import { useActionState } from 'react';
+import { submitContact } from '@/app/[locale]/kontak/actions';
+import { contactInitialState, type ContactState } from '@/lib/contact';
 
 type ContactFormProps = {
+  /** Alamat cadangan, dipakai HANYA saat pengiriman gagal. null = belum
+   *  dikonfigurasi (lihat §4j di lib/site.ts); tautan cadangannya lalu tidak
+   *  ditampilkan sama sekali, bukan menunjuk alamat karangan. */
   email: string | null;
   labels: {
     heading: string;
@@ -16,6 +20,12 @@ type ContactFormProps = {
     message: string;
     messagePlaceholder: string;
     submit: string;
+    sending: string;
+    success: string;
+    errorInvalid: string;
+    errorRateLimit: string;
+    errorUnavailable: string;
+    errorFallback: string;
   };
 };
 
@@ -24,29 +34,71 @@ const fieldClassName =
 const labelClassName = 'block text-xs font-bold uppercase tracking-wider text-muted';
 
 /**
- * Belum ada backend/API untuk menerima pesan, jadi "kirim" di sini berarti
- * membuka mailto: ke site.contact.email dengan subjek+isi terisi otomatis --
- * benar-benar mengirim lewat klien email pengguna, bukan menampilkan pesan
- * sukses palsu dari form yang sebetulnya tidak mengirim ke mana pun.
+ * Form kontak yang benar-benar mengirim, lewat Server Action ke
+ * `POST /api/v1/contact` CMS.
+ *
+ * Sebelumnya "kirim" di sini cuma membuka mailto: -- satu-satunya pilihan
+ * jujur saat belum ada backend yang menerima pesan. Sekarang ada, jadi pesan
+ * masuk ke dashboard CMS dan mailto: turun pangkat jadi jalan keluar saat
+ * pengiriman gagal: pengunjung tidak kehilangan cara menghubungi, tapi juga
+ * tidak pernah dibohongi pesan sukses dari form yang tidak mengirim apa pun.
+ *
+ * Input tidak dikendalikan state (uncontrolled): Server Action membaca
+ * FormData, jadi form ini tetap terkirim meski JavaScript mati.
  */
 export function ContactForm({ email, labels }: ContactFormProps) {
-  const [name, setName] = useState('');
-  const [senderEmail, setSenderEmail] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
+  const [state, formAction, pending] = useActionState<ContactState, FormData>(
+    submitContact,
+    contactInitialState,
+  );
 
-  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!email) return;
+  const errorMessage =
+    state.status === 'error'
+      ? state.reason === 'invalid'
+        ? labels.errorInvalid
+        : state.reason === 'rate-limit'
+          ? labels.errorRateLimit
+          : labels.errorUnavailable
+      : null;
 
-    const body = `${message}\n\n${name} (${senderEmail})`;
-    const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailto;
-  };
+  // Cadangan email hanya masuk akal saat pengirimannya yang bermasalah, bukan
+  // saat isian pengunjung yang kurang lengkap -- dan bukan saat tertahan laju
+  // permintaan, yang cukup diulang sebentar lagi.
+  const showFallback = state.status === 'error' && state.reason === 'unavailable' && Boolean(email);
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-5">
       <p className="text-xs font-bold uppercase tracking-wider text-secondary">{labels.heading}</p>
+
+      {state.status === 'success' ? (
+        <p role="status" className="rounded-md border border-secondary bg-secondary/10 px-4 py-3 text-sm text-fg">
+          {labels.success}
+        </p>
+      ) : null}
+
+      {errorMessage ? (
+        // role="alert" supaya pembaca layar mengumumkannya begitu muncul --
+        // kegagalan kiriman yang hanya terlihat mata mudah terlewat.
+        <p role="alert" className="rounded-md border border-border px-4 py-3 text-sm text-fg">
+          {errorMessage}
+          {showFallback ? (
+            <>
+              {' '}
+              <a href={`mailto:${email}`} className="font-bold text-primary underline underline-offset-2">
+                {labels.errorFallback}
+              </a>
+            </>
+          ) : null}
+        </p>
+      ) : null}
+
+      {/* Honeypot: disembunyikan dari mata dan dari pembaca layar, dan
+          dikeluarkan dari urutan tab. Pengunjung asli tidak akan pernah
+          mengisinya; bot yang mengisi semua field akan tertangkap di CMS. */}
+      <div aria-hidden className="hidden">
+        <label htmlFor="contact-website">Website</label>
+        <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
 
       <div>
         <label htmlFor="contact-name" className={labelClassName}>
@@ -57,8 +109,7 @@ export function ContactForm({ email, labels }: ContactFormProps) {
           name="name"
           type="text"
           required
-          value={name}
-          onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
           placeholder={labels.namePlaceholder}
           className={`mt-2 ${fieldClassName}`}
         />
@@ -73,8 +124,7 @@ export function ContactForm({ email, labels }: ContactFormProps) {
           name="email"
           type="email"
           required
-          value={senderEmail}
-          onChange={(event) => setSenderEmail(event.target.value)}
+          autoComplete="email"
           placeholder={labels.emailPlaceholder}
           className={`mt-2 ${fieldClassName}`}
         />
@@ -89,8 +139,6 @@ export function ContactForm({ email, labels }: ContactFormProps) {
           name="subject"
           type="text"
           required
-          value={subject}
-          onChange={(event) => setSubject(event.target.value)}
           placeholder={labels.subjectPlaceholder}
           className={`mt-2 ${fieldClassName}`}
         />
@@ -105,8 +153,6 @@ export function ContactForm({ email, labels }: ContactFormProps) {
           name="message"
           required
           rows={6}
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
           placeholder={labels.messagePlaceholder}
           className={`mt-2 resize-none ${fieldClassName}`}
         />
@@ -114,10 +160,10 @@ export function ContactForm({ email, labels }: ContactFormProps) {
 
       <button
         type="submit"
-        disabled={!email}
+        disabled={pending}
         className="inline-flex w-fit items-center rounded-md bg-primary px-6 py-2.5 text-xs font-bold uppercase tracking-wide text-primary-fg hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {labels.submit}
+        {pending ? labels.sending : labels.submit}
       </button>
     </form>
   );

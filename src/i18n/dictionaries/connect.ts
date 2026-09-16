@@ -46,6 +46,12 @@ export type ConnectDictionary = {
   contactFormMessage: string;
   contactFormMessagePlaceholder: string;
   contactFormSubmit: string;
+  contactFormSending: string;
+  contactFormSuccess: string;
+  contactFormErrorInvalid: string;
+  contactFormErrorRateLimit: string;
+  contactFormErrorUnavailable: string;
+  contactFormErrorFallback: string;
   contactInfoHeading: string;
   contactMapEyebrow: string;
   contactMapHeading: string;
@@ -96,6 +102,12 @@ export const connectDictionary: Record<Locale, ConnectDictionary> = {
     contactFormMessage: 'Pesan',
     contactFormMessagePlaceholder: 'Tulis pesan Anda...',
     contactFormSubmit: 'Kirim Pesan',
+    contactFormSending: 'Mengirim…',
+    contactFormSuccess: 'Terima kasih. Pesan Anda sudah kami terima dan akan kami balas lewat email.',
+    contactFormErrorInvalid: 'Ada isian yang belum lengkap. Periksa kembali nama, email, subjek, dan pesan Anda.',
+    contactFormErrorRateLimit: 'Terlalu banyak pesan dikirim dari sini dalam waktu singkat. Coba lagi beberapa menit lagi.',
+    contactFormErrorUnavailable: 'Pesan Anda belum bisa dikirim saat ini.',
+    contactFormErrorFallback: 'Kirim lewat email',
     contactInfoHeading: 'Kontak & Alamat',
     contactMapEyebrow: 'Lokasi',
     contactMapHeading: 'Temukan Kami',
@@ -144,6 +156,12 @@ export const connectDictionary: Record<Locale, ConnectDictionary> = {
     contactFormMessage: 'Message',
     contactFormMessagePlaceholder: 'Write your message...',
     contactFormSubmit: 'Send Message',
+    contactFormSending: 'Sending…',
+    contactFormSuccess: 'Thank you. We have received your message and will reply by email.',
+    contactFormErrorInvalid: 'Some fields are incomplete. Please check your name, email, subject, and message.',
+    contactFormErrorRateLimit: 'Too many messages have been sent from here recently. Please try again in a few minutes.',
+    contactFormErrorUnavailable: 'Your message could not be sent right now.',
+    contactFormErrorFallback: 'Send by email instead',
     contactInfoHeading: 'Contact & Address',
     contactMapEyebrow: 'Location',
     contactMapHeading: 'Find Us',

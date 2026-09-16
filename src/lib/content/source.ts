@@ -3,6 +3,7 @@ import path from 'node:path';
 import { cache } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
+import { cmsAccess } from '@/lib/cms';
 import { stripHtml } from '@/lib/html';
 import {
   articleSchema,
@@ -581,25 +582,8 @@ async function fetchAllPages(url: URL, headers: HeadersInit, tag: string): Promi
  *  (bukan parameter `program` khusus) karena CMS punya filter lain dengan
  *  bentuk yang sama persis (`category`, `upcoming`, docs/api-public.md), dan
  *  yang membedakannya cuma nama kuncinya. */
-/** Alamat + kredensial CMS, divalidasi sekali di satu tempat. Berisik saat
- *  kosong, bukan diam-diam jatuh balik ke JSON lokal: deploy yang mengira
- *  dirinya membaca CMS tapi menyajikan konten build-time adalah kegagalan yang
- *  tidak terlihat sampai konten jadi basi berminggu-minggu. */
-function apiAccess(): { base: string; headers: Record<string, string> } {
-  const base = process.env.CONTENT_API_URL;
-  if (!base) throw new Error('CONTENT_SOURCE=api tetapi CONTENT_API_URL tidak diisi.');
-
-  const apiKey = process.env.X_API_KEY;
-  if (!apiKey) throw new Error('CONTENT_SOURCE=api tetapi X_API_KEY tidak diisi.');
-
-  return {
-    base: base.replace(/\/$/, ''),
-    headers: { Accept: 'application/json', 'X-Api-Key': apiKey },
-  };
-}
-
 async function fetchApi(name: CollectionName, extraQuery: Record<string, string> = {}): Promise<unknown> {
-  const { base, headers } = apiAccess();
+  const { base, headers } = cmsAccess();
   const config = apiCollections[name];
   // CMS-nya tidak punya "semua bahasa sekaligus" untuk koleksi yang
   // diterjemahkan -- lang jadi parameter kueri dan setiap artikel yang belum
@@ -825,7 +809,7 @@ const loadArticleBySlugMemo = cache(async (slug: string, lang: Locale): Promise<
     return match ? validateFullArticle(match) : null;
   }
 
-  const { base, headers } = apiAccess();
+  const { base, headers } = cmsAccess();
   const url = new URL(`${base}/news/${encodeURIComponent(slug)}`);
   url.searchParams.set('lang', lang);
 
@@ -858,7 +842,7 @@ const loadArticlePreviewsMemo = cache(
         .slice(0, limit);
     }
 
-    const { base, headers } = apiAccess();
+    const { base, headers } = cmsAccess();
     const url = new URL(`${base}/news`);
     url.searchParams.set('lang', lang);
     url.searchParams.set('per_page', String(limit));
@@ -901,7 +885,7 @@ async function fetchNewsPage(
   apiPage: number,
   perPage: number,
 ): Promise<{ items: ArticleListItem[]; total: number }> {
-  const { base, headers } = apiAccess();
+  const { base, headers } = cmsAccess();
   const url = new URL(`${base}/news`);
   url.searchParams.set('lang', query.lang);
   url.searchParams.set('per_page', String(perPage));
