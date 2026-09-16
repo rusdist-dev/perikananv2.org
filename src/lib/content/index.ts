@@ -1,7 +1,23 @@
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
-import { loadArticlesByProgram, loadCollection } from './source';
+import {
+  loadArticleBySlug,
+  loadArticlePreviews,
+  loadArticlesByProgram,
+  loadArticlesQuery,
+  loadCollection,
+  type ArticlePage,
+  type ArticleQuery,
+} from './source';
 import { getCmsSlugByFrontendSlug } from './program-taxonomy';
-import type { Article, Publication, TeamMember, Milestone, ProgramOption, NewsCategory } from './schema';
+import type {
+  Article,
+  ArticleListItem,
+  Publication,
+  TeamMember,
+  Milestone,
+  ProgramOption,
+  NewsCategory,
+} from './schema';
 
 /**
  * Barrel: satu-satunya modul yang boleh diimpor halaman.
@@ -10,9 +26,18 @@ import type { Article, Publication, TeamMember, Milestone, ProgramOption, NewsCa
  * itu yang membuat sumber data bisa diganti tanpa menyentuh satu pun halaman.
  */
 
-export type { Article, Publication, TeamMember, Milestone, ProgramOption, NewsCategory } from './schema';
+export type {
+  Article,
+  ArticleListItem,
+  Publication,
+  TeamMember,
+  Milestone,
+  ProgramOption,
+  NewsCategory,
+} from './schema';
+export type { ArticlePage } from './source';
 
-function byNewest(a: Article, b: Article): number {
+function byNewest(a: ArticleListItem, b: ArticleListItem): number {
   return b.publishedAt.localeCompare(a.publishedAt);
 }
 
@@ -23,7 +48,7 @@ function byNewest(a: Article, b: Article): number {
  *  yang jadi identitas sesungguhnya di mode CMS; mode lokal tidak
  *  mengenalnya (JSON tidak membawa ID CMS), jadi jatuh balik ke slug --
  *  aman di sana karena data lokal memang satu slug per artikel. */
-function mergeKey(article: Article): string {
+function mergeKey(article: ArticleListItem): string {
   return article.cmsId !== null ? `id:${article.cmsId}` : `slug:${article.slug}`;
 }
 
@@ -35,8 +60,8 @@ function mergeKey(article: Article): string {
  * melihat daftar yang bolong. Kalau tiap halaman mengurus fallback sendiri,
  * separuhnya akan lupa.
  */
-function pickForLocale(all: Article[], locale: Locale): Article[] {
-  const byKey = new Map<string, Article>();
+function pickForLocale(all: ArticleListItem[], locale: Locale): ArticleListItem[] {
+  const byKey = new Map<string, ArticleListItem>();
 
   for (const article of all) {
     const key = mergeKey(article);
@@ -56,14 +81,17 @@ function pickForLocale(all: Article[], locale: Locale): Article[] {
     .sort(byNewest);
 }
 
-export async function getArticles(locale: Locale): Promise<Article[]> {
+export async function getArticles(locale: Locale): Promise<ArticleListItem[]> {
   const all = await loadCollection('articles');
   return pickForLocale(all, locale);
 }
 
+/** Satu artikel, langsung dari `/news/{slug}` -- BUKAN getArticles() lalu
+ *  dicari slug-nya. Halaman detail tidak butuh arsipnya, dan menariknya
+ *  sekali per halaman artikel adalah yang membuat `next build` menjatuhkan
+ *  CMS (lihat komentar loadArticleBySlug di source.ts). */
 export async function getArticle(slug: string, locale: Locale): Promise<Article | null> {
-  const articles = await getArticles(locale);
-  return articles.find((a) => a.slug === slug) ?? null;
+  return loadArticleBySlug(slug, locale);
 }
 
 /** Slug artikel yang sama (lihat mergeKey) di tiap locale -- dipakai
@@ -72,14 +100,23 @@ export async function getArticle(slug: string, locale: Locale): Promise<Article 
  *  slug yang sama persis (yang 404 begitu slug-nya berbeda per bahasa,
  *  lihat komentar `cmsId` di schema.ts). Locale yang tidak muncul di hasil
  *  berarti CMS memang tidak mengembalikan varian untuk locale itu. */
-export async function getArticleLocaleSlugs(article: Article): Promise<Partial<Record<Locale, string>>> {
-  const all = await loadCollection('articles');
-  const key = mergeKey(article);
+export async function getArticleLocaleSlugs(
+  article: ArticleListItem,
+): Promise<Partial<Record<Locale, string>>> {
   const slugs: Partial<Record<Locale, string>> = {};
 
-  for (const candidate of all) {
-    if (mergeKey(candidate) === key) slugs[candidate.lang] = candidate.slug;
-  }
+  // Satu permintaan kecil per locale, bukan seluruh koleksi. Endpoint
+  // `/news/{slug}` menerima slug bahasa MANA PUN dan mengembalikan varian
+  // bahasa yang diminta beserta slug bahasa itu (sudah diverifikasi langsung
+  // ke API), jadi slug yang sedang dibuka cukup ditanyakan ulang per bahasa.
+  // Panggilan untuk locale yang sedang dirender dijawab dari memo
+  // loadArticleBySlug -- halaman detail sudah memintanya lebih dulu.
+  await Promise.all(
+    locales.map(async (locale) => {
+      const variant = await loadArticleBySlug(article.slug, locale);
+      if (variant) slugs[locale] = variant.slug;
+    }),
+  );
 
   return slugs;
 }
@@ -90,18 +127,38 @@ export async function getArticleSlugs(): Promise<string[]> {
   return [...new Set(all.map((a) => a.slug))];
 }
 
-/** Dipakai generateStaticParams /berita/[slug] -- BUKAN cross product locale x
- *  slug (perkalian setiap locale dengan getArticleSlugs()), karena sejak
- *  slug bisa berbeda antara varian id/en artikel yang sama (lihat komentar
- *  mergeKey), cross product itu membuat kombinasi (locale, slug) yang tidak
- *  pernah cocok dengan artikel manapun di locale itu. Ini membangun pasangan
- *  yang benar-benar valid, langsung dari slug hasil getArticles per locale. */
-export async function getArticleRouteParams(): Promise<{ locale: Locale; slug: string }[]> {
+/**
+ * Pasangan (locale, slug) yang dibangun saat build oleh generateStaticParams
+ * /berita/[slug] -- SEBAGIAN saja, bukan semuanya.
+ *
+ * `perLocale` artikel terbaru per bahasa yang dibangun di muka; sisanya
+ * dirender saat pertama dibuka lalu ikut di-cache (dynamicParams default
+ * true, lihat komentar di halaman detailnya). Mem-prerender keseluruhan
+ * 240 artikel x 2 bahasa berarti ratusan permintaan dalam beberapa menit,
+ * dan CMS menjawabnya dengan HTTP 500 sampai build gagal -- terukur di lima
+ * kali percobaan build. Yang dibangun di muka sengaja yang terbaru: itu yang
+ * ditautkan beranda dan halaman pertama /berita, jadi yang paling mungkin
+ * dibuka lebih dulu.
+ *
+ * BUKAN cross product locale x slug (perkalian setiap locale dengan
+ * getArticleSlugs()): sejak slug bisa berbeda antara varian id/en artikel
+ * yang sama (lihat komentar mergeKey), cross product itu membuat kombinasi
+ * yang tidak pernah cocok dengan artikel manapun di locale itu.
+ */
+export async function getArticleRouteParams(
+  perLocale: number,
+): Promise<{ locale: Locale; slug: string }[]> {
   const params: { locale: Locale; slug: string }[] = [];
+
   for (const locale of locales) {
-    const articles = await getArticles(locale);
-    for (const article of articles) params.push({ locale, slug: article.slug });
+    // Permintaan kecil per bahasa, bukan menarik seluruh arsip cuma untuk
+    // mengetahui slug mana yang terbaru.
+    const articles = await loadArticlePreviews(locale, perLocale, null);
+    for (const article of [...articles].sort(byNewest).slice(0, perLocale)) {
+      params.push({ locale, slug: article.slug });
+    }
   }
+
   return params;
 }
 
@@ -117,12 +174,154 @@ export async function getArticleRouteParams(): Promise<{ locale: Locale; slug: s
  *  berita yang ditandai beberapa program sekaligus cuma tampil di satu
  *  halaman program. Fallback locale tetap di sini, karena CMS menyaring per
  *  program, bukan menggabungkan varian bahasa. */
-export async function getArticlesByProgram(locale: Locale, frontendProgramSlug: string): Promise<Article[]> {
+export async function getArticlesByProgram(
+  locale: Locale,
+  frontendProgramSlug: string,
+): Promise<ArticleListItem[]> {
   const cmsSlug = getCmsSlugByFrontendSlug(frontendProgramSlug);
   if (!cmsSlug) return [];
 
   const articles = await loadArticlesByProgram(cmsSlug);
   return pickForLocale(articles, locale);
+}
+
+/**
+ * Beberapa artikel terbaru -- dipakai seksi berita di beranda.
+ *
+ * Diminta ke CMS dengan `per_page` sekecil yang ditampilkan. Beranda dulu
+ * memanggil getArticles() lalu mengambil tiga teratas, yang berarti menarik,
+ * memetakan, dan memvalidasi 240 artikel x 2 bahasa untuk merender tiga kartu.
+ *
+ * Satu locale saja, tanpa penggabungan varian bahasa: CMS sudah jatuh balik
+ * sendiri ke bahasa Indonesia saat terjemahan Inggrisnya kosong
+ * (docs/api-public.md §Bahasa), dan kartu ringkas tidak menampilkan atribut
+ * lang seperti halaman detail.
+ */
+export async function getLatestArticles(locale: Locale, limit: number): Promise<ArticleListItem[]> {
+  return loadArticlePreviews(locale, limit, null);
+}
+
+/**
+ * Tahun-tahun yang boleh dipilih di filter /berita.
+ *
+ * CMS tidak menerbitkan daftar tahun, jadi rentangnya diturunkan dari artikel
+ * tertua sampai yang terbaru -- dua permintaan kecil, bukan menarik arsip
+ * hanya untuk mengumpulkan tahun uniknya. Rentang, bukan himpunan: tahun yang
+ * kebetulan tidak punya berita tetap muncul dan menghasilkan daftar kosong,
+ * dan itu jawaban yang jujur ("tidak ada berita tahun itu") ketimbang tahunnya
+ * hilang dari dropdown tanpa penjelasan.
+ */
+export async function getNewsYears(locale: Locale): Promise<number[]> {
+  const [newest, oldest] = await Promise.all([
+    loadArticlePreviews(locale, 1, null),
+    loadArticlesQuery({
+      lang: locale,
+      search: '',
+      year: '',
+      program: '',
+      category: '',
+      sort: 'oldest',
+      page: 1,
+      perPage: 1,
+    }),
+  ]);
+
+  const newestYear = newest[0] ? Number(newest[0].publishedAt.slice(0, 4)) : null;
+  const oldestYear = oldest.articles[0] ? Number(oldest.articles[0].publishedAt.slice(0, 4)) : null;
+  if (!newestYear || !oldestYear || oldestYear > newestYear) return [];
+
+  return Array.from({ length: newestYear - oldestYear + 1 }, (_, i) => newestYear - i);
+}
+
+/** Artikel terbaru tanpa filter apa pun -- dipakai kartu utama (hero)
+ *  /berita, yang memang tidak ikut menyempit saat pengunjung memfilter.
+ *  Satu permintaan kecil, bukan mengambil kepala dari seluruh arsip. */
+export async function getNewestArticle(locale: Locale): Promise<ArticleListItem | null> {
+  const [newest] = await loadArticlePreviews(locale, 1, null);
+  return newest ?? null;
+}
+
+/** Berapa kartu per halaman /berita. Di sini, bukan di komponennya: angka ini
+ *  menentukan `per_page` yang diminta ke CMS sekaligus pembagi jumlah halaman,
+ *  jadi dua hal yang harus selalu sama. */
+export const NEWS_PAGE_SIZE = 9;
+
+/**
+ * Satu halaman /berita sesuai filter di URL -- disaring dan dipaginasi CMS.
+ *
+ * Nilai kosong berarti "tanpa filter", jadi pemanggil boleh mengoper isi
+ * searchParams apa adanya tanpa membersihkannya dulu. Halaman di luar rentang
+ * bukan galat: CMS mengembalikan daftar kosong dan halaman menampilkan pesan
+ * "tidak ada hasil", sama seperti kombinasi filter yang tidak cocok.
+ */
+export async function getNewsPage(
+  locale: Locale,
+  params: {
+    search?: string;
+    year?: string;
+    program?: string;
+    category?: string;
+    sort?: string;
+    page?: string;
+  },
+): Promise<ArticlePage> {
+  const page = Number.parseInt(params.page ?? '1', 10);
+  const year = params.year ?? '';
+
+  const query: ArticleQuery = {
+    lang: locale,
+    search: (params.search ?? '').trim(),
+    // CMS sendiri mengabaikan tahun yang bukan 4 digit, tapi menyaringnya di
+    // sini menjaga kunci cache tidak ikut kotor oleh nilai sampah dari URL.
+    year: /^[0-9]{4}$/.test(year) ? year : '',
+    program: params.program ?? '',
+    category: params.category ?? '',
+    sort: params.sort === 'oldest' ? 'oldest' : 'newest',
+    page: Number.isFinite(page) && page > 0 ? page : 1,
+    perPage: NEWS_PAGE_SIZE,
+  };
+
+  return loadArticlesQuery(query);
+}
+
+/**
+ * Kartu "related" di bawah artikel: beberapa artikel program yang sama, atau
+ * yang terbaru kalau artikelnya belum ditandai program.
+ *
+ * Diminta ke CMS dengan `per_page` sekecil yang ditampilkan -- versi
+ * sebelumnya memanggil getArticles() (seluruh arsip) lalu membuang hampir
+ * semuanya untuk mengambil tiga kartu.
+ */
+export async function getRelatedArticles(
+  article: ArticleListItem,
+  locale: Locale,
+  limit: number,
+): Promise<ArticleListItem[]> {
+  const picked: ArticleListItem[] = [];
+  const seen = new Set([article.slug]);
+
+  const take = (candidates: ArticleListItem[]) => {
+    for (const candidate of candidates) {
+      if (picked.length >= limit) return;
+      if (seen.has(candidate.slug)) continue;
+      seen.add(candidate.slug);
+      picked.push(candidate);
+    }
+  };
+
+  // +1 di tiap permintaan karena artikelnya sendiri hampir pasti ikut
+  // terjaring lalu dibuang.
+  const programSlug = article.programs[0];
+  if (programSlug) take(await loadArticlePreviews(locale, limit + 1, programSlug));
+
+  // Ditambal artikel terbaru kalau programnya belum punya cukup berita --
+  // dan itu sering: sebagian program di CMS baru berisi satu artikel, yaitu
+  // yang sedang dibaca. Tanpa penambal ini seksi "Related Story" hilang sama
+  // sekali di halaman-halaman itu. Permintaan kedua ini hanya terjadi saat
+  // memang kurang, bukan di setiap halaman.
+  if (picked.length < limit) take(await loadArticlePreviews(locale, limit + 1, null));
+
+  return picked;
 }
 
 /** Menggabungkan varian id/en sebuah daftar opsi filter: kunci gabungnya

@@ -6,7 +6,13 @@ import { ShareAndTags } from '@/components/news/ShareAndTags';
 import { AppLink } from '@/components/ui/AppLink';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { resolveArticleImage } from '@/data/article-images';
-import { getArticle, getArticles, getArticleLocaleSlugs, getArticleRouteParams, type Article } from '@/lib/content';
+import {
+  getArticle,
+  getArticleLocaleSlugs,
+  getArticleRouteParams,
+  getRelatedArticles,
+  type ArticleListItem,
+} from '@/lib/content';
 import { getBodyParagraphs } from '@/lib/article-body';
 import { formatArticleDate } from '@/lib/date';
 import { stripHtml } from '@/lib/html';
@@ -29,7 +35,15 @@ const RELATED_COUNT = 3;
 /** Kartu ringkas dipakai HANYA di seksi "More From <kategori>" di bawah --
  *  bentuknya sama seperti kartu grid /berita, tapi diulang lokal di sini
  *  karena hanya satu tempat lagi yang memakainya sekarang. */
-function RelatedCard({ article, locale, t }: { article: Article; locale: Locale; t: ReturnType<typeof getDictionary> }) {
+function RelatedCard({
+  article,
+  locale,
+  t,
+}: {
+  article: ArticleListItem;
+  locale: Locale;
+  t: ReturnType<typeof getDictionary>;
+}) {
   const image = resolveArticleImage(article.image);
   const category = article.category;
 
@@ -69,9 +83,28 @@ function RelatedCard({ article, locale, t }: { article: Article; locale: Locale;
   );
 }
 
+/**
+ * Artikel terbaru per bahasa saja yang dibangun saat build; sisanya dirender
+ * saat pertama dibuka. Angkanya menutup halaman pertama /berita (9 kartu)
+ * plus margin, jadi yang paling mungkin diklik lebih dulu sudah jadi.
+ *
+ * Alasannya bukan kecepatan build semata: mem-prerender 240 artikel x 2
+ * bahasa membanjiri CMS sampai ia menjawab HTTP 500 dan build gagal -- lima
+ * kali dicoba, dan kegagalan terendah pun masih menggagalkan seluruh build.
+ * Lihat komentar getArticleRouteParams di lib/content.
+ */
+const PRERENDERED_PER_LOCALE = 12;
+
 export async function generateStaticParams() {
-  return getArticleRouteParams();
+  return getArticleRouteParams(PRERENDERED_PER_LOCALE);
 }
+
+/**
+ * Default Next, ditulis eksplisit karena sekarang menanggung beban: slug yang
+ * TIDAK ada di generateStaticParams dirender saat diminta, bukan dijawab 404.
+ * Mengubahnya jadi false akan membuat 456 artikel sisanya hilang dari situs.
+ */
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: { params: Promise<Params> }) {
   const { locale, slug } = await params;
@@ -101,16 +134,13 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
   const readingMinutes = estimateReadingMinutes(stripHtml(article.body));
   const bodyParagraphs = getBodyParagraphs(article.body);
 
-  const allArticles = await getArticles(locale);
-  const otherArticles = allArticles.filter((a) => a.slug !== article.slug);
-  // Baru 3 artikel contoh yang ada (src/data/articles.json) -- kalau kurang
-  // dari RELATED_COUNT artikel lain, yang tersisa diulang alih-alih
-  // menampilkan kartu kosong. Lihat komentar serupa di berita/page.tsx.
-  const relatedPool = otherArticles.length > 0 ? otherArticles : allArticles;
-  const relatedArticles =
-    relatedPool.length > 0
-      ? Array.from({ length: RELATED_COUNT }, (_, i) => relatedPool[i % relatedPool.length])
-      : [];
+  // Diminta ke CMS sebanyak yang ditampilkan saja. Versi sebelumnya menarik
+  // seluruh arsip lalu mengulang isinya kalau kurang dari RELATED_COUNT --
+  // pengulangan itu peninggalan masa src/data/articles.json yang cuma berisi
+  // tiga contoh; dengan 240 artikel sungguhan, daftar yang pendek berarti
+  // programnya memang baru punya sedikit berita, dan menampilkan kartu yang
+  // sama dua kali lebih buruk daripada menampilkan lebih sedikit kartu.
+  const relatedArticles = await getRelatedArticles(article, locale, RELATED_COUNT);
 
   return (
     // lang di elemen artikel, bukan di <html>: kalau ini versi fallback,

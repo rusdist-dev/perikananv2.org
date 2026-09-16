@@ -2,7 +2,14 @@ import { notFound } from 'next/navigation';
 import berita1 from '@/assets/berita/berita1.png';
 import { resolveArticleImage } from '@/data/article-images';
 import { NewsExplorer } from '@/components/news/NewsExplorer';
-import { getArticles, getNewsCategories, getProgramOptions } from '@/lib/content';
+import {
+  getNewestArticle,
+  getNewsCategories,
+  getNewsPage,
+  getNewsYears,
+  getProgramOptions,
+  NEWS_PAGE_SIZE,
+} from '@/lib/content';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
@@ -20,21 +27,59 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return buildMetadata({ locale, path: '/berita', title: t.news });
 }
 
-export default async function NewsPage({ params }: { params: Promise<{ locale: string }> }) {
+/** Satu nilai dari searchParams; array (parameter yang muncul dua kali di
+ *  URL) diambil yang pertama, bukan ditolak -- URL yang disunting tangan
+ *  tidak boleh menjatuhkan halaman. */
+function one(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value) ?? '';
+}
+
+type NewsSearchParams = {
+  q?: string | string[];
+  year?: string | string[];
+  program?: string | string[];
+  category?: string | string[];
+  sort?: string | string[];
+  page?: string | string[];
+};
+
+export default async function NewsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<NewsSearchParams>;
+}) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+
+  const sp = await searchParams;
+  const filters = {
+    search: one(sp.q),
+    year: one(sp.year),
+    program: one(sp.program),
+    category: one(sp.category),
+    sort: one(sp.sort) === 'oldest' ? ('oldest' as const) : ('newest' as const),
+    page: one(sp.page),
+  };
 
   const t = getDictionary(locale);
   // Opsi filter datang dari taksonomi CMS (/programs, /news-categories),
   // bukan diturunkan dari artikel yang kebetulan sudah ditarik: program atau
   // kategori yang belum punya berita pun tetap muncul, dan daftarnya tidak
   // ikut menyusut saat filter lain dipakai.
-  const [articles, programOptions, newsCategories] = await Promise.all([
-    getArticles(locale),
+  //
+  // `featured` sengaja artikel terbaru TANPA filter -- ia bagian dari hero
+  // halaman, bukan bagian dari hasil pencarian, dan dulu pun begitu (diambil
+  // dari daftar penuh sebelum filter klien bekerja).
+  const [newsPage, newest, programOptions, newsCategories, yearOptions] = await Promise.all([
+    getNewsPage(locale, filters),
+    getNewestArticle(locale),
     getProgramOptions(locale),
     getNewsCategories(locale),
+    getNewsYears(locale),
   ]);
-  const [featured] = articles;
+  const featured = newest;
 
   return (
     <NewsExplorer
@@ -63,19 +108,33 @@ export default async function NewsPage({ params }: { params: Promise<{ locale: s
             }
           : null
       }
-      articles={articles.map((article) => ({
+      /* Hanya satu halaman hasil yang dikirim ke klien -- sembilan kartu,
+       * bukan seluruh arsip.
+       *
+       * Sampai CMS mendukung `search` dan `year`, halaman ini terpaksa
+       * membawa 240 artikel (~34 KB gzip terukur) supaya panel filternya bisa
+       * bekerja di browser. Sejak kedua parameter itu ada (docs/api-public.md),
+       * seluruh filter dilayani server dan yang tersisa di klien hanyalah
+       * merender apa yang sudah disaring. */
+      articles={newsPage.articles.map((article) => ({
         slug: article.slug,
         title: article.title,
         excerpt: article.excerpt,
         publishedAt: article.publishedAt,
-        tags: article.tags,
         image: article.image,
         category: article.category,
-        // Slug, bukan nama: itu yang dicocokkan dengan nilai dropdown --
-        // lihat komentar `categorySlug`/`programs` di lib/content/schema.ts.
-        categorySlug: article.categorySlug,
-        programs: article.programs,
       }))}
+      filters={filters}
+      yearOptions={yearOptions}
+      page={{
+        total: newsPage.total,
+        totalPages: newsPage.totalPages,
+        size: NEWS_PAGE_SIZE,
+        current: Math.min(
+          Math.max(1, Number.parseInt(filters.page || '1', 10) || 1),
+          newsPage.totalPages,
+        ),
+      }}
       programOptions={programOptions.map((option) => ({ value: option.value, label: option.label }))}
       categoryOptions={newsCategories.map((category) => ({
         value: category.slug,

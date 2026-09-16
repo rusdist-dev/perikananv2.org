@@ -42,10 +42,25 @@ export const site = {
   /** Preview branch mengoper URL-nya sendiri supaya canonical tidak menunjuk produksi. */
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://perikanan.org',
 
-  /** TODO: ganti dengan deskripsi asli sebelum rilis -- ini masuk ke <meta name="description">. */
+  /**
+   * Masuk ke <meta name="description">, og:description, dan kartu Twitter di
+   * SETIAP halaman yang tidak mengoper deskripsinya sendiri -- termasuk yang
+   * dibaca mesin pencari. Sebelumnya berisi penanda "belum diisi" -- dan
+   * penanda itu benar-benar tersaji di produksi.
+   *
+   * Isinya bukan karangan: ini kalimat pembuka `homeHeroBody`
+   * (i18n/dictionaries/common.ts) -- teks resmi organisasi yang sudah ada di
+   * halaman depan -- dipadatkan ke ~140 karakter supaya tidak terpotong di
+   * hasil pencarian. Kalau teks depannya berubah, samakan juga yang di sini.
+   *
+   * CMS sebenarnya punya tempatnya (`/settings` -> `meta_description`,
+   * docs/api-public.md), tapi untuk tenant ini seluruh isi /settings masih
+   * kosong (`name: ""`, semua field null) -- jadi belum ada yang bisa ditarik.
+   * Begitu diisi di dashboard, di sinilah tempat menyambungkannya.
+   */
   description: {
-    id: 'TODO: satu kalimat yang menjelaskan situs ini kepada pembaca Indonesia.',
-    en: 'TODO: one sentence explaining this site to an English reader.',
+    id: 'REKAM/FRCI adalah program Kelautan Rekam Nusantara Foundation: analisis perikanan dan pengelolaan kelautan berkelanjutan berbasis data ilmiah.',
+    en: "REKAM/FRCI is Rekam Nusantara Foundation's Ocean program: fisheries analysis and sustainable marine management grounded in scientific data.",
   },
 
   social,

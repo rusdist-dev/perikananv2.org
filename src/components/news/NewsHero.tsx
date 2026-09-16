@@ -1,5 +1,4 @@
 import Image, { type StaticImageData } from 'next/image';
-import type { SubmitEvent } from 'react';
 import newsHeroBg from '@/assets/banner/ornament4.png';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
@@ -53,11 +52,13 @@ type NewsHeroProps = {
   programOptions: FilterOption[];
   categoryOptions: FilterOption[];
   yearOptions: number[];
-  onSearchChange: (value: string) => void;
-  onProgramChange: (value: string) => void;
-  onCategoryChange: (value: string) => void;
-  onYearChange: (value: string) => void;
-  onApply: (event: SubmitEvent<HTMLFormElement>) => void;
+  /** Tujuan form filter, sudah berprefiks locale. Panel ini kini form GET
+   *  biasa: filternya hidup di URL, bukan di state komponen, jadi hasil
+   *  saringan bisa ditautkan, di-bookmark, dan tetap bekerja tanpa JavaScript. */
+  formAction: string;
+  /** Ikut terkirim sebagai field tersembunyi supaya pilihan urutan tidak
+   *  hilang begitu pengunjung menerapkan filter. */
+  sort: string;
 };
 
 /** Hero /berita: latar biru + ornament4.png (ilustrasi kawanan ikan navy/putih)
@@ -72,14 +73,11 @@ export function NewsHero({
   readFullStoryLabel,
   filter,
   filterValues,
+  formAction,
+  sort,
   programOptions,
   categoryOptions,
   yearOptions,
-  onSearchChange,
-  onProgramChange,
-  onCategoryChange,
-  onYearChange,
-  onApply,
 }: NewsHeroProps) {
   return (
     <section className="relative isolate overflow-hidden bg-primary text-primary-fg">
@@ -134,10 +132,17 @@ export function NewsHero({
             </article>
 
             <form
-              onSubmit={onApply}
+              method="get"
+              action={formAction}
               className="flex flex-col gap-4 rounded-lg bg-white p-6 text-fg"
             >
               <h2 className="text-lg font-bold text-primary">{filter.title}</h2>
+
+              {/* Tanpa ini, menerapkan filter diam-diam mengembalikan urutan
+                  ke "terbaru" -- form GET hanya mengirim field yang ada di
+                  dalamnya. Halaman sengaja TIDAK ikut dikirim: filter baru
+                  selalu wajar dimulai dari halaman satu. */}
+              <input type="hidden" name="sort" value={sort} />
 
               <div className="flex flex-col gap-1">
                 <label
@@ -150,8 +155,7 @@ export function NewsHero({
                   id="news-filter-search"
                   name="q"
                   type="search"
-                  value={filterValues.search}
-                  onChange={(event) => onSearchChange(event.target.value)}
+                  defaultValue={filterValues.search}
                   placeholder={`${filter.searchLabel}…`}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 />
@@ -166,11 +170,11 @@ export function NewsHero({
                 </label>
                 <select
                   id="news-filter-program"
-                  value={filterValues.program}
-                  onChange={(event) => onProgramChange(event.target.value)}
+                  name="program"
+                  defaultValue={filterValues.program}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option value="all">{filter.allProgramsLabel}</option>
+                  <option value="">{filter.allProgramsLabel}</option>
                   {programOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -188,11 +192,11 @@ export function NewsHero({
                 </label>
                 <select
                   id="news-filter-category"
-                  value={filterValues.category}
-                  onChange={(event) => onCategoryChange(event.target.value)}
+                  name="category"
+                  defaultValue={filterValues.category}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option value="all">{filter.allCategoryLabel}</option>
+                  <option value="">{filter.allCategoryLabel}</option>
                   {categoryOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -210,11 +214,11 @@ export function NewsHero({
                 </label>
                 <select
                   id="news-filter-year"
-                  value={filterValues.year}
-                  onChange={(event) => onYearChange(event.target.value)}
+                  name="year"
+                  defaultValue={filterValues.year}
                   className="rounded-md border border-border px-3 py-2 text-sm"
                 >
-                  <option value="all">{filter.allYearLabel}</option>
+                  <option value="">{filter.allYearLabel}</option>
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>
                       {y}

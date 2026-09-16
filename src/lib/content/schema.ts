@@ -17,7 +17,19 @@ const localized = {
   lang: localeEnum,
 };
 
-export const articleSchema = z.object({
+/**
+ * Artikel sebagaimana muncul di DAFTAR: kartu, hasil pencarian, sitemap.
+ *
+ * Sengaja TANPA `body`. Yang menampilkan daftar tidak pernah membacanya, dan
+ * menyertakannya berarti setiap pemuatan daftar menjalankan DOMPurify atas
+ * body tiap artikel -- ~2 ms per artikel yang terbuang seluruhnya. Artikel
+ * lengkapnya ada di `articleSchema` di bawah, dan hanya jalur satu-record
+ * (`/news/{slug}`) yang menghasilkannya.
+ *
+ * Pemisahan ini tipe, bukan sekadar konvensi: memanggil `.body` pada entri
+ * daftar gagal saat typecheck, bukan diam-diam memberi string kosong.
+ */
+export const articleListItemSchema = z.object({
   ...localized,
   slug: z
     .string()
@@ -27,11 +39,6 @@ export const articleSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'slug harus kebab-case tanpa titik'),
   title: z.string().min(1),
   excerpt: z.string().min(1),
-  /** Teks polos (JSON lokal) atau HTML (mode CMS) -- kalau HTML, source.ts
-   *  sudah men-sanitasinya (DOMPurify) sebelum sampai sini, jadi halaman
-   *  boleh merendernya lewat dangerouslySetInnerHTML tanpa sanitasi ulang.
-   *  Lihat lib/article-body.ts untuk cara keduanya dipecah jadi paragraf. */
-  body: z.string().min(1),
   publishedAt: z.iso.date(),
   tags: z.array(z.string()).default([]),
   /** Dua kemungkinan bentuk tergantung sumber (lib/content/source.ts):
@@ -97,9 +104,20 @@ export const articleSchema = z.object({
   cmsId: z.union([z.string(), z.number()]).nullable().default(null),
 });
 
-export type Article = z.output<typeof articleSchema>;
+export type ArticleListItem = z.output<typeof articleListItemSchema>;
 
-export const articlesSchema = z.array(articleSchema);
+export const articlesSchema = z.array(articleListItemSchema);
+
+/** Artikel LENGKAP, dengan isinya. Hanya dihasilkan `/news/{slug}` (lihat
+ *  loadArticleBySlug) dan hanya dibutuhkan halaman detail. */
+export const articleSchema = articleListItemSchema.extend({
+  /** HTML tersanitasi (DOMPurify di lib/content/source.ts), jadi halaman boleh
+   *  merendernya lewat dangerouslySetInnerHTML tanpa sanitasi ulang. Lihat
+   *  lib/article-body.ts untuk cara ia dipecah jadi paragraf. */
+  body: z.string().min(1),
+});
+
+export type Article = z.output<typeof articleSchema>;
 
 /** Publikasi (dokumen/PDF) tidak diterjemahkan per locale -- judulnya nama
  *  diri dokumen aslinya, sama seperti alasan yang sama di src/data/publications.ts
@@ -231,6 +249,28 @@ export const newsCategoriesSchema = z.array(newsCategorySchema);
  *  (src/data/<key>.json) dan cache tag revalidasi. Nama resource CMS yang
  *  sesungguhnya (kalau berbeda, seperti "articles" -> "news") dipetakan
  *  terpisah lewat `apiCollections` di source.ts. */
+/** Skema SATU entri per koleksi.
+ *
+ *  Inilah bentuk yang benar-benar dipakai saat memuat: validasi berjalan
+ *  per entri (lihat validate() di source.ts), supaya satu baris rusak dari
+ *  CMS membuang dirinya sendiri alih-alih menjatuhkan seluruh koleksi --
+ *  dan bersamanya /berita, beranda, enam halaman program, dan /cari.
+ *  `collections` di bawah tinggal pembungkus array-nya, dipakai untuk tipe
+ *  hasil dan pesan galat. */
+export const collectionItems = {
+  articles: articleListItemSchema,
+  publications: publicationSchema,
+  team: teamMemberSchema,
+  milestones: milestoneSchema,
+  programOptions: programOptionSchema,
+  newsCategories: newsCategorySchema,
+} as const;
+
+export type CollectionName = keyof typeof collectionItems;
+
+/** `satisfies Record<CollectionName, ...>` bukan hiasan: ia yang membuat
+ *  koleksi baru yang lupa didaftarkan di salah satu dari dua tabel ini gagal
+ *  saat typecheck, bukan saat halaman dibuka. */
 export const collections = {
   articles: articlesSchema,
   publications: publicationsSchema,
@@ -238,6 +278,4 @@ export const collections = {
   milestones: milestonesSchema,
   programOptions: programOptionsSchema,
   newsCategories: newsCategoriesSchema,
-} as const;
-
-export type CollectionName = keyof typeof collections;
+} as const satisfies Record<CollectionName, z.ZodType>;

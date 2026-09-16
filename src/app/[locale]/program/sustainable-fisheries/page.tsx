@@ -17,7 +17,7 @@ import { ProgramObjectives } from '@/components/program/ProgramObjectives';
 import { ProgramRelatedStories, type RelatedStory } from '@/components/program/ProgramRelatedStories';
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
 import { resolveArticleImage } from '@/data/article-images';
-import { getArticlesByProgram, type Article } from '@/lib/content';
+import { getArticlesByProgram, type ArticleListItem } from '@/lib/content';
 import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { isLocale, type Locale } from '@/i18n/config';
@@ -71,7 +71,7 @@ function getKeyActivitiesBullets(t: Dictionary) {
 
 /** Berita sungguhan dari CMS yang ditandai taksonomi program ini
  *  (related_programs) -- lihat getArticlesByProgram (lib/content). */
-function toRelatedStories(articles: Article[], locale: Locale, t: Dictionary): RelatedStory[] {
+function toRelatedStories(articles: ArticleListItem[], locale: Locale, t: Dictionary): RelatedStory[] {
   return articles.slice(0, RELATED_STORIES_COUNT).map((article) => ({
     image: resolveArticleImage(article.image),
     date: formatArticleDate(article.publishedAt, locale),

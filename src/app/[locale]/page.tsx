@@ -10,7 +10,7 @@ import { HomePublicationsGrid } from '@/components/home/HomePublicationsGrid';
 import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
-import { getArticles, getPublications } from '@/lib/content';
+import { getLatestArticles, getPublications } from '@/lib/content';
 import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
@@ -39,12 +39,16 @@ function getImpactStats(t: Dictionary) {
   ];
 }
 
+/** Tiga kartu berita di beranda. Dipakai langsung sebagai `per_page` ke CMS,
+ *  bukan memotong daftar panjang setelah ditarik. */
+const HOME_ARTICLE_COUNT = 3;
+
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const articles = (await getArticles(locale)).slice(0, 3);
+  const articles = await getLatestArticles(locale, HOME_ARTICLE_COUNT);
   const publications = (await getPublications()).slice(0, 3);
 
   // Urutan & label slide ikut panelNav (lib/nav.ts) apa adanya -- programMeta
