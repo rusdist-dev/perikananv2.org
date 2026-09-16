@@ -185,6 +185,47 @@ export async function getArticlesByProgram(
   return pickForLocale(articles, locale);
 }
 
+/** Batas hasil berita untuk /cari. Seratus adalah `per_page` maksimum yang
+ *  dihormati CMS, dan kueri terluas yang diuji ("hiu") menghasilkan 46 --
+ *  masih jauh di bawahnya. Kueri yang menembus batas ini akan terpotong diam-
+ *  diam, jadi kalau arsipnya tumbuh jauh, pencarian perlu ikut dipaginasi. */
+export const NEWS_SEARCH_LIMIT = 100;
+
+/**
+ * Pencarian berita, dikerjakan CMS lewat `?search=`.
+ *
+ * Bukan sekadar memindahkan pekerjaan: pencocokan lokal hanya melihat judul,
+ * excerpt, dan tag, sementara CMS ikut mencari ISI artikel dan di KEDUA
+ * bahasa (docs/api-public.md). Terukur jauh lebih luas -- "mangrove" 10 -> 35
+ * hasil, "blue carbon" 3 -> 22. Sejak entri daftar tidak lagi membawa body,
+ * pencocokan lokal juga tidak mungkin lagi menyamainya.
+ *
+ * Yang hilang: artikel yang cocok HANYA lewat nama programnya (1-2 per kueri
+ * pada pengujian) -- teksnya tidak pernah menyebut kata itu, cuma tag-nya.
+ * Penggantinya adalah filter program di /berita, yang memang untuk itu.
+ */
+export async function searchArticles(
+  locale: Locale,
+  query: string,
+  limit: number,
+): Promise<ArticleListItem[]> {
+  const search = query.trim();
+  if (!search) return [];
+
+  const page = await loadArticlesQuery({
+    lang: locale,
+    search,
+    year: '',
+    program: '',
+    category: '',
+    sort: 'newest',
+    page: 1,
+    perPage: limit,
+  });
+
+  return page.articles;
+}
+
 /**
  * Beberapa artikel terbaru -- dipakai seksi berita di beranda.
  *

@@ -1,6 +1,7 @@
 import { panelNav } from '@/lib/nav';
+import { getDictionary } from '@/i18n/dictionary';
 import { programMeta } from '@/data/programs';
-import { getArticles, getPublications } from '@/lib/content';
+import { getPublications, searchArticles, NEWS_SEARCH_LIMIT } from '@/lib/content';
 import type { Locale } from '@/i18n/config';
 
 /**
@@ -45,12 +46,26 @@ function matchesAllTerms(haystack: string, terms: string[]): boolean {
   return terms.every((term) => normalized.includes(term));
 }
 
-function programLabels(): { href: string; label: string }[] {
+/**
+ * Nama program yang bisa dicari, dengan `labelKey` diterjemahkan.
+ *
+ * Versi sebelumnya menyaring `typeof item.label === 'string'` dan diam-diam
+ * menghasilkan daftar KOSONG: seluruh item program di panelNav memakai
+ * `labelKey`, bukan `label` (lihat komentar NavItem di lib/nav.ts). Akibatnya
+ * /cari tidak pernah sekali pun mengembalikan hasil bertipe program, dan
+ * koreksi ejaan untuk nama program tidak pernah menyala -- keduanya gagal
+ * tanpa galat, persis jenis kegagalan yang tidak terlihat sampai ada yang
+ * mencarinya.
+ */
+function programLabels(locale: Locale): { href: string; label: string }[] {
   const section = panelNav.find((s) => s.id === 'nav-program');
   if (!section) return [];
-  return section.items
-    .filter((item): item is { href: string; label: string } => typeof item.label === 'string')
-    .map((item) => ({ href: item.href, label: item.label }));
+
+  const t = getDictionary(locale);
+  return section.items.map((item) => ({
+    href: item.href,
+    label: item.labelKey ? t[item.labelKey] : item.label,
+  }));
 }
 
 export async function searchContent(locale: Locale, query: string): Promise<SearchResult[]> {
@@ -59,7 +74,7 @@ export async function searchContent(locale: Locale, query: string): Promise<Sear
 
   const results: SearchResult[] = [];
 
-  for (const { href, label } of programLabels()) {
+  for (const { href, label } of programLabels(locale)) {
     const description = programMeta[href]?.description ?? '';
     if (matchesAllTerms(`${label} ${description}`, terms)) {
       results.push({
@@ -93,21 +108,24 @@ export async function searchContent(locale: Locale, query: string): Promise<Sear
     }
   }
 
-  const articles = await getArticles(locale);
+  // Berita disaring CMS, bukan di sini: pencocokan lokal cuma melihat judul,
+  // excerpt, dan tag, sementara CMS ikut mencari isi artikel dan kedua bahasa
+  // -- lihat komentar searchArticles di lib/content. Program dan publikasi di
+  // atas tetap lokal: keduanya korpus kecil yang memang tidak ada di CMS
+  // (program) atau belum punya parameter pencarian (publikasi).
+  const articles = await searchArticles(locale, query, NEWS_SEARCH_LIMIT);
   for (const article of articles) {
-    if (matchesAllTerms(`${article.title} ${article.excerpt} ${article.tags.join(' ')}`, terms)) {
-      results.push({
-        type: 'news',
-        title: article.title,
-        description: article.excerpt,
-        href: `/berita/${article.slug}`,
-        meta: article.category,
-        hasPdf: false,
-        publishedAt: article.publishedAt,
-        year: new Date(article.publishedAt).getFullYear(),
-        tags: article.tags,
-      });
-    }
+    results.push({
+      type: 'news',
+      title: article.title,
+      description: article.excerpt,
+      href: `/berita/${article.slug}`,
+      meta: article.category,
+      hasPdf: false,
+      publishedAt: article.publishedAt,
+      year: new Date(article.publishedAt).getFullYear(),
+      tags: article.tags,
+    });
   }
 
   return results;
@@ -139,9 +157,9 @@ function levenshtein(a: string, b: string): number {
  * Tag berita tidak ditambahkan terpisah -- semuanya sudah persis nama
  * program yang sama.
  */
-async function suggestionCorpus(): Promise<string[]> {
+async function suggestionCorpus(locale: Locale): Promise<string[]> {
   const phrases = new Set<string>();
-  for (const { label } of programLabels()) phrases.add(label);
+  for (const { label } of programLabels(locale)) phrases.add(label);
   const publications = await getPublications();
   for (const pub of publications) {
     if (pub.category) phrases.add(pub.category);
@@ -150,12 +168,12 @@ async function suggestionCorpus(): Promise<string[]> {
 }
 
 /** null kalau tidak ada frasa yang cukup dekat -- UI lalu menampilkan pesan generik, bukan saran karangan. */
-export async function suggestCorrection(query: string): Promise<string | null> {
+export async function suggestCorrection(locale: Locale, query: string): Promise<string | null> {
   const q = normalize(query).replace(/\s+/g, '');
   if (!q) return null;
 
   let best: { phrase: string; distance: number } | null = null;
-  for (const phrase of await suggestionCorpus()) {
+  for (const phrase of await suggestionCorpus(locale)) {
     const normalizedPhrase = normalize(phrase).replace(/\s+/g, '');
     const distance = levenshtein(q, normalizedPhrase);
     if (!best || distance < best.distance) best = { phrase, distance };

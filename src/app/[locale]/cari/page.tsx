@@ -49,7 +49,7 @@ export default async function SearchPage({ params, searchParams }: PageProps) {
   const t = getDictionary(locale);
   const query = readQuery((await searchParams).q);
   const results = query ? await searchContent(locale, query) : [];
-  const suggestion = query && results.length === 0 ? await suggestCorrection(query) : null;
+  const suggestion = query && results.length === 0 ? await suggestCorrection(locale, query) : null;
 
   const dateLocale = locale === 'id' ? 'id-ID' : 'en-US';
   const siteHost = site.url.replace(/^https?:\/\//, '');
