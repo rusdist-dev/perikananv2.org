@@ -7,11 +7,15 @@ import { cmsAccess } from '@/lib/cms';
 import { stripHtml } from '@/lib/html';
 import {
   articleSchema,
+  coastStatsSchema,
   collectionItems,
   collections,
+  villageDetailSchema,
   type Article,
   type ArticleListItem,
+  type CoastStats,
   type CollectionName,
+  type VillageDetail,
 } from './schema';
 import { getProgramNameByCmsSlug } from './program-taxonomy';
 
@@ -35,7 +39,15 @@ const mode: Mode = process.env.CONTENT_SOURCE === 'api' ? 'api' : 'local';
 
 const DATA_DIR = path.join(process.cwd(), 'src', 'data');
 
-async function fetchLocal(name: CollectionName): Promise<unknown> {
+/** Fixture mode lokal yang BUKAN koleksi: detail desa diambil satu record
+ *  (lihat loadVillageDetail) dan statistik agregat memang satu objek, jadi
+ *  keduanya tidak punya entri di `collections` -- tapi mode lokal tetap butuh
+ *  berkasnya supaya panel dan kartu totalan Our Impact tidak kosong saat
+ *  CONTENT_SOURCE belum 'api'. Ditulis sebagai union, bukan `string`, supaya
+ *  salah ketik nama berkas tetap gagal saat typecheck. */
+type LocalFixture = CollectionName | 'villageDetails' | 'coastStats';
+
+async function fetchLocal(name: LocalFixture): Promise<unknown> {
   const file = path.join(DATA_DIR, `${name}.json`);
   const raw = await readFile(file, 'utf8');
   return JSON.parse(raw);
@@ -277,6 +289,228 @@ function mapNewsCategoryItem(raw: Record<string, unknown>, lang: Locale): unknow
   return { lang, slug: raw.slug, name: raw.name };
 }
 
+/** Angka dari CMS yang boleh saja kosong. String kosong, null, dan nilai yang
+ *  bukan angka sama-sama jadi null -- BUKAN 0: "belum didata" dan "nol"
+ *  adalah dua pernyataan berbeda, dan panel menampilkannya berbeda pula. */
+function optionalNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function optionalText(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
+
+/** Koordinat desa. `koordinat` yang null (desa tanpa baris boundary di CMS)
+ *  menghasilkan lat/lng null berdua, bukan salah satunya -- setengah koordinat
+ *  tidak bisa dipakai untuk apa pun. */
+function mapKoordinat(raw: unknown): { lat: number | null; lng: number | null } {
+  if (!raw || typeof raw !== 'object') return { lat: null, lng: null };
+  const point = raw as Record<string, unknown>;
+  const lat = optionalNumber(point.lat);
+  const lng = optionalNumber(point.lng);
+  return lat === null || lng === null ? { lat: null, lng: null } : { lat, lng };
+}
+
+/** Enam desimal ~ 11 cm di khatulistiwa.
+ *
+ *  API mengirim 14-15 desimal (-7.711906403999933), yaitu presisi sisa
+ *  perhitungan floating point, bukan presisi survei: digit ke-8 dan seterusnya
+ *  menyatakan jarak di bawah sepersejuta meter. Yang dipotong di sini karena
+ *  itu bukan ketelitian, melainkan noise yang harus diangkut ke browser setiap
+ *  kali desa diklik -- dan batas desa adalah bagian terbesar muatan itu
+ *  (25 KB untuk Ujungalang sebelum dipangkas, lebih besar dari seluruh sisa
+ *  detailnya digabung). Pada zoom maksimum peta ini satu piksel masih ~19
+ *  meter, jadi selisihnya tidak akan pernah terlihat. */
+const COORD_DECIMALS = 1e6;
+
+function roundCoord(value: number): number {
+  return Math.round(value * COORD_DECIMALS) / COORD_DECIMALS;
+}
+
+function isCoord(value: unknown): value is [number, number] {
+  return (
+    Array.isArray(value) &&
+    value.length >= 2 &&
+    typeof value[0] === 'number' &&
+    typeof value[1] === 'number' &&
+    Number.isFinite(value[0]) &&
+    Number.isFinite(value[1])
+  );
+}
+
+/** Satu cincin tertutup. Kurang dari tiga titik bukan bidang apa pun, jadi
+ *  dibuang -- Leaflet akan menggambarnya sebagai garis atau tidak sama sekali,
+ *  dan itu terbaca seperti peta yang rusak. */
+function mapRing(raw: unknown): [number, number][] | null {
+  if (!Array.isArray(raw)) return null;
+
+  const points = raw
+    .filter(isCoord)
+    .map(([lat, lng]): [number, number] => [roundCoord(lat), roundCoord(lng)]);
+
+  return points.length >= 3 ? points : null;
+}
+
+function mapPolygon(raw: unknown): [number, number][][] | null {
+  if (!Array.isArray(raw)) return null;
+
+  const rings = raw.map(mapRing).filter((ring): ring is [number, number][] => ring !== null);
+  return rings.length > 0 ? rings : null;
+}
+
+/**
+ * `peta.path` -> daftar poligon yang seragam.
+ *
+ * Ada karena API mengirim DUA bentuk berbeda untuk field yang sama, dan ini
+ * sudah diperiksa langsung ke endpoint-nya:
+ *
+ *   - Depok  : `[ cincin, ... ]`            (kedalaman 3) -- satu bidang
+ *   - Ujungalang, Kapoposang Bali
+ *              `[ [ cincin, ... ], ... ]`   (kedalaman 4) -- banyak bidang
+ *
+ * Keduanya dinormalkan jadi bentuk kedua. Yang membedakan keduanya cuma satu
+ * pertanyaan: apakah elemen pertama dari elemen pertama sudah berupa TITIK?
+ * Kalau ya, seluruh `path` adalah satu poligon dan cincin-cincinnya ada di
+ * tingkat atas; kalau tidak, tingkat atas itu daftar poligon.
+ *
+ * Menebak dari `length` tidak bisa dipakai: desa berbidang tunggal dan desa
+ * berbidang banyak sama-sama bisa punya panjang berapa pun.
+ */
+function mapVillageBoundary(raw: unknown): [number, number][][][] {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+
+  const first = raw[0];
+  if (Array.isArray(first) && isCoord(first[0])) {
+    const polygon = mapPolygon(raw);
+    return polygon ? [polygon] : [];
+  }
+
+  return raw
+    .map(mapPolygon)
+    .filter((polygon): polygon is [number, number][][] => polygon !== null);
+}
+
+/** Satu entri `/ext/coast/desa`. Nama field API-nya snake_case dan sebagian
+ *  panjang (`kabupaten_kota`); pemetaan ke nama skema terjadi di sini supaya
+ *  komponen tidak pernah menyentuh bentuk mentah CMS. */
+function mapImpactVillageItem(raw: Record<string, unknown>): unknown {
+  return {
+    kode: raw.desa_kode,
+    desa: raw.desa,
+    kecamatan: raw.kecamatan,
+    kabupaten: raw.kabupaten_kota,
+    provinsi: raw.provinsi,
+    ...mapKoordinat(raw.koordinat),
+    jumlahForm: optionalNumber(raw.jumlah_form) ?? 0,
+    pendataanTerakhir: optionalText(raw.pendataan_terakhir),
+  };
+}
+
+/** Satu entri `/ext/coast/kawasan-konservasi`.
+ *
+ *  Yang benar-benar dipakai peta cuma `id_mpa`; sisanya mengisi tooltip dan
+ *  keterangan. Nama panjangnya dibiarkan apa adanya dari CMS -- termasuk huruf
+ *  besar-kecil yang tidak seragam -- karena yang dipakai mencocokkan poligon
+ *  memang bukan nama. */
+function mapConservationAreaItem(raw: Record<string, unknown>): unknown {
+  return {
+    id: optionalNumber(raw.id),
+    nama: optionalText(raw.nama_kawasan),
+    idMpa: optionalText(raw.id_mpa),
+    luas: optionalNumber(raw.luas_area_dikonservasi),
+    pelaksana: optionalText(raw.pelaksana_konservasi),
+  };
+}
+
+/** Satu metrik statistik beserta rinciannya, rekursif.
+ *
+ *  Sarangnya diikuti sampai habis, bukan dipotong di tingkat kedua: data hari
+ *  ini tiga tingkat ("Dampak Ekonomi (Produksi)" -> "Perikanan Tangkap" ->
+ *  "Lainnya"), dan komoditas baru di CMS bisa menambah tingkat tanpa memberi
+ *  tahu siapa pun.
+ *
+ *  `children_sum_to_total` dibaca sebagai boolean apa adanya -- undefined
+ *  (metrik daun, CMS tidak mengirim field ini) jadi null, bukan false: "tidak
+ *  menjumlah" adalah pernyataan tentang rincian yang ADA, dan baris tanpa
+ *  rincian tidak menyatakan apa-apa. */
+function mapVillageMetric(raw: Record<string, unknown>): unknown {
+  return {
+    key: raw.key,
+    label: raw.label,
+    unit: optionalText(raw.unit),
+    decimals: optionalNumber(raw.decimals) ?? 0,
+    baru: optionalNumber(raw.baru),
+    lama: optionalNumber(raw.lama),
+    childrenSumToTotal:
+      typeof raw.children_sum_to_total === 'boolean' ? raw.children_sum_to_total : null,
+    children: asArray(raw.children).map(mapVillageMetric),
+  };
+}
+
+/**
+ * Satu respons `/ext/coast/desa/{desa_kode}`, diratakan.
+ *
+ * Bentuk API-nya bersarang (`wilayah`, `peta`, `pendataan`, `statistik.metrik`)
+ * sementara skemanya rata: yang bersarang di sana adalah asal datanya di CMS,
+ * bukan cara panel memakainya -- panel butuh "desa", "tahun pembanding", dan
+ * tiga daftar, bukan empat objek yang harus ditelusuri ulang di JSX.
+ *
+ * `peta.path` diratakan lewat mapVillageBoundary() di bawah -- lihat di sana
+ * soal dua bentuk sarang berbeda yang dikirim API untuk field yang sama.
+ */
+function mapVillageDetail(raw: Record<string, unknown>): unknown {
+  const wilayah = (raw.wilayah ?? {}) as Record<string, unknown>;
+  const peta = (raw.peta ?? {}) as Record<string, unknown>;
+  const pendataan = (raw.pendataan ?? {}) as Record<string, unknown>;
+  const statistik = (raw.statistik ?? {}) as Record<string, unknown>;
+
+  return {
+    kode: wilayah.desa_kode,
+    desa: wilayah.desa,
+    kecamatan: wilayah.kecamatan,
+    kabupaten: wilayah.kabupaten_kota,
+    provinsi: wilayah.provinsi,
+    lat: optionalNumber(peta.lat),
+    lng: optionalNumber(peta.lng),
+    jumlahForm: optionalNumber(pendataan.jumlah_form) ?? 0,
+    pendataanTerakhir: optionalText(pendataan.terakhir),
+    tahunBaru: optionalNumber(statistik.tahun_baru),
+    tahunLama: optionalNumber(statistik.tahun_lama),
+    metrik: asArray(statistik.metrik).map(mapVillageMetric),
+    gambar: asArray(raw.gambar)
+      // Entri tanpa url dibuang di sini, bukan dibiarkan gagal validasi:
+      // gambar yang hilang bukan alasan untuk menjatuhkan seluruh detail desa.
+      .filter((image) => typeof image.url === 'string' && image.url !== '')
+      .map((image) => ({ url: image.url, keterangan: optionalText(image.keterangan) })),
+    rehabilitasi: asArray(raw.rehabilitasi).map((item) => ({
+      tanggal: optionalText(item.tanggal),
+      ekosistem: optionalText(item.ekosistem),
+      statusLahan: optionalText(item.status_lahan),
+      luas: optionalNumber(item.luas_area_direhabilitasi),
+      pelaksana: optionalText(item.pelaksana),
+      kolaborator: optionalText(item.kolaborator),
+      jumlahBibit: optionalNumber(item.jumlah_bibit),
+      survivalRate: optionalNumber(item.survival_rate),
+    })),
+    batas: mapVillageBoundary(peta.path),
+    pelatihan: asArray(raw.pelatihan).map((item) => ({
+      tanggal: optionalText(item.tanggal),
+      nama: optionalText(item.nama),
+      peserta: optionalNumber(item.peserta),
+      pria: optionalNumber(item.peserta_pria),
+      wanita: optionalNumber(item.peserta_wanita),
+      remaja: optionalNumber(item.peserta_remaja),
+      lansia: optionalNumber(item.peserta_lansia),
+      disabilitas: optionalNumber(item.peserta_disabilitas),
+    })),
+  };
+}
+
 /** `data` bisa array (endpoint daftar) atau satu objek (`/news/{slug}`,
  *  docs/api-public.md §Amplop respons) -- pemanggil yang menyempitkannya. */
 type ApiEnvelope = {
@@ -347,6 +581,27 @@ const apiCollections: Record<CollectionName, ApiCollectionConfig> = {
     perLocale: true,
     paginated: false,
     mapItem: (raw, lang) => [mapNewsCategoryItem(raw, lang)],
+  },
+  impactVillages: {
+    // Resource-nya ber-segmen dua: endpoint pendataan pesisir hidup di bawah
+    // awalan `ext/`, bukan sejajar dengan /news dan /publications.
+    resource: 'ext/coast/desa',
+    // Tidak per-locale: endpoint ini tidak menerima `?lang=` sama sekali, dan
+    // isinya nama wilayah administratif yang memang tidak diterjemahkan.
+    perLocale: false,
+    // Tidak dipaginasi -- ini yang dijanjikan dokumentasinya ("peta butuh semua
+    // marker sekaligus") dan sudah diverifikasi: responsnya datang tanpa `meta`
+    // sama sekali, sama seperti team/programs/news-categories.
+    paginated: false,
+    mapItem: (raw) => [mapImpactVillageItem(raw)],
+  },
+  conservationAreas: {
+    resource: 'ext/coast/kawasan-konservasi',
+    // Sama seperti ext/coast/desa: tanpa `?lang=` (isinya nama kawasan versi
+    // KKP) dan tanpa `meta` -- 11 baris datang sekaligus.
+    perLocale: false,
+    paginated: false,
+    mapItem: (raw) => [mapConservationAreaItem(raw)],
   },
 };
 
@@ -821,6 +1076,111 @@ const loadArticleBySlugMemo = cache(async (slug: string, lang: Locale): Promise<
 
 export function loadArticleBySlug(slug: string, lang: Locale): Promise<Article | null> {
   return loadArticleBySlugMemo(slug, lang);
+}
+
+/** Sama kebijakannya dengan validate(): detail yang cacat dicatat lalu
+ *  dianggap tidak ada, bukan melempar -- panel menampilkan keadaan kosongnya
+ *  dan sisa halaman (peta, dropdown) tetap hidup. */
+function validateVillageDetail(raw: unknown): VillageDetail | null {
+  const parsed = villageDetailSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] detail desa ${describeItem(raw, 0)} dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/**
+ * SATU desa lewat `/ext/coast/desa/{desa_kode}` -- dipanggil saat pengunjung
+ * memilih desa, bukan saat halaman dibuka.
+ *
+ * Alasannya sama dengan loadArticleBySlug: menarik ke-19 detail di muka
+ * berarti 19 permintaan (masing-masing dengan 24 metrik dan daftar
+ * kegiatannya) untuk mengisi satu panel yang hanya menampilkan satu desa --
+ * dan CMS ini sudah terbukti menjawab 500 begitu dibanjiri (lihat
+ * MAX_CONCURRENT_REQUESTS).
+ *
+ * null berarti dua hal yang sengaja tidak dibedakan pemanggil: CMS menjawab
+ * 404 (desa itu tidak punya form terverifikasi), atau detailnya ada tapi gagal
+ * validasi. Keduanya berujung pada panel yang mengatakan datanya belum ada,
+ * bukan halaman yang jatuh.
+ */
+const loadVillageDetailMemo = cache(async (kode: string): Promise<VillageDetail | null> => {
+  if (mode !== 'api') {
+    const raw = (await fetchLocal('villageDetails')) as Record<string, unknown>[];
+    const match = raw.find((item) => item.kode === kode);
+    return match ? validateVillageDetail(match) : null;
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/coast/desa/${encodeURIComponent(kode)}`);
+
+  const json = await fetchEnvelope(url, headers, 'impactVillages', null, true);
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  return validateVillageDetail(mapVillageDetail(json.data as Record<string, unknown>));
+});
+
+/** Sama kebijakannya dengan validateVillageDetail: yang cacat dicatat lalu
+ *  dianggap tidak ada. Kartu totalannya hilang, halaman Our Impact selebihnya
+ *  tetap hidup. */
+function validateCoastStats(raw: unknown): CoastStats | null {
+  const parsed = coastStatsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] statistik pesisir dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/**
+ * Totalan statistik SELURUH desa lewat `/ext/coast/statistik`.
+ *
+ * Satu objek, bukan koleksi -- karena itu ia tidak lewat loadCollection: tidak
+ * ada entri untuk divalidasi satu per satu dan tidak ada halaman untuk diikuti.
+ *
+ * Bentuk responsnya bersarang (`pendataan` + `statistik`) sementara skemanya
+ * rata, dengan alasan yang sama seperti mapVillageDetail: yang bersarang itu
+ * asal datanya di CMS, bukan cara kartu totalan memakainya.
+ *
+ * null = totalannya tidak bisa diambil atau tidak lolos validasi. Pemanggil
+ * tidak merender kartunya sama sekali; peta di atasnya tidak ikut terpengaruh.
+ */
+const loadCoastStatsMemo = cache(async (): Promise<CoastStats | null> => {
+  if (mode !== 'api') {
+    return validateCoastStats(await fetchLocal('coastStats'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/coast/statistik`);
+
+  const json = await fetchEnvelope(url, headers, 'impactVillages', null, true);
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const pendataan = (data.pendataan ?? {}) as Record<string, unknown>;
+  const statistik = (data.statistik ?? {}) as Record<string, unknown>;
+
+  return validateCoastStats({
+    jumlahForm: optionalNumber(pendataan.jumlah_form) ?? 0,
+    jumlahDesa: optionalNumber(pendataan.jumlah_desa) ?? 0,
+    pendataanTerakhir: optionalText(pendataan.terakhir),
+    tahunBaru: optionalNumber(statistik.tahun_baru),
+    tahunLama: optionalNumber(statistik.tahun_lama),
+    metrik: asArray(statistik.metrik).map(mapVillageMetric),
+  });
+});
+
+export function loadCoastStats(): Promise<CoastStats | null> {
+  return loadCoastStatsMemo();
+}
+
+export function loadVillageDetail(kode: string): Promise<VillageDetail | null> {
+  return loadVillageDetailMemo(kode);
 }
 
 /**

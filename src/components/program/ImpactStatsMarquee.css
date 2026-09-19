@@ -1,0 +1,80 @@
+/* Kartu totalan berjalan di bawah peta Our Impact.
+
+   CSS, bukan JavaScript: yang dibutuhkan cuma satu translasi yang berulang, dan
+   menggerakkannya lewat requestAnimationFrame berarti mengirim JS untuk sesuatu
+   yang sudah dijalankan compositor tanpa membangunkan main thread. Komponennya
+   karena itu tetap server component -- nol KB JS untuk seluruh bagian ini.
+
+   Berkas CSS terpisah (bukan kelas Tailwind) dengan alasan yang sama seperti
+   IndonesiaMap.css: @keyframes, pemberhentian saat hover, dan
+   prefers-reduced-motion adalah tiga aturan yang saling terkait, dan menuliskan
+   mereka sebagai satu blok lebih mudah dibaca daripada menyebarkannya jadi
+   varian utility. */
+
+.stats-marquee {
+  /* Tepi yang melembut, bukan kartu yang terpotong tajam: ia yang memberi tahu
+     bahwa daftarnya BERJALAN, bukan berhenti di tepi layar. mask, bukan
+     gradien putih di atasnya -- latar halaman ini bergambar (bg_wave1), jadi
+     penutup berwarna solid akan terlihat sebagai dua balok pucat. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 3rem,
+    black calc(100% - 3rem),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 3rem,
+    black calc(100% - 3rem),
+    transparent
+  );
+  overflow: hidden;
+}
+
+.stats-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: stats-marquee-scroll var(--stats-marquee-duration, 60s) linear infinite;
+}
+
+/* Berhenti saat disentuh pointer ATAU saat fokus keyboard masuk: kartu yang
+   sedang dibaca tidak boleh kabur ke kiri. :focus-within yang membuat janji itu
+   berlaku juga bagi yang menavigasi tanpa tetikus -- wadahnya tabbable (lihat
+   tabIndex di komponen) karena ia area yang bisa digulir. */
+.stats-marquee:hover .stats-marquee-track,
+.stats-marquee:focus-within .stats-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes stats-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  /* -50%, bukan -100%: isinya dirender DUA KALI berdampingan, jadi pada -50%
+     salinan kedua berada persis di posisi awal salinan pertama dan loncatan
+     kembali ke 0 tidak terlihat. */
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Gerakan otomatis yang tidak bisa dihentikan adalah persis yang dilarang WCAG
+   2.2.2 untuk konten yang bergerak lebih dari lima detik. Di sini ia dimatikan
+   total, lalu daftarnya diserahkan kembali ke pengunjung sebagai area yang bisa
+   digulir sendiri -- salinan keduanya ikut disembunyikan, karena tanpa animasi
+   ia cuma pengulangan yang membingungkan. */
+@media (prefers-reduced-motion: reduce) {
+  .stats-marquee {
+    overflow-x: auto;
+  }
+
+  .stats-marquee-track {
+    animation: none;
+  }
+
+  .stats-marquee-clone {
+    display: none;
+  }
+}

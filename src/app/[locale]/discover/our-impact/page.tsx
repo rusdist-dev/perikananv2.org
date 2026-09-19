@@ -2,11 +2,13 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import waveBg from '@/assets/banner/bg_wave1.png';
 import { Container } from '@/components/layout/Container';
+import { ImpactStatsMarquee } from '@/components/program/ImpactStatsMarquee';
 import { ImpactVillageMap } from '@/components/program/ImpactVillageMap';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
+import { getCoastStats, getImpactVillages, getInterventionMpaIds } from '@/lib/content';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -23,6 +25,34 @@ export default async function OurImpactPage({ params }: { params: Promise<{ loca
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+
+  // Daftar desanya diambil DI SINI, bukan di dalam ImpactVillageMap: komponen
+  // itu client component, dan kunci API CMS tidak boleh ikut ke browser.
+  // Detail per desa menyusul lewat Server Action saat ada yang diklik (lihat
+  // ./actions.ts) -- menariknya sekaligus di sini berarti 19 permintaan untuk
+  // satu panel yang menampilkan satu desa.
+  //
+  // Ketiganya diminta BERBARENGAN: tidak ada yang bergantung pada hasil yang
+  // lain, dan menunggunya berurutan berarti tiga perjalanan ke CMS yang
+  // dijumlahkan, bukan tiga yang berjalan bersamaan.
+  //
+  // allSettled, bukan all: kegagalan daftar kawasan atau totalan tidak boleh
+  // menjatuhkan halaman yang bagian utamanya (peta + dropdown) baik-baik saja.
+  // Yang gagal kehilangan penanda warnanya atau pita kartunya; sisanya jalan.
+  const [villagesResult, mpaIdsResult, statsResult] = await Promise.allSettled([
+    getImpactVillages(),
+    getInterventionMpaIds(),
+    getCoastStats(),
+  ]);
+
+  // Daftar desa TIDAK punya jalan keluar: tanpa itu tidak ada peta, tidak ada
+  // dropdown, dan tidak ada halaman -- jadi kegagalannya dilempar ulang supaya
+  // error boundary Next yang menanganinya, bukan halaman kosong tanpa sebab.
+  if (villagesResult.status === 'rejected') throw villagesResult.reason;
+
+  const villages = villagesResult.value;
+  const interventionMpaIds = mpaIdsResult.status === 'fulfilled' ? mpaIdsResult.value : [];
+  const stats = statsResult.status === 'fulfilled' ? statsResult.value : null;
 
   return (
     <div className="relative isolate overflow-hidden bg-bg">
@@ -66,7 +96,16 @@ export default async function OurImpactPage({ params }: { params: Promise<{ loca
           sejajar dengan teks di atas, sedangkan petanya full-bleed selebar
           viewport. */}
       <div className="relative mt-10 w-full ">
-        <ImpactVillageMap />
+        <ImpactVillageMap
+          villages={villages}
+          interventionMpaIds={interventionMpaIds}
+          locale={locale}
+        />
+
+        {/* Di bawah peta, bukan di atasnya: yang dicari orang di halaman ini
+            adalah desanya. Totalan ini jawaban untuk pertanyaan berikutnya
+            ("seberapa besar semuanya"), jadi ia menunggu giliran. */}
+        {stats ? <ImpactStatsMarquee stats={stats} locale={locale} /> : null}
       </div>
     </div>
   );

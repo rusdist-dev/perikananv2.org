@@ -352,6 +352,12 @@ async function buildConservationAreas() {
       type: 'Feature',
       properties: {
         name: feature.properties.nama_kk,
+        // Kunci pencocokan ke CMS: /ext/coast/kawasan-konservasi mengirim
+        // `id_mpa` yang sama ("T244"), dan itulah satu-satunya pengenal yang
+        // stabil di antara keduanya -- nama kawasan di CMS diketik ulang
+        // (huruf besar-kecil bebas, "Periaran" alih-alih "Perairan"), jadi
+        // mencocokkan nama berarti kawasan yang diam-diam tidak ketemu.
+        idMpa: feature.properties.id_mpa ?? null,
         wpp: normaliseWpp(feature.properties.wpp),
         ha: feature.properties.luas_kk_ha ?? null,
       },

@@ -4,7 +4,9 @@ import {
   loadArticlePreviews,
   loadArticlesByProgram,
   loadArticlesQuery,
+  loadCoastStats,
   loadCollection,
+  loadVillageDetail,
   type ArticlePage,
   type ArticleQuery,
 } from './source';
@@ -17,6 +19,10 @@ import type {
   Milestone,
   ProgramOption,
   NewsCategory,
+  CoastStats,
+  ConservationArea,
+  ImpactVillage,
+  VillageDetail,
 } from './schema';
 
 /**
@@ -34,6 +40,13 @@ export type {
   Milestone,
   ProgramOption,
   NewsCategory,
+  CoastStats,
+  ConservationArea,
+  ImpactVillage,
+  VillageDetail,
+  VillageMetric,
+  VillageRehabilitation,
+  VillageTraining,
 } from './schema';
 export type { ArticlePage } from './source';
 
@@ -488,4 +501,83 @@ function pickMilestonesForLocale(all: Milestone[], locale: Locale): Milestone[] 
 export async function getMilestones(locale: Locale): Promise<Milestone[]> {
   const all = await loadCollection('milestones');
   return pickMilestonesForLocale(all, locale);
+}
+
+/** Urut ALFABETIS berdasarkan nama desa -- urutan yang sama dengan yang sudah
+ *  dikirim CMS.
+ *
+ *  Sebelumnya daftar ini diurutkan barat -> timur memakai bujur, diwarisi dari
+ *  src/data/impact-villages.ts yang digantikan koleksi ini. Urutan geografis
+ *  itu masuk akal untuk peta, tapi daftar yang sama juga mengisi dropdown --
+ *  dan di dropdown ia tidak bisa ditebak: mencari satu nama berarti menyusuri
+ *  seluruh daftar. Peta sendiri tidak peduli urutan penandanya.
+ *
+ *  Tetap dihitung di sini meski CMS sudah mengirimnya terurut, supaya yang
+ *  tampil tidak bergantung pada urutan yang kebetulan datang -- termasuk dari
+ *  fixture lokal src/data/impactVillages.json.
+ *
+ *  Desa TANPA koordinat ikut tampil, di posisi alfabetisnya seperti yang lain:
+ *  ia tidak punya penanda di peta (lihat komentar lat/lng di
+ *  impactVillageSchema), tapi menghilangkannya dari dropdown berarti desa yang
+ *  datanya lengkap jadi tidak bisa dibuka hanya karena batas wilayahnya belum
+ *  digambar di CMS.
+ *
+ *  localeCompare dengan locale 'id' -- bukan perbandingan < / >, yang mengurut
+ *  menurut kode karakter dan menaruh semua nama berawalan huruf kecil setelah
+ *  huruf besar. */
+function byDesaName(a: ImpactVillage, b: ImpactVillage): number {
+  return a.desa.localeCompare(b.desa, 'id');
+}
+
+/** Seluruh desa pesisir dengan pendataan terverifikasi -- mengisi dropdown DAN
+ *  penanda peta di /discover/our-impact. Tanpa parameter locale: lihat
+ *  komentar impactVillageSchema soal kenapa koleksi ini tidak per-bahasa. */
+export async function getImpactVillages(): Promise<ImpactVillage[]> {
+  const all = await loadCollection('impactVillages');
+  return [...all].sort(byDesaName);
+}
+
+/** Kawasan konservasi tempat program benar-benar bekerja -- dipakai peta Our
+ *  Impact untuk mewarnai poligonnya berbeda dari 543 kawasan lain yang cuma
+ *  jadi konteks.
+ *
+ *  Urut nama supaya keterangan di bawah peta (dan pesan galat saat sebuah
+ *  kawasan tidak ketemu poligonnya) tidak berubah urutan tiap kali CMS
+ *  menyusun ulang tabelnya.
+ *
+ *  localeCompare('id') dengan alasan yang sama seperti byDesaName: sebagian
+ *  nama di CMS diketik huruf kapital semua ("KAWASAN KONSERVASI DI PERAIRAN
+ *  ..."), dan perbandingan kode karakter akan menaruh semuanya sebelum yang
+ *  berhuruf kecil. */
+export async function getConservationAreas(): Promise<ConservationArea[]> {
+  const all = await loadCollection('conservationAreas');
+  return [...all].sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
+}
+
+/** `id_mpa` kawasan intervensi saja -- bentuk yang benar-benar dipakai peta.
+ *
+ *  Ada sebagai fungsi tersendiri supaya halaman tidak perlu tahu bahwa
+ *  pencocokan poligon terjadi lewat `idMpa`; ia cuma meneruskan hasilnya ke
+ *  IndonesiaMap. */
+export async function getInterventionMpaIds(): Promise<string[]> {
+  const areas = await getConservationAreas();
+  return areas.map((area) => area.idMpa);
+}
+
+/** Totalan statistik seluruh desa, untuk kartu berjalan di bawah peta Our
+ *  Impact. null = totalannya tidak tersedia; pemanggil tidak merender kartunya
+ *  sama sekali. */
+export async function getCoastStats(): Promise<CoastStats | null> {
+  return loadCoastStats();
+}
+
+/** Detail satu desa untuk panel di samping peta. `kode` adalah `desa_kode`
+ *  BPS, sama persis dengan `ImpactVillage.kode`.
+ *
+ *  null = desa itu tidak punya detail yang bisa ditampilkan (404 dari CMS,
+ *  atau datanya gagal validasi -- lihat loadVillageDetail). Pemanggilnya
+ *  menampilkan keadaan kosong, bukan notFound(): yang gagal cuma satu panel di
+ *  halaman yang sisanya baik-baik saja. */
+export async function getVillageDetail(kode: string): Promise<VillageDetail | null> {
+  return loadVillageDetail(kode);
 }

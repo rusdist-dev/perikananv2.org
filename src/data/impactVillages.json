@@ -1,0 +1,211 @@
+[
+  {
+    "kode": "33.25.13.2005",
+    "desa": "Depok",
+    "kecamatan": "Kandeman",
+    "kabupaten": "Kabupaten Batang",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.894481219181676,
+    "lng": 109.76980264980163,
+    "jumlahForm": 5,
+    "pendataanTerakhir": "2026-07-19"
+  },
+  {
+    "kode": "33.29.09.2019",
+    "desa": "Randusanga Wetan",
+    "kecamatan": "Brebes",
+    "kabupaten": "Kabupaten Brebes",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.842973321482873,
+    "lng": 109.08489358788479,
+    "jumlahForm": 5,
+    "pendataanTerakhir": "2026-07-19"
+  },
+  {
+    "kode": "33.01.22.1005",
+    "desa": "Kutawaru",
+    "kecamatan": "Cilacap Tengah",
+    "kabupaten": "Kabupaten Cilacap",
+    "provinsi": "Jawa Tengah",
+    "lat": -7.683286815236046,
+    "lng": 108.98244321229988,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-20"
+  },
+  {
+    "kode": "33.01.24.2002",
+    "desa": "Ujungalang",
+    "kecamatan": "Kampung Laut",
+    "kabupaten": "Kabupaten Cilacap",
+    "provinsi": "Jawa Tengah",
+    "lat": -7.69574487601314,
+    "lng": 108.90287387176629,
+    "jumlahForm": 3,
+    "pendataanTerakhir": "2026-06-24"
+  },
+  {
+    "kode": "33.21.12.2012",
+    "desa": "Betahwalang",
+    "kecamatan": "Bonang",
+    "kabupaten": "Kabupaten Demak",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.8067142838444425,
+    "lng": 110.57745082034053,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-19"
+  },
+  {
+    "kode": "33.21.12.2011",
+    "desa": "Purworejo",
+    "kecamatan": "Bonang",
+    "kabupaten": "Kabupaten Demak",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.820189359480415,
+    "lng": 110.56238796756071,
+    "jumlahForm": 5,
+    "pendataanTerakhir": "2026-07-19"
+  },
+  {
+    "kode": "33.21.13.2001",
+    "desa": "Wedung",
+    "kecamatan": "Wedung",
+    "kabupaten": "Kabupaten Demak",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.791834259428883,
+    "lng": 110.58564164286348,
+    "jumlahForm": 7,
+    "pendataanTerakhir": "2026-07-24"
+  },
+  {
+    "kode": "33.20.06.1008",
+    "desa": "Bulu",
+    "kecamatan": "Jepara",
+    "kabupaten": "Kabupaten Jepara",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.587099115930465,
+    "lng": 110.64716725875198,
+    "jumlahForm": 3,
+    "pendataanTerakhir": "2026-07-23"
+  },
+  {
+    "kode": "33.20.01.2016",
+    "desa": "Tanggultlare",
+    "kecamatan": "Kedung",
+    "kabupaten": "Kabupaten Jepara",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.6525481621434,
+    "lng": 110.65082997224503,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-21"
+  },
+  {
+    "kode": "33.20.11.2008",
+    "desa": "Telukawur",
+    "kecamatan": "Tahunan",
+    "kabupaten": "Kabupaten Jepara",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.625586069669528,
+    "lng": 110.64194786441794,
+    "jumlahForm": 5,
+    "pendataanTerakhir": "2026-07-22"
+  },
+  {
+    "kode": "33.05.01.2012",
+    "desa": "Ayah",
+    "kecamatan": "Ayah",
+    "kabupaten": "Kabupaten Kebumen",
+    "provinsi": "Jawa Tengah",
+    "lat": -7.714224997045454,
+    "lng": 109.39429447733018,
+    "jumlahForm": 3,
+    "pendataanTerakhir": "2026-07-23"
+  },
+  {
+    "kode": "33.18.19.2010",
+    "desa": "Keboromo",
+    "kecamatan": "Tayu",
+    "kabupaten": "Kabupaten Pati",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.541832900029243,
+    "lng": 111.04876951147942,
+    "jumlahForm": 3,
+    "pendataanTerakhir": "2026-07-20"
+  },
+  {
+    "kode": "33.26.19.2009",
+    "desa": "Tratebang",
+    "kecamatan": "Wonokerto",
+    "kabupaten": "Kabupaten Pekalongan",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.860069868152682,
+    "lng": 109.61856817708373,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-21"
+  },
+  {
+    "kode": "33.27.13.2018",
+    "desa": "Pesantren",
+    "kecamatan": "Ulujami",
+    "kabupaten": "Kabupaten Pemalang",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.817583847633775,
+    "lng": 109.50897316450107,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-18"
+  },
+  {
+    "kode": "33.17.10.2010",
+    "desa": "Pasar Banggi",
+    "kecamatan": "Rembang",
+    "kabupaten": "Kabupaten Rembang",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.705962635988367,
+    "lng": 111.390616285599,
+    "jumlahForm": 3,
+    "pendataanTerakhir": "2026-07-19"
+  },
+  {
+    "kode": "33.17.10.2008",
+    "desa": "Punjulharjo",
+    "kecamatan": "Rembang",
+    "kabupaten": "Kabupaten Rembang",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.694264724592827,
+    "lng": 111.41578340951204,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-18"
+  },
+  {
+    "kode": "33.28.16.2011",
+    "desa": "Bojongsana",
+    "kecamatan": "Suradadi",
+    "kabupaten": "Kabupaten Tegal",
+    "provinsi": "Jawa Tengah",
+    "lat": -6.890484282287477,
+    "lng": 109.287517205132,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-18"
+  },
+  {
+    "kode": "73.10.01.2008",
+    "desa": "Kapoposang Bali",
+    "kecamatan": "Liukang Tangaya",
+    "kabupaten": "Kabupaten Pangkajene dan Kepulauan",
+    "provinsi": "Sulawesi Selatan",
+    "lat": -7.500797889566567,
+    "lng": 117.18328164136334,
+    "jumlahForm": 4,
+    "pendataanTerakhir": "2026-07-11"
+  },
+  {
+    "kode": "73.10.01.2006",
+    "desa": "Sailus",
+    "kecamatan": "Liukang Tangaya",
+    "kabupaten": "Kabupaten Pangkajene dan Kepulauan",
+    "provinsi": "Sulawesi Selatan",
+    "lat": -7.498654020243002,
+    "lng": 117.46026052574152,
+    "jumlahForm": 5,
+    "pendataanTerakhir": "2026-07-11"
+  }
+]

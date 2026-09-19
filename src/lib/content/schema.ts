@@ -245,6 +245,262 @@ export type NewsCategory = z.output<typeof newsCategorySchema>;
 
 export const newsCategoriesSchema = z.array(newsCategorySchema);
 
+/** Satu desa pesisir yang punya pendataan terverifikasi, dari
+ *  `/ext/coast/desa` -- daftar yang mengisi dropdown DAN penanda peta
+ *  /discover/our-impact.
+ *
+ *  Tanpa `lang` seperti publicationSchema, dan karena alasan yang lebih kuat:
+ *  isinya nama tempat administratif ("Purworejo", "Kabupaten Demak"), yang
+ *  tidak diterjemahkan -- endpoint-nya memang tidak menerima `?lang=` sama
+ *  sekali.
+ *
+ *  Menggantikan src/data/impact-villages.ts, yang koordinatnya perkiraan dan
+ *  sepuluh desanya dipilih tangan; komentar di berkas itu sudah menyebut
+ *  koleksi seperti ini sebagai penggantinya. */
+export const impactVillageSchema = z.object({
+  /** `desa_kode` BPS ("33.21.12.2011"). Identitas desa di seluruh jalur ini:
+   *  nilai state pilihan, id penanda peta, dan argumen endpoint detail.
+   *  Bukan nama desa -- ada lebih dari satu "Purworejo" di daftar wilayah
+   *  Indonesia, dan kodenya yang membedakan. */
+  kode: z.string().min(1),
+  desa: z.string().min(1),
+  /** TANPA awalan "Kecamatan" (API memang mengirimnya begitu): panel detail
+   *  mencetak awalannya sendiri sebagai label baris. */
+  kecamatan: z.string().min(1),
+  /** `kabupaten_kota`, SUDAH termasuk awalan "Kabupaten"/"Kota" -- keduanya
+   *  muncul di daftar ini dan tidak bisa disingkat jadi satu awalan. */
+  kabupaten: z.string().min(1),
+  provinsi: z.string().min(1),
+  /** null berdua kalau desa itu belum punya baris boundary di CMS. Sengaja
+   *  null, BUKAN 0,0 -- penanda di lepas pantai Afrika terlihat seperti data
+   *  (alasan yang sama disebut dokumentasi endpoint-nya). Desanya tetap masuk
+   *  daftar dan tetap bisa dipilih; yang tidak ada cuma penandanya. */
+  lat: z.number().nullable().default(null),
+  lng: z.number().nullable().default(null),
+  /** Berapa formulir pendataan terverifikasi yang jadi dasar angka desa ini. */
+  jumlahForm: z.number().default(0),
+  /** Tanggal pendataan terakhir (ISO). null kalau CMS tidak mengirimnya. */
+  pendataanTerakhir: z.iso.date().nullable().default(null),
+});
+
+export type ImpactVillage = z.output<typeof impactVillageSchema>;
+
+export const impactVillagesSchema = z.array(impactVillageSchema);
+
+/** Satu angka pada tab Statistik, apa adanya dari CMS.
+ *
+ *  `label`, `unit`, dan `decimals` ikut datang dari API dan TIDAK ditiru di
+ *  sini sebagai tabel padanan di kode: daftar metriknya ditentukan formulir
+ *  pendataan di CMS (9 metrik puncak hari ini, sebagian beranak), jadi metrik
+ *  baru muncul sendiri di panel tanpa deploy. Tabel padanan di frontend akan
+ *  berarti metrik baru tampil tanpa label -- atau tidak tampil sama sekali.
+ *
+ *  BERSARANG sejak API mengirim `children`: "Dampak Ekonomi (Produksi)"
+ *  membawa "Perikanan Tangkap" yang membawa "Lainnya" -- tiga tingkat pada
+ *  data hari ini. Sarangnya dipertahankan apa adanya, tidak diratakan, karena
+ *  itulah yang dipakai tab Statistik untuk memutuskan baris mana yang bisa
+ *  dibuka-tutup.
+ *
+ *  Angkanya NUMBER, bukan string yang sudah diformat (beda dari VillageStat
+ *  lama di src/data/village-detail.ts): pemformatan ribuan dan desimal
+ *  bergantung locale pembaca, dan angka yang sudah jadi string tidak bisa
+ *  disejajarkan sebagai kolom `lama` vs `baru`. */
+export type VillageMetric = {
+  key: string;
+  label: string;
+  unit: string | null;
+  decimals: number;
+  baru: number | null;
+  lama: number | null;
+  childrenSumToTotal: boolean | null;
+  children: VillageMetric[];
+};
+
+/** Tipe hasilnya ditulis tangan di atas, tidak disimpulkan dengan
+ *  `z.output<typeof ...>` seperti skema lain di berkas ini: TypeScript tidak
+ *  bisa menyimpulkan tipe yang menunjuk dirinya sendiri lewat getter
+ *  (TS7023/TS2615), jadi salah satu ujungnya harus dinyatakan. Anotasi
+ *  `z.ZodType<VillageMetric>` di bawah yang mengikat keduanya -- field yang
+ *  ditambah di skema tanpa ditambah di tipe akan gagal typecheck di sini. */
+export const villageMetricSchema: z.ZodType<VillageMetric> = z.object({
+  key: z.string().min(1),
+  label: z.string().min(1),
+  /** "ha", "Rp", "orang", "kg", "unit" -- atau null (nilai_stok_karbon memang
+   *  dikirim tanpa satuan). */
+  unit: z.string().nullable().default(null),
+  /** Berapa desimal yang BERMAKNA untuk metrik ini menurut CMS: 2 untuk luas
+   *  dan rupiah, 0 untuk cacah orang. Dipakai apa adanya saat memformat --
+   *  "29,00 orang" salah dengan cara yang halus. */
+  decimals: z.number().int().min(0).max(6).default(0),
+  /** Nilai tahun `tahunBaru` dan `tahunLama`. null = metrik itu tidak punya
+   *  nilai untuk tahun itu, yang TIDAK sama dengan nol. */
+  baru: z.number().nullable().default(null),
+  lama: z.number().nullable().default(null),
+  /** Apakah `children` benar-benar menjumlah ke angka induknya.
+   *
+   *  false untuk rincian yang TUMPANG TINDIH: "Total Orang Terlibat" 29 orang
+   *  dengan rincian 19 pria + 10 wanita + 4 remaja + 1 lansia -- seorang
+   *  remaja juga terhitung pria. Panel memakainya untuk menjelaskan kenapa
+   *  rinciannya tidak menjumlah, bukan untuk menyembunyikan angkanya.
+   *
+   *  null = metrik tanpa anak (CMS tidak mengirim field ini untuk daun). */
+  childrenSumToTotal: z.boolean().nullable().default(null),
+  /** Rincian satu tingkat di bawah. Array kosong = baris tunggal.
+   *
+   *  Rekursif lewat getter, cara Zod 4 menuliskan skema yang menunjuk dirinya
+   *  sendiri: `villageMetricSchema` belum ada saat objeknya dibangun, dan
+   *  getter menunda pembacaannya sampai validasi pertama. */
+  get children() {
+    return z.array(villageMetricSchema).default([]);
+  },
+});
+
+/** Satu kawasan konservasi tempat program pendataan pesisir benar-benar
+ *  bekerja, dari `/ext/coast/kawasan-konservasi`.
+ *
+ *  BUKAN daftar kawasan konservasi Indonesia -- yang itu ada 554 dan hidup di
+ *  public/geo/conservation-areas.json, digambar peta apa adanya. Koleksi ini
+ *  yang menentukan mana di antaranya yang diwarnai berbeda sebagai kawasan
+ *  intervensi.
+ *
+ *  Tidak ada geometri di sini: bentuk poligonnya tetap datang dari berkas geo,
+ *  dan `idMpa` yang menjodohkan keduanya. */
+export const conservationAreaSchema = z.object({
+  /** Id baris di CMS. Dipakai sebagai kunci React, bukan untuk mencocokkan
+   *  apa pun -- yang menjodohkan ke peta adalah `idMpa`. */
+  id: z.number(),
+  nama: z.string().min(1),
+  /** Pengenal kawasan versi KKP ("T244"), kunci pencocokan ke properti `idMpa`
+   *  di public/geo/conservation-areas.json.
+   *
+   *  WAJIB ada: baris tanpa `id_mpa` tidak bisa ditemukan poligonnya, jadi ia
+   *  dibuang dengan berisik oleh validate() alih-alih diam-diam tidak pernah
+   *  berwarna di peta. */
+  idMpa: z.string().min(1),
+  /** Luas yang dikonservasi menurut pendataan (ha) -- angka CMS, BUKAN luas
+   *  resmi kawasan di berkas geo (`ha`). Keduanya memang bisa berbeda: yang
+   *  satu wilayah kerja, yang satu batas SK. */
+  luas: z.number().nullable().default(null),
+  pelaksana: z.string().nullable().default(null),
+});
+
+export type ConservationArea = z.output<typeof conservationAreaSchema>;
+
+export const conservationAreasSchema = z.array(conservationAreaSchema);
+
+/** Statistik pendataan pesisir SE-PROGRAM, dari `/ext/coast/statistik`.
+ *
+ *  Metriknya memakai villageMetricSchema yang sama dengan panel per-desa --
+ *  bentuk satu entrinya memang identik (key/label/unit/decimals/baru/lama).
+ *  Bedanya endpoint ini mengirimnya RATA: 12 metrik tanpa `children`, karena
+ *  totalan lintas desa tidak punya rincian per komoditas. `children` karena itu
+ *  selalu jatuh ke default array kosong di sini, dan kartu totalannya tidak
+ *  punya baris yang bisa dibuka. */
+export const coastStatsSchema = z.object({
+  jumlahForm: z.number().default(0),
+  jumlahDesa: z.number().default(0),
+  pendataanTerakhir: z.iso.date().nullable().default(null),
+  tahunBaru: z.number().nullable().default(null),
+  tahunLama: z.number().nullable().default(null),
+  metrik: z.array(villageMetricSchema).default([]),
+});
+
+export type CoastStats = z.output<typeof coastStatsSchema>;
+
+/** Satu kegiatan rehabilitasi. Semua field selain tanggal boleh kosong --
+ *  formulir CMS tidak mewajibkan semuanya, dan baris yang separuh terisi
+ *  tetap lebih berguna daripada dibuang. */
+export const villageRehabilitationSchema = z.object({
+  tanggal: z.iso.date().nullable().default(null),
+  ekosistem: z.string().nullable().default(null),
+  statusLahan: z.string().nullable().default(null),
+  luas: z.number().nullable().default(null),
+  pelaksana: z.string().nullable().default(null),
+  kolaborator: z.string().nullable().default(null),
+  jumlahBibit: z.number().nullable().default(null),
+  /** Persen (0-100), bukan pecahan 0-1. */
+  survivalRate: z.number().nullable().default(null),
+});
+
+export type VillageRehabilitation = z.output<typeof villageRehabilitationSchema>;
+
+/** Satu pelatihan beserta rincian pesertanya. Rincian gender/usia/disabilitas
+ *  dipertahankan terpisah, bukan dijumlah jadi satu angka: justru pemilahan
+ *  itu yang jadi indikator program. */
+export const villageTrainingSchema = z.object({
+  tanggal: z.iso.date().nullable().default(null),
+  nama: z.string().nullable().default(null),
+  peserta: z.number().nullable().default(null),
+  pria: z.number().nullable().default(null),
+  wanita: z.number().nullable().default(null),
+  remaja: z.number().nullable().default(null),
+  lansia: z.number().nullable().default(null),
+  disabilitas: z.number().nullable().default(null),
+});
+
+export type VillageTraining = z.output<typeof villageTrainingSchema>;
+
+/** Satu titik batas wilayah: [lat, lng], urutan yang sama dengan yang dipakai
+ *  Leaflet -- bukan [lng, lat] ala GeoJSON. Ditulis sebagai tuple, bukan
+ *  `z.array(z.number())`, supaya `[lat, lng]` bisa diserahkan langsung ke
+ *  L.polygon tanpa cast di komponen. */
+const koordinatSchema = z.tuple([z.number(), z.number()]);
+
+/**
+ * Isi panel detail satu desa, dari `/ext/coast/desa/{desa_kode}`.
+ *
+ * BUKAN anggota `collections` di bawah: ia diambil satu record sekali klik
+ * (lihat loadVillageDetail di source.ts), persis seperti articleSchema yang
+ * juga di luar daftar koleksi. Menarik 19 detail sekaligus saat halaman
+ * dibuka berarti 19 permintaan untuk satu panel yang menampilkan satu.
+ */
+export const villageDetailSchema = z.object({
+  kode: z.string().min(1),
+  desa: z.string().min(1),
+  kecamatan: z.string().min(1),
+  kabupaten: z.string().min(1),
+  provinsi: z.string().min(1),
+  lat: z.number().nullable().default(null),
+  lng: z.number().nullable().default(null),
+  jumlahForm: z.number().default(0),
+  pendataanTerakhir: z.iso.date().nullable().default(null),
+  /** Tahun pembanding statistik. Keduanya dari CMS, bukan dihitung dari
+   *  tanggal hari ini: yang menentukan "tahun berjalan" adalah data pendataan
+   *  yang masuk, bukan kalender. */
+  tahunBaru: z.number().nullable().default(null),
+  tahunLama: z.number().nullable().default(null),
+  metrik: z.array(villageMetricSchema).default([]),
+  /** Foto desa beserta keterangannya. `keterangan` bukan caption pendek --
+   *  isinya paragraf profil desa, dan itulah yang mengisi tab Deskripsi. */
+  gambar: z
+    .array(
+      z.object({
+        url: z.string().min(1),
+        keterangan: z.string().nullable().default(null),
+      }),
+    )
+    .default([]),
+  rehabilitasi: z.array(villageRehabilitationSchema).default([]),
+  pelatihan: z.array(villageTrainingSchema).default([]),
+  /** Batas wilayah desa (`peta.path`), SUDAH dinormalkan jadi satu bentuk:
+   *  daftar poligon -> daftar cincin -> daftar titik.
+   *
+   *  Tiga tingkat, bukan dua, karena satu desa bisa terdiri dari beberapa
+   *  bidang terpisah: Ujungalang 13 dan Kapoposang Bali 7 (pulau-pulau di
+   *  estuari dan kepulauan). Kalau semuanya diratakan jadi satu daftar cincin,
+   *  Leaflet akan membaca cincin ke-2 dan seterusnya sebagai LUBANG pada
+   *  cincin pertama -- pulau-pulaunya berubah jadi lubang menganga.
+   *
+   *  API sendiri mengirim dua bentuk berbeda untuk field yang sama; yang
+   *  menyeragamkannya mapVillageBoundary() di source.ts.
+   *
+   *  Array kosong = desa itu belum punya batas wilayah di CMS. Peta menggambar
+   *  penandanya saja, tanpa poligon. */
+  batas: z.array(z.array(koordinatSchema).min(3)).array().default([]),
+});
+
+export type VillageDetail = z.output<typeof villageDetailSchema>;
+
 /** Daftar koleksi yang dikenal. Kunci di sini menentukan nama file
  *  (src/data/<key>.json) dan cache tag revalidasi. Nama resource CMS yang
  *  sesungguhnya (kalau berbeda, seperti "articles" -> "news") dipetakan
@@ -264,6 +520,8 @@ export const collectionItems = {
   milestones: milestoneSchema,
   programOptions: programOptionSchema,
   newsCategories: newsCategorySchema,
+  impactVillages: impactVillageSchema,
+  conservationAreas: conservationAreaSchema,
 } as const;
 
 export type CollectionName = keyof typeof collectionItems;
@@ -278,4 +536,6 @@ export const collections = {
   milestones: milestonesSchema,
   programOptions: programOptionsSchema,
   newsCategories: newsCategoriesSchema,
+  impactVillages: impactVillagesSchema,
+  conservationAreas: conservationAreasSchema,
 } as const satisfies Record<CollectionName, z.ZodType>;

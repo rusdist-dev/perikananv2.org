@@ -43,8 +43,21 @@ export type MapMarker = {
   label: string;
 };
 
+/** Batas wilayah yang digambar di atas peta: daftar POLIGON -> daftar CINCIN
+ *  -> daftar titik [lat, lng].
+ *
+ *  Tiga tingkat, karena satu wilayah bisa terdiri dari beberapa bidang
+ *  terpisah (desa kepulauan). Bentuk ini sama persis dengan yang diterima
+ *  L.polygon untuk multipoligon, jadi tidak ada penerjemahan lagi di effect --
+ *  dan tingkat cincin tetap ada supaya bidang terpisah tidak salah dibaca
+ *  sebagai lubang. Sumbernya VillageDetail.batas, yang sudah dinormalkan di
+ *  lib/content/source.ts. */
+export type MapShape = [number, number][][][];
+
 /** Cukup dekat untuk menunjukkan "di pesisir mana", masih cukup jauh untuk
- *  memperlihatkan pulau tempat desa itu berada. */
+ *  memperlihatkan pulau tempat desa itu berada. Dipakai saat yang diketahui
+ *  cuma satu TITIK; kalau batas wilayahnya ikut dikirim, bingkainya diambil
+ *  dari poligon itu (lihat effect `shape`). */
 const FOCUS_ZOOM = 8;
 
 /** Kedua berkas dihasilkan `npm run geo` (scripts/build-map-geo.mjs) dan
@@ -60,8 +73,61 @@ type RegionProperties = { name: string; subject: boolean };
 
 /** Kawasan konservasi. `wpp` sudah dinormalkan di build step (sumbernya
  *  mencampur "WPP 712" dengan "WPP712" dan satu "-"), jadi di sini ia sudah
- *  pasti berbentuk "WPP 712" atau null. */
-type MpaProperties = { name: string; wpp: string | null; ha: number | null };
+ *  pasti berbentuk "WPP 712" atau null.
+ *
+ *  `idMpa` ("T244") adalah pengenal KKP yang juga dikirim CMS lewat
+ *  `/ext/coast/kawasan-konservasi` -- lihat prop `interventionMpaIds`. null
+ *  untuk dua kawasan yang memang tidak punya id di data sumber; keduanya
+ *  karena itu tidak akan pernah cocok, dan itu jawaban yang benar. */
+type MpaProperties = {
+  name: string;
+  idMpa: string | null;
+  wpp: string | null;
+  ha: number | null;
+};
+
+/** Lihat komentar prop `maxZoom` soal kenapa angkanya serendah ini secara
+ *  bawaan. */
+const DEFAULT_MAX_ZOOM = 9;
+
+/** Atribusi lapisan batas wilayah, sebagai konstanta karena ia DIPASANG dan
+ *  DILEPAS: begitu basemap raster menyala, daratan Natural Earth disembunyikan
+ *  (lihat IndonesiaMap.css), dan atribusi untuk sesuatu yang tidak digambar
+ *  adalah keterangan yang keliru. */
+const NE_ATTRIBUTION =
+  'Batas wilayah: <a href="https://www.naturalearthdata.com/">Natural Earth</a>';
+
+export type BasemapId = 'imagery' | 'light';
+
+/**
+ * Basemap raster opsional.
+ *
+ * Keduanya dari Esri dan dipilih karena BISA DIPAKAI TANPA KUNCI API: peta ini
+ * tidak punya tempat menyimpan kredensial yang tidak ikut terkirim ke browser,
+ * dan menambah satu kunci berarti menambah satu hal yang bisa bocor atau
+ * kedaluwarsa diam-diam.
+ *
+ * `{z}/{y}/{x}` -- urutan y sebelum x -- memang begitu skema ArcGIS, berbeda
+ * dari kebanyakan penyedia lain. Tertukar berarti ubin kosong tanpa pesan galat.
+ *
+ * maxZoom 16, bukan 19 yang sebenarnya disediakan Esri: kawasan konservasi
+ * digambar dari data yang disederhanakan sampai ~222 m (lihat KK_TOLERANCE di
+ * scripts/build-map-geo.mjs), jadi di luar zoom itu batas kawasan mulai
+ * terlihat kasar di atas citra yang tajam -- persis masalah yang basemap ini
+ * datang untuk menyelesaikan.
+ */
+const BASEMAPS: Record<BasemapId, { url: string; attribution: string; maxZoom: number }> = {
+  imagery: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Citra: <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+    maxZoom: 16,
+  },
+  light: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Peta dasar: <a href="https://www.esri.com/">Esri</a>, HERE, Garmin',
+    maxZoom: 16,
+  },
+};
 
 /** Kotak yang memuat seluruh wilayah Indonesia: Sabang di barat laut sampai
  *  perbatasan Papua di timur dan Rote di selatan. Dipakai untuk `fitBounds`
@@ -92,13 +158,23 @@ const PAN_LIMIT: Leaflet.LatLngBoundsLiteral = [
  * "apakah nama kawasan perlu di-escape" tidak pernah perlu dijawab -- termasuk
  * saat berkas datanya nanti diperbarui oleh orang lain.
  */
-function mpaTooltip({ name, wpp, ha }: MpaProperties): HTMLElement {
+function mpaTooltip({ name, wpp, ha }: MpaProperties, intervention: boolean): HTMLElement {
   const root = document.createElement('div');
 
   const title = document.createElement('span');
   title.className = 'map-tooltip-name';
   title.textContent = name;
   root.append(title);
+
+  // Warna poligon saja tidak cukup untuk membedakan kawasan intervensi (WCAG
+  // 1.4.1): keterangannya harus ada dalam teks juga, dan tooltip adalah satu-
+  // satunya tempat tiap poligon bisa memperkenalkan dirinya sendiri.
+  if (intervention) {
+    const badge = document.createElement('span');
+    badge.className = 'map-tooltip-badge';
+    badge.textContent = 'Kawasan intervensi';
+    root.append(badge);
+  }
 
   // Luas diformat id-ID (856.649 ha) menyusul ariaLabel komponen yang juga
   // berbahasa Indonesia. Kalau nanti tooltip ini harus ikut locale halaman,
@@ -135,6 +211,13 @@ function markerLabel(label: string): HTMLElement {
   name.className = 'map-marker-name';
   name.textContent = label;
   return name;
+}
+
+/** Apakah satu kawasan termasuk yang diintervensi. Dipakai dua kali per feature
+ *  (warna dan tooltip), jadi ia satu fungsi -- bukan dua tempat yang bisa
+ *  menjawab berbeda. */
+function isIntervention(ids: Set<string> | null, { idMpa }: MpaProperties): boolean {
+  return ids !== null && idMpa !== null && ids.has(idMpa);
 }
 
 /** Isi gelembung gerombol: jumlah penanda di dalamnya. */
@@ -186,8 +269,12 @@ export function IndonesiaMap({
   className = 'h-[380px] md:h-[520px] lg:h-[620px]',
   ariaLabel = 'Peta interaktif wilayah kerja di Indonesia',
   focus = null,
+  shape = null,
+  basemap = null,
   mpaNames = null,
+  interventionMpaIds = null,
   markers = null,
+  maxZoom = DEFAULT_MAX_ZOOM,
   onMarkerSelect,
 }: {
   /** Palet peta. Warnanya didefinisikan di IndonesiaMap.css, bukan di sini --
@@ -201,6 +288,27 @@ export function IndonesiaMap({
    *  pemanggil sebaiknya menyusunnya di useMemo -- objek literal baru di tiap
    *  render akan membuat peta terbang ulang ke tempat yang sama terus. */
   focus?: MapFocus | null;
+  /** Batas wilayah yang digambar dan dijadikan bingkai. `null` (bawaan) =
+   *  tidak ada poligon.
+   *
+   *  Berdampingan dengan `focus`, bukan menggantikannya: keduanya datang pada
+   *  waktu berbeda di Our Impact -- titiknya sudah ada di klien begitu desa
+   *  dipilih, batasnya menyusul setelah permintaan detail selesai. Sama seperti
+   *  `focus`, peta bergerak tiap kali IDENTITAS nilai ini berganti, jadi
+   *  susunlah di useMemo. */
+  shape?: MapShape | null;
+  /** Basemap raster yang menyala di ATAS ketiadaan basemap, bukan menggantinya
+   *  sebagian. `null` (bawaan) = peta tanpa raster sama sekali, seperti semula.
+   *
+   *  Saat menyala, daratan Natural Earth ikut disembunyikan (aturan
+   *  `[data-basemap]` di IndonesiaMap.css): garis pantai 1:10 juta yang
+   *  digambar DI ATAS citra beresolusi meter bukan cuma mubazir, ia menutupi
+   *  yang akurat dengan yang kasar. Kawasan konservasi tetap digambar --
+   *  justru itu yang jadi masuk akal begitu ada citra di bawahnya.
+   *
+   *  Ubinnya baru diminta saat nilai ini berubah dari null, jadi kunjungan
+   *  yang tidak memilih desa tidak menghubungi pihak ketiga sama sekali. */
+  basemap?: BasemapId | null;
   /** Daftar putih kawasan konservasi, berisi `nama_kk` persis seperti di data
    *  sumber (lihat src/data/frci-conservation-areas.ts). `null` -- bawaannya --
    *  berarti gambar semuanya.
@@ -209,6 +317,20 @@ export function IndonesiaMap({
    *  itu: ini konfigurasi per halaman, bukan filter yang bisa diubah pengunjung.
    *  Mengubah nilainya setelah peta jadi tidak menggambar ulang lapisan. */
   mpaNames?: readonly string[] | null;
+  /** `id_mpa` kawasan yang digambar dengan warna BERBEDA -- kawasan tempat
+   *  program benar-benar bekerja, bukan sekadar kawasan konservasi yang ada di
+   *  peta. Daftarnya datang dari CMS (`/ext/coast/kawasan-konservasi`).
+   *
+   *  Ini PENANDA, bukan penyaring: kawasan di luar daftar tetap digambar
+   *  seperti biasa. Justru itu gunanya -- yang diintervensi hanya terbaca
+   *  sebagai "diintervensi" kalau yang tidak ikut terlihat di sebelahnya.
+   *
+   *  Dicocokkan lewat `id_mpa`, bukan nama: nama kawasan di CMS diketik ulang
+   *  dengan huruf besar-kecil bebas dan sesekali salah eja, jadi pencocokan
+   *  nama akan gagal diam-diam pada kawasan yang justru ingin ditonjolkan.
+   *
+   *  DIBACA SEKALI saat peta dibuat, sama seperti `mpaNames`. */
+  interventionMpaIds?: readonly string[] | null;
   /** Penanda yang tampil sejak awal, digerombolkan otomatis. `null` -- bawaannya
    *  -- berarti peta tanpa penanda sama sekali; halaman yang tidak memakainya
    *  juga tidak ikut mengunduh plugin gerombolnya.
@@ -217,6 +339,14 @@ export function IndonesiaMap({
    *  halaman, bukan daftar yang berubah karena interaksi. Susun di scope modul
    *  atau useMemo. */
   markers?: readonly MapMarker[] | null;
+  /** Batas zoom terdalam. DIBACA SEKALI saat peta dibuat, seperti `mpaNames`.
+   *
+   *  Bawaannya 9 karena tanpa `shape` satu-satunya yang bisa diperbesar adalah
+   *  garis pantai Natural Earth 10m, yang digeneralisasi sampai ~1 km -- zoom
+   *  lebih dalam cuma memperbesar penyederhanaannya. Halaman yang MENGGAMBAR
+   *  batas wilayah punya alasan untuk menaikkannya: poligon desa itu presisi,
+   *  dan pada zoom 9 satu desa cuma selebar beberapa piksel. */
+  maxZoom?: number;
   /** Dipanggil dengan `id` penanda yang diklik. Pemanggil yang memutuskan
    *  artinya -- di Our Impact ia menyetel desa terpilih, jadi klik pada peta
    *  bermuara ke alur yang sama persis dengan memilih lewat dropdown.
@@ -234,6 +364,13 @@ export function IndonesiaMap({
   const mapRef = useRef<Leaflet.Map | null>(null);
   const leafletRef = useRef<typeof Leaflet | null>(null);
   const markerRef = useRef<Leaflet.CircleMarker | null>(null);
+  const shapeRef = useRef<Leaflet.Polygon | null>(null);
+  const basemapRef = useRef<Leaflet.TileLayer | null>(null);
+  /** Apakah atribusi Natural Earth sedang DILEPAS. Dilacak, bukan dihitung
+   *  ulang, karena AttributionControl menyimpan pencacah per teks: memanggil
+   *  addAttribution dua kali lalu removeAttribution sekali menyisakan
+   *  atribusinya tetap tampil. */
+  const neHiddenRef = useRef(false);
   const hadFocusRef = useRef(false);
   const [mapReady, setMapReady] = useState(false);
 
@@ -304,10 +441,10 @@ export function IndonesiaMap({
         maxBounds: PAN_LIMIT,
         maxBoundsViscosity: 0.8,
         minZoom: 4,
-        // Tanpa tile tidak ada batas grid, tapi sumber Natural Earth 10m
-        // menggeneralisasi garis pantai sampai ~1 km. Zoom lebih dalam dari ini
-        // hanya memperbesar penyederhanaan itu, bukan menambah detail.
-        maxZoom: 9,
+        // Lihat komentar prop `maxZoom`: bawaannya 9 karena garis pantai
+        // Natural Earth 10m tidak punya detail lebih dari itu, dan halaman yang
+        // menggambar batas wilayah presisi yang menaikkannya.
+        maxZoom,
         // Peta selebar viewport yang menelan scroll roda tetikus membuat
         // halaman tidak bisa dilewati. Zoom tetap tersedia via tombol +/-,
         // dobel-klik, dan pinch di layar sentuh.
@@ -343,9 +480,7 @@ export function IndonesiaMap({
 
       map.fitBounds(INDONESIA_BOUNDS);
 
-      map.attributionControl.addAttribution(
-        'Batas wilayah: <a href="https://www.naturalearthdata.com/">Natural Earth</a>',
-      );
+      map.attributionControl.addAttribution(NE_ATTRIBUTION);
 
       if (region) {
         L.geoJSON<RegionProperties>(region, {
@@ -366,6 +501,7 @@ export function IndonesiaMap({
       // jadi daftar sepanjang 24 nama berarti ~13.000 perbandingan string
       // sepanjang 100 karakter tepat di jalur render pertama peta.
       const allowedMpa = mpaNames ? new Set(mpaNames) : null;
+      const interventionMpa = interventionMpaIds ? new Set(interventionMpaIds) : null;
 
       // Nama yang tidak cocok GAGAL DIAM-DIAM -- kawasannya sekadar tidak
       // tergambar, dan tidak ada yang tahu sampai seseorang menghitung poligon
@@ -388,6 +524,28 @@ export function IndonesiaMap({
       // urutan penambahan, dan kawasan konservasi harus berada di atas daratan
       // -- sebagian besar kawasan menempel pantai, jadi kalau tertimbun
       // daratan separuhnya hilang.
+      // Sama seperti mpaNames di atas, tapi kegagalannya lebih halus: kawasan
+      // yang id-nya tidak ketemu tetap TERGAMBAR, cuma dengan warna kawasan
+      // biasa -- jadi tidak ada yang terlihat hilang, yang hilang cuma
+      // penandanya. Gejala itu tidak akan pernah dilaporkan siapa pun.
+      if (process.env.NODE_ENV !== 'production' && interventionMpa && mpa) {
+        const available = new Set(
+          mpa.features
+            .map((feature) => feature.properties.idMpa)
+            .filter((id): id is string => id !== null),
+        );
+        const missing = [...interventionMpa].filter((id) => !available.has(id));
+        if (missing.length > 0) {
+          console.warn(
+            `IndonesiaMap: ${missing.length} id_mpa dari CMS tidak ada di ${MPA_URL} ` +
+              'dan kawasannya tidak ditandai sebagai kawasan intervensi: ' +
+              `${missing.join(', ')}. Berkas geo dibangun dari data KKP yang ` +
+              'di-commit (npm run geo) -- kawasan yang baru ditetapkan bisa saja ' +
+              'belum ada di sana.',
+          );
+        }
+      }
+
       if (mpa) {
         L.geoJSON<MpaProperties>(mpa, {
           // Menyaring di sini, bukan di build step: berkas yang sama dipakai
@@ -396,9 +554,17 @@ export function IndonesiaMap({
           // -- tanpa menjalankan ulang `npm run geo` dan meng-commit artefak
           // kedua. Yang dibayar: berkasnya tetap terunduh utuh.
           filter: allowedMpa ? (feature) => allowedMpa.has(feature.properties.name) : undefined,
-          style: () => ({ className: 'map-mpa' }),
+          // Dua kelas, bukan satu kelas yang diganti: .map-mpa tetap memegang
+          // ketebalan garis dan opasitas, dan .map-mpa-intervention hanya
+          // menimpa warnanya (lihat IndonesiaMap.css).
+          style: (feature) => ({
+            className:
+              feature && isIntervention(interventionMpa, feature.properties)
+                ? 'map-mpa map-mpa-intervention'
+                : 'map-mpa',
+          }),
           onEachFeature: (feature, layer) => {
-            layer.bindTooltip(mpaTooltip(feature.properties), {
+            layer.bindTooltip(mpaTooltip(feature.properties, isIntervention(interventionMpa, feature.properties)), {
               // Tanpa sticky, tooltip muncul di centroid poligon -- untuk
               // kawasan seluas 856.000 ha itu bisa jauh dari kursor, bahkan di
               // luar layar.
@@ -483,6 +649,9 @@ export function IndonesiaMap({
       // kalau tidak, effect sorot berikutnya memanggil .remove() pada layer
       // milik peta yang sudah tidak ada.
       markerRef.current = null;
+      shapeRef.current = null;
+      basemapRef.current = null;
+      neHiddenRef.current = false;
       mapRef.current = null;
       leafletRef.current = null;
       setMapReady(false);
@@ -604,6 +773,111 @@ export function IndonesiaMap({
       })
       .addTo(map);
   }, [focus, mapReady]);
+
+  /**
+   * Menggambar `shape` dan membingkai peta ke batasnya.
+   *
+   * Effect TERSENDIRI, bukan disatukan dengan effect `focus` di atas, karena
+   * keduanya berubah pada waktu yang berbeda: di Our Impact titik fokus sudah
+   * diketahui begitu desa dipilih (datanya ada di daftar yang sudah di klien),
+   * sedangkan batas wilayahnya baru tiba setelah permintaan detail selesai.
+   * Menyatukan keduanya berarti effect fokus ikut berjalan ulang -- dan peta
+   * terbang ulang -- setiap kali detail mendarat.
+   *
+   * Urutannya memang dua gerakan untuk satu pilihan: effect fokus lebih dulu
+   * membawa peta ke desanya pada zoom 8, lalu effect ini mengetatkan bingkai ke
+   * batas wilayahnya begitu batas itu tiba. Itu disengaja -- gerakan pertama
+   * memberi konteks "di pesisir mana", gerakan kedua memperlihatkan desanya.
+   * Untuk desa yang detailnya sudah di-cache, keduanya terjadi dalam satu
+   * render dan hanya gerakan kedua yang terlihat.
+   */
+  useEffect(() => {
+    const L = leafletRef.current;
+    const map = mapRef.current;
+    if (!L || !map) return;
+
+    shapeRef.current?.remove();
+    shapeRef.current = null;
+
+    if (!shape || shape.length === 0) return;
+
+    const layer = L.polygon(shape, {
+      // Sama seperti lapisan lain: kelas saja, warnanya urusan
+      // IndonesiaMap.css. Tidak interaktif supaya ia tidak mencuri hover
+      // tooltip kawasan konservasi di bawahnya -- poligon ini penanda lokasi,
+      // bukan sesuatu yang perlu ditanyai.
+      className: 'map-village-shape',
+      interactive: false,
+    }).addTo(map);
+    shapeRef.current = layer;
+
+    const bounds = layer.getBounds();
+    // Poligon yang seluruh titiknya terbuang (lihat mapRing) menyisakan bounds
+    // tak sah; fitBounds atasnya melempar dan merobohkan render.
+    if (!bounds.isValid()) return;
+
+    // Alasan yang sama dengan effect fokus: gerak besar yang dipicu perubahan
+    // kontrol adalah WCAG 2.3.3.
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Padding supaya batas desa tidak menempel persis di tepi kanvas -- dan
+    // supaya desa yang sangat kecil tidak diperbesar sampai menyentuh maxZoom,
+    // yang membuat garis pantai di sekitarnya terlihat kasar.
+    const padding: [number, number] = [32, 32];
+
+    if (still) map.fitBounds(bounds, { padding, animate: false });
+    else map.flyToBounds(bounds, { padding, duration: 1.1 });
+  }, [shape, mapReady]);
+
+  /**
+   * Menyalakan/mematikan basemap raster.
+   *
+   * Ubinnya mendarat di `tilePane` (z-index 200) sementara seluruh GeoJSON ada
+   * di `overlayPane` (z-index 400), jadi urutan tumpukannya sudah benar tanpa
+   * diatur: batas desa dan kawasan konservasi otomatis di atas citra.
+   *
+   * Yang TIDAK otomatis dan diurus di sini ada tiga: daratan Natural Earth
+   * harus disembunyikan (lewat data-basemap, aturannya di IndonesiaMap.css),
+   * atribusinya harus ikut dilepas karena bentuknya tidak lagi digambar, dan
+   * batas zoom harus dinaikkan -- percuma memasang citra beresolusi meter
+   * kalau petanya berhenti di zoom 13.
+   */
+  useEffect(() => {
+    const L = leafletRef.current;
+    const map = mapRef.current;
+    const container = containerRef.current;
+    if (!L || !map || !container) return;
+
+    basemapRef.current?.remove();
+    basemapRef.current = null;
+
+    if (!basemap) {
+      delete container.dataset.basemap;
+      if (neHiddenRef.current) {
+        map.attributionControl.addAttribution(NE_ATTRIBUTION);
+        neHiddenRef.current = false;
+      }
+      // Leaflet menjepit sendiri zoom yang sedang berlaku kalau ia melebihi
+      // batas baru, jadi tidak perlu setView manual di sini.
+      map.setMaxZoom(maxZoom);
+      return;
+    }
+
+    const preset = BASEMAPS[basemap];
+    basemapRef.current = L.tileLayer(preset.url, {
+      attribution: preset.attribution,
+      maxZoom: preset.maxZoom,
+    }).addTo(map);
+
+    // Nilainya id basemap, bukan sekadar 'on': gaya batas desa berbeda di atas
+    // citra satelit (garis putih) dan di atas peta dasar terang (garis navy).
+    container.dataset.basemap = basemap;
+
+    if (!neHiddenRef.current) {
+      map.attributionControl.removeAttribution(NE_ATTRIBUTION);
+      neHiddenRef.current = true;
+    }
+    map.setMaxZoom(preset.maxZoom);
+  }, [basemap, maxZoom, mapReady]);
 
   return (
     // `isolate` bukan hiasan: pane Leaflet ber-z-index 200-700 dan

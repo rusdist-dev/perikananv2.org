@@ -70,6 +70,14 @@
   --map-mpa: color-mix(in srgb, oklch(74.6% 0.16 232.661) 90%, white);
   --map-mpa-stroke: color-mix(in srgb, oklch(74.6% 0.16 232.661) 55%, white);
 
+  /* Terukur: kawasan intervensi/laut 4.34:1, /darat 1.46:1, /kawasan biasa
+     1.13:1. Angka terakhir itu yang tidak bisa dinaikkan di tema ini -- laut
+     navy memaksa kedua warna kawasan sama-sama terang, jadi yang membedakannya
+     hue (oker vs biru) dan TEBAL GARIS, bukan luminansi. Lihat
+     .map-mpa-intervention di bawah. */
+  --map-mpa-hl: color-mix(in srgb, var(--color-series-4) 55%, white);
+  --map-mpa-hl-stroke: color-mix(in srgb, var(--color-series-4) 95%, white);
+
   --map-chrome-bg: var(--color-bg);
   --map-chrome-fg: var(--color-primary);
   --map-chrome-border: var(--color-border);
@@ -124,6 +132,19 @@
   --map-mpa: oklch(74.6% 0.16 232.661);
   --map-mpa-stroke: color-mix(in srgb, oklch(74.6% 0.16 232.661) 80%, black);
 
+  /* Kawasan intervensi. Oker, bukan turunan biru yang lebih pekat: biru-vs-biru
+     adalah perbedaan yang paling dulu hilang begitu petanya dicetak hitam-putih
+     atau dilihat mata yang tidak membedakan warna. Biru vs oker justru pasangan
+     yang selamat di hampir semua jenis buta warna.
+
+     Terukur (tema inilah yang dipakai Our Impact): intervensi/laut 5.77:1,
+     /kawasan biasa 3.08:1 -- yang kedua itu perbandingan yang paling penting di
+     sini, karena keduanya bersebelahan di peta. /darat 1.25:1, ditolong garis
+     batasnya sendiri seperti kawasan biasa (WCAG 1.4.11 lewat GARIS), dan garis
+     itu 9.55:1 terhadap laut. */
+  --map-mpa-hl: color-mix(in srgb, var(--color-series-4) 85%, black);
+  --map-mpa-hl-stroke: color-mix(in srgb, var(--color-series-4) 55%, black);
+
   --map-chrome-bg: var(--color-bg);
   --map-chrome-fg: var(--color-primary);
   --map-chrome-border: var(--color-border);
@@ -168,6 +189,11 @@
 
   --map-mpa: color-mix(in srgb, var(--color-secondary) 30%, white);
   --map-mpa-stroke: color-mix(in srgb, var(--color-secondary) 60%, white);
+
+  /* Terukur: intervensi/laut 7.39:1, /darat 2.33:1, /kawasan biasa 1.65:1 --
+     sama seperti tema brand, yang memisahkan keduanya hue dan tebal garis. */
+  --map-mpa-hl: color-mix(in srgb, var(--color-series-4) 60%, white);
+  --map-mpa-hl-stroke: color-mix(in srgb, var(--color-series-4) 95%, white);
 
   --map-chrome-bg: color-mix(in srgb, var(--color-primary) 60%, black);
   --map-chrome-fg: var(--color-primary-fg);
@@ -258,6 +284,124 @@
 [data-map-theme] .map-mpa:hover {
   fill-opacity: 0.75;
   stroke-width: 1.2;
+}
+
+/* Kawasan tempat program benar-benar bekerja (`interventionMpaIds`, dicocokkan
+   lewat id_mpa dari CMS).
+
+   Kelas KEDUA di atas .map-mpa, bukan penggantinya: yang ditimpa hanya warna
+   dan tebal garis, sisanya tetap perilaku kawasan biasa.
+
+   Garisnya lebih tebal, bukan cuma berbeda warna. Itu saluran kedua yang tidak
+   bergantung pada penglihatan warna -- dan di tema brand/dark ia jadi saluran
+   utama, karena laut di sana memaksa kedua warna kawasan sama-sama terang
+   (lihat angka terukur di blok tema masing-masing). Saluran ketiga ada di
+   tooltip: kawasan intervensi memperkenalkan dirinya dengan teks. */
+[data-map-theme] .map-mpa-intervention {
+  fill: var(--map-mpa-hl);
+  fill-opacity: 0.85;
+  stroke: var(--map-mpa-hl-stroke);
+  stroke-width: 1.6;
+}
+
+[data-map-theme] .map-mpa-intervention:hover {
+  fill-opacity: 0.8;
+  stroke-width: 2.2;
+}
+
+/* Kotak warna untuk keterangan di LUAR peta (lihat ImpactVillageMap).
+   Warnanya diambil dari token tema yang sama dengan poligonnya, jadi wadah
+   keterangan itu harus membawa data-map-theme yang sama dengan petanya --
+   blok tema di atas cuma mendefinisikan custom property, tidak ada gaya lain
+   yang ikut menempel karena itu. */
+.map-legend-swatch {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: var(--radius-xs, 2px);
+  background: var(--map-mpa);
+  /* Setebal 2px, bukan 0.7 seperti di peta: pada kotak sekecil ini garis
+     setipis itu praktis tidak terlihat, padahal justru garislah yang
+     membedakan kawasan intervensi di tema yang warnanya berdekatan. */
+  border: 2px solid var(--map-mpa-stroke);
+}
+
+.map-legend-swatch-intervention {
+  background: var(--map-mpa-hl);
+  border-color: var(--map-mpa-hl-stroke);
+}
+
+/* --- Basemap raster ----------------------------------------------------- */
+
+/* Saat basemap menyala, daratan Natural Earth DISEMBUNYIKAN, bukan dibuat
+   transparan.
+
+   Sumbernya berskala 1:10 juta -- garis pantainya digeneralisasi ~3 km per
+   segmen -- sementara citra di bawahnya beresolusi meter. Menumpuk keduanya
+   berarti garis pantai yang salah tergambar persis di atas garis pantai yang
+   benar, dan yang kasar itu yang menang secara visual. Lebih baik ia tidak ada
+   sama sekali di mode ini.
+
+   Atribusinya ikut dilepas di komponen, karena bentuknya memang tidak lagi
+   digambar. */
+[data-map-theme][data-basemap] .map-land,
+[data-map-theme][data-basemap] .map-context {
+  display: none;
+}
+
+/* Kawasan konservasi TETAP digambar -- justru di sinilah ia paling berarti,
+   karena kini terlihat meliputi perairan yang sesungguhnya. Isiannya
+   ditipiskan dari 0.8 ke 0.3: nilai yang dirancang untuk di atas laut berwarna
+   rata akan menutupi citra satelit sampai tak ada yang tersisa untuk dilihat. */
+[data-map-theme][data-basemap] .map-mpa {
+  fill-opacity: 0.3;
+}
+
+/* Kawasan intervensi ditipiskan juga, tapi TIDAK sampai 0.3: di atas citra
+   satelit yang ramai, isian setipis itu membuat satu-satunya penanda "di sini
+   kami bekerja" hilang justru pada tampilan yang paling banyak dilihat (basemap
+   menyala begitu sebuah desa dipilih). 0.45 masih menyisakan tambak dan garis
+   pantai di bawahnya terbaca. */
+[data-map-theme][data-basemap] .map-mpa-intervention {
+  fill-opacity: 0.45;
+}
+
+/* Di atas citra satelit garis batas desa dibalik jadi terang.
+   --map-pin (navy) hilang di atas tambak dan tegalan yang gelap; --map-pin-stroke
+   adalah pasangannya yang memang sudah disiapkan kontras terhadapnya di tiap
+   tema. Untuk basemap 'light' aturan ini sengaja TIDAK berlaku -- di atas peta
+   dasar abu-abu terang, garis terang justru yang lenyap. */
+[data-map-theme][data-basemap='imagery'] .map-village-shape {
+  stroke: var(--map-pin-stroke);
+}
+
+/* --- Batas wilayah desa terpilih --------------------------------------- */
+
+/* Poligon batas desa dari CMS. Satu-satunya bentuk presisi di peta ini --
+   sisanya Natural Earth 10m yang digeneralisasi sampai ~1 km -- dan justru itu
+   sebabnya ia digambar dengan garis, bukan hanya isian: pada zoom tempat desa
+   selebar beberapa piksel, isian saja tidak terlihat sama sekali.
+
+   Warnanya menumpang --map-pin, token yang sudah diukur kontrasnya di ketiga
+   tema untuk penanda desa terpilih (lihat blok tema di atas). Memakai token
+   yang sudah ada, bukan menambah pasangan baru, berarti tidak ada angka
+   kontras keempat yang harus ikut diukur ulang setiap kali palet berubah --
+   dan poligon serta penandanya memang menandai hal yang sama.
+
+   Isinya tembus pandang dengan alasan yang sama seperti .map-mpa: ini penanda
+   di atas peta, bukan bentuk pengganti. Garis pantai dan kawasan konservasi di
+   bawahnya harus tetap terbaca, kalau tidak batas desa justru menutupi konteks
+   yang membuatnya berarti. */
+[data-map-theme] .map-village-shape {
+  fill: var(--map-pin);
+  fill-opacity: 0.25;
+  stroke: var(--map-pin);
+  stroke-opacity: 1;
+  stroke-width: 2;
+  /* Tanpa ini garisnya ikut menebal selama animasi flyToBounds, karena Leaflet
+     menskalakan <g> induknya sebelum reproyeksi -- persis alasan yang sama
+     seperti pada .map-focus-pin. */
+  vector-effect: non-scaling-stroke;
 }
 
 /* --- Penanda desa terpilih --------------------------------------------- */
@@ -376,6 +520,18 @@
   font-size: var(--text-xs);
   font-weight: 600;
   line-height: 1.35;
+}
+
+/* Penanda teks "Kawasan intervensi" di tooltip -- pasangan tekstual dari warna
+   poligonnya. Warnanya SENGAJA mengikuti --map-mpa-hl-stroke, bukan token
+   chrome: ia harus terbaca sebagai keterangan untuk warna yang barusan diklik,
+   bukan sebagai baris keterangan biasa. */
+[data-map-theme] .map-tooltip .map-tooltip-badge {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--map-mpa-hl-stroke);
 }
 
 [data-map-theme] .map-tooltip .map-tooltip-meta {
