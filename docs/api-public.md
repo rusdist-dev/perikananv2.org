@@ -296,6 +296,165 @@ GET /api/v1/ext/coast/statistik
   `nilai_stok_karbon` bersatuan `Mg C` (per-desa dikirim tanpa satuan) dan tidak ada
   metrik puncak seperti `luas_ekosistem_total`.
 
+### Opsi filter dataset IKAN (`ext/ikan/opsi/`)
+
+Dipakai form filter `/data/ikan`. Delapan endpoint dengan bentuk respons yang sama —
+yang berbeda hanya parameter penyaring yang diterimanya:
+
+```
+GET /api/v1/ext/ikan/opsi/wppnri
+GET /api/v1/ext/ikan/opsi/provinsi?wppnri=
+GET /api/v1/ext/ikan/opsi/kabupaten?wppnri=&provinsi=
+GET /api/v1/ext/ikan/opsi/lokasi-pendaratan?wppnri=&provinsi=&kabupaten=
+GET /api/v1/ext/ikan/opsi/jenis-data?…&lokasi_pendaratan=
+GET /api/v1/ext/ikan/opsi/alat-tangkap?…&jenis_data=
+GET /api/v1/ext/ikan/opsi/family?…&alat_tangkap=
+GET /api/v1/ext/ikan/opsi/spesies?…&family=
+```
+
+```json
+{ "data": [{ "value": "WPPNRI-572", "jumlah_trip": 7015 }] }
+```
+
+- **Berantai satu arah.** Tiap endpoint hanya menerima parameter tingkat DI ATASNYA
+  (`/opsi/provinsi` tidak mengenal `kabupaten`), jadi mengganti satu tingkat
+  membatalkan seluruh pilihan di bawahnya. Rantainya tersimpan di
+  `src/lib/ikan-filters.ts` — satu-satunya tempat urutannya ditulis.
+- **Parameter boleh dikosongkan seluruhnya**, dan hasilnya daftar penuh tingkat itu
+  (3 WPPNRI, 9 provinsi, … 374 spesies per 20 September 2026). Itu yang dipakai render
+  pertama halaman.
+- **Daftar kosong adalah jawaban yang sah**, bukan galat: kombinasi seperti
+  `wppnri=WPPNRI-713&provinsi=ACEH` memang tidak pernah tercatat. Parameter yang tidak
+  dikenal nilainya juga menghasilkan `[]`, bukan `422`.
+- **Tidak dipaginasi**, **tidak ber-`meta`**, **tidak menerima `?lang=`**.
+- `jumlah_trip` adalah cacah trip di balik nilai itu. Ikut divalidasi dan tersedia di
+  `IkanOption`, tapi tidak ditampilkan di dropdown.
+- Satu panggilan memakan waktu ±2,7 detik di CMS lokal — sama untuk semua endpoint,
+  termasuk `/news`, jadi ini ongkos dasar CMS-nya, bukan beratnya kueri opsi. Frontend
+  meminta tingkat terdekat lebih dulu, sisanya menyusul (lihat `changeLevel()` di
+  `IkanFilterPanel`).
+
+### Grafik trip IKAN (`ext/ikan/grafik/trip`)
+
+Mengisi KEDUA grafik tab Summary `/data/ikan` dalam satu permintaan:
+
+```
+GET /api/v1/ext/ikan/grafik/trip
+    ?wppnri=&provinsi=&kabupaten=&lokasi_pendaratan=&jenis_data=
+    &tipe_tanggal=monthly|yearly&dari=YYYY-MM-DD&sampai=YYYY-MM-DD
+```
+
+```json
+{
+  "data": {
+    "filter": { "tipe_tanggal": "monthly", "dari": null, "sampai": null },
+    "total_trip": 10619,
+    "per_tanggal": [{ "periode": "2026-01", "jumlah_trip": 30 }],
+    "per_lokasi_pendaratan": [{ "lokasi_pendaratan": "KAPOPOSANG BALI", "jumlah_trip": 1611 }]
+  }
+}
+```
+
+- **`data` objek tunggal**, bukan array. `filter` adalah gema parameter yang benar-benar
+  dipakai server — dipakai frontend untuk memastikan grafik yang tampil menjawab filter
+  yang diminta.
+- **Hanya LIMA penyaring** — sampai `jenis_data`. Alat tangkap, family, dan spesies tidak
+  diterima: satu trip bisa memakai beberapa alat dan mendaratkan banyak spesies, jadi
+  "jumlah trip" tidak bisa disaring oleh ketiganya tanpa berubah arti.
+- `periode` berbentuk `YYYY-MM` untuk `monthly` dan `YYYY` untuk `yearly`.
+- **Kerapatan `per_tanggal` bergantung pada rentang tanggal.** Tanpa `dari`/`sampai`,
+  yang dikirim hanya periode yang PUNYA catatan — pada data hari ini ada lompatan
+  2004-01 → 2020-12, jadi dua batang bersebelahan tidak selalu dua bulan berurutan.
+  Dengan rentang, seluruh periode di dalamnya dikirim termasuk yang bernilai nol.
+- **Kombinasi tanpa catatan menghasilkan nol, bukan galat**: `total_trip: 0` dengan dua
+  daftar kosong (tanpa rentang) atau daftar penuh nol (dengan rentang). Frontend
+  memperlakukan keduanya sebagai "tidak ada trip", bukan sebagai grafik.
+- **Parameter yang salah dijawab `422`** dengan pesan yang bisa dibaca
+  (`tipe_tanggal harus monthly atau yearly`, `sampai tidak boleh mendahului dari`) —
+  asalkan header `Accept: application/json` ikut terkirim. Tanpa header itu, CMS
+  mengembalikan HALAMAN HTML dengan status `200`, yang akan menggagalkan `res.json()`
+  di pemanggil. `cmsAccess()` selalu mengirimnya.
+
+### Grafik tangkapan IKAN (`ext/ikan/grafik/tangkapan`)
+
+Mengisi tab Catch Composition `/data/ikan`:
+
+```
+GET /api/v1/ext/ikan/grafik/tangkapan
+    ?wppnri=&provinsi=&kabupaten=&lokasi_pendaratan=&jenis_data=&alat_tangkap=
+    &dari=YYYY-MM-DD&sampai=YYYY-MM-DD
+```
+
+```json
+{
+  "data": {
+    "filter": { "dari": null, "sampai": null },
+    "unit": "kg",
+    "total_catch": 15784681.3,
+    "per_spesies": [{ "spesies": "Katsuwonus pelamis", "total_catch": 8312805 }]
+  }
+}
+```
+
+- **SATU daftar**, bukan dua seperti endpoint trip: berat per spesies, tanpa deret waktu
+  dan tanpa pecahan per lokasi. `per_spesies` sudah urut menurun dari server (frontend
+  tetap mengurutnya sendiri — bentuk berperingkat tidak boleh bergantung pada janji yang
+  tidak tertulis).
+- **ENAM penyaring** — satu lebih banyak dari endpoint trip: `alat_tangkap` ikut di sini
+  karena berat tangkapan memang bisa dipisah per alat, sementara "jumlah trip" tidak
+  (satu trip bisa memakai beberapa alat).
+- **Tidak mengenal `tipe_tanggal`.** Yang dikembalikan total, bukan deret waktu.
+- `unit` datang dari API ("kg" hari ini) — jangan ditulis tetap di frontend.
+- Kombinasi tanpa catatan: `total_catch: 0` dengan `per_spesies: []`. Parameter salah
+  bentuk dijawab `422` seperti endpoint grafik trip.
+
+### Grafik frekuensi panjang IKAN (`ext/ikan/grafik/frekuensi-panjang`)
+
+Mengisi tab Length Frequency `/data/ikan` — endpoint dengan parameter terbanyak di
+dataset ini:
+
+```
+GET /api/v1/ext/ikan/grafik/frekuensi-panjang
+    ?wppnri=&provinsi=&kabupaten=&lokasi_pendaratan=&jenis_data=&alat_tangkap=&family=&spesies=
+    &dari=&sampai=&tipe_panjang=TL|FL&selang_kelas=2&lm=40
+```
+
+```json
+{
+  "data": {
+    "filter": { "tipe_panjang": "TL", "spesies": "Katsuwonus pelamis" },
+    "unit": "cm",
+    "selang_kelas": 2,
+    "ringkasan": { "jumlah_ikan": 76007, "panjang_min": 3, "panjang_maks": 150,
+                   "rata_rata": 23.69, "median": 23.09, "modus": 23.5 },
+    "komposisi_tipe_panjang": [{ "tipe_panjang": "FL", "jumlah": 55376 },
+                               { "tipe_panjang": null, "jumlah": 311 }],
+    "indikator": { "lc": 18.36, "lc_metode": "interpolasi 50% frekuensi kumulatif …",
+                   "lm": 40, "persen_di_bawah_lm": null },
+    "kelas": [{ "batas_bawah": 3, "batas_atas": 4, "nilai_tengah": 3.5,
+                "jumlah": 26, "persen": 0.0342, "kumulatif_persen": 0.0342 }]
+  }
+}
+```
+
+- **DELAPAN penyaring** — seluruh rantai sampai `spesies`. Memang harus: sebaran panjang
+  lintas spesies tidak berarti apa-apa (tongkol 30 cm dan teri 3 cm di satu histogram).
+- `tipe_panjang` **opsional**, enum `TL`/`FL`, dan **dikosongkan berarti keduanya
+  digabung** — bukan "tidak ada filter yang cocok". TL (total length) dan FL (fork
+  length) adalah dua besaran berbeda untuk ikan yang sama, jadi gabungan itu melebarkan
+  sebarannya oleh perbedaan cara ukur. String kosong **bukan** nilai yang sah: jangan
+  kirim parameternya sama sekali. `komposisi_tipe_panjang` memberi pecahannya, termasuk
+  bucket `null` untuk catatan yang tidak menyebut cara ukurnya.
+- `selang_kelas` antara **0,1 dan 50** (`422` di luar itu), bawaan 1. Ia menentukan
+  jumlah batang: 1 cm → 148 kelas pada data hari ini, 10 cm → 16.
+- `lm` adalah **angka acuan dari pemanggil**, bukan hitungan API: ia digemakan di
+  `indikator.lm` dan hanya dengan itu `persen_di_bawah_lm` terisi. `lc` sebaliknya
+  dihitung server, dan `lc_metode` menuliskan caranya — tampilkan apa adanya, jangan
+  ditulis ulang di frontend.
+- `filter` datang sebagai **objek** saat ada isinya dan sebagai **array kosong** saat
+  tidak. Pemanggil harus menyiapkan keduanya.
+- Kombinasi tanpa catatan: `jumlah_ikan: 0`, `kelas: []`, seluruh indikator `null`.
+
 ### Kontak (`POST`, satu-satunya endpoint tulis)
 
 ```

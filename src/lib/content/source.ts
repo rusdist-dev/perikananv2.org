@@ -6,15 +6,37 @@ import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import { cmsAccess } from '@/lib/cms';
 import { stripHtml } from '@/lib/html';
 import {
+  IKAN_CATCH_CHART_LEVELS,
+  IKAN_LENGTH_CHART_LEVELS,
+  IKAN_LEVEL_ENDPOINT,
+  IKAN_LEVEL_PARAM,
+  IKAN_TRIP_CHART_LEVELS,
+  ancestorSelection,
+  isIsoDate,
+  type IkanCatchQuery,
+  type IkanFilterLevel,
+  type IkanLengthQuery,
+  type IkanOption,
+  type IkanSelection,
+  type IkanTripQuery,
+} from '@/lib/ikan-filters';
+import {
   articleSchema,
   coastStatsSchema,
   collectionItems,
   collections,
+  ikanCatchChartSchema,
+  ikanLengthChartSchema,
+  ikanOptionsSchema,
+  ikanTripChartSchema,
   villageDetailSchema,
   type Article,
   type ArticleListItem,
   type CoastStats,
   type CollectionName,
+  type IkanCatchChart,
+  type IkanLengthChart,
+  type IkanTripChart,
   type VillageDetail,
 } from './schema';
 import { getProgramNameByCmsSlug } from './program-taxonomy';
@@ -45,7 +67,14 @@ const DATA_DIR = path.join(process.cwd(), 'src', 'data');
  *  berkasnya supaya panel dan kartu totalan Our Impact tidak kosong saat
  *  CONTENT_SOURCE belum 'api'. Ditulis sebagai union, bukan `string`, supaya
  *  salah ketik nama berkas tetap gagal saat typecheck. */
-type LocalFixture = CollectionName | 'villageDetails' | 'coastStats';
+type LocalFixture =
+  | CollectionName
+  | 'villageDetails'
+  | 'coastStats'
+  | 'ikanOptions'
+  | 'ikanTripChart'
+  | 'ikanCatchChart'
+  | 'ikanLengthChart';
 
 async function fetchLocal(name: LocalFixture): Promise<unknown> {
   const file = path.join(DATA_DIR, `${name}.json`);
@@ -1122,6 +1151,366 @@ const loadVillageDetailMemo = cache(async (kode: string): Promise<VillageDetail 
 
   return validateVillageDetail(mapVillageDetail(json.data as Record<string, unknown>));
 });
+
+/**
+ * Opsi satu tingkat filter IKAN, disaring oleh pilihan tingkat-tingkat di
+ * atasnya.
+ *
+ * TIDAK lewat loadCollection: parameternya berubah mengikuti pilihan pengunjung,
+ * jadi tidak ada satu "koleksi" yang bisa ditarik sekali lalu disaring di sisi
+ * kita. Justru sebaliknya yang benar di sini -- 374 spesies menyusut jadi
+ * belasan begitu WPPNRI dan alat tangkap dipilih, dan CMS yang tahu kombinasi
+ * mana yang benar-benar punya catatan.
+ *
+ * Array kosong adalah jawaban yang SAH, bukan kegagalan: kombinasi seperti
+ * "WPPNRI-713 + Provinsi Aceh" memang tidak pernah tercatat, dan dropdown yang
+ * kosong adalah cara paling jujur menyampaikannya.
+ *
+ * Mode lokal mengabaikan penyaringnya dan selalu mengembalikan daftar penuh
+ * tingkat itu (lihat src/data/ikanOptions.json). Fixture yang meniru seluruh
+ * kombinasi berarti menyalin basis data pendataan ke dalam repo; yang
+ * dibutuhkan mode lokal cuma form yang terisi.
+ */
+const loadIkanOptionsMemo = cache(
+  async (level: IkanFilterLevel, selectionKey: string): Promise<IkanOption[]> => {
+    const selection = JSON.parse(selectionKey) as IkanSelection;
+
+    if (mode !== 'api') {
+      const fixture = (await fetchLocal('ikanOptions')) as Record<string, unknown>;
+      return validateIkanOptions(level, fixture[level] ?? []);
+    }
+
+    const { base, headers } = cmsAccess();
+    const url = new URL(`${base}/ext/ikan/opsi/${IKAN_LEVEL_ENDPOINT[level]}`);
+
+    // Hanya tingkat DI ATAS `level` yang ikut -- lihat ancestorSelection.
+    for (const [ancestor, value] of Object.entries(ancestorSelection(level, selection))) {
+      url.searchParams.set(IKAN_LEVEL_PARAM[ancestor as IkanFilterLevel], value);
+    }
+
+    const json = await fetchEnvelope(url, headers, 'ikanOptions', null, true);
+    if (!json) return [];
+
+    return validateIkanOptions(
+      level,
+      asArray(json.data).map((raw) => ({
+        value: optionalText(raw.value),
+        jumlahTrip: optionalNumber(raw.jumlah_trip) ?? 0,
+      })),
+    );
+  },
+);
+
+/** Opsi yang cacat dibuang SELURUH daftarnya, tidak per entri seperti koleksi
+ *  lain: dropdown yang diam-diam kehilangan satu pilihan lebih berbahaya
+ *  daripada dropdown yang kosong -- pilihan yang hilang tidak terlihat hilang,
+ *  dan orang menyimpulkan datanya yang tidak ada. */
+function validateIkanOptions(level: IkanFilterLevel, raw: unknown): IkanOption[] {
+  const parsed = ikanOptionsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] opsi filter IKAN "${level}" dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return [];
+}
+
+/** `selection` diserialkan jadi kunci string supaya memo React (yang
+ *  membandingkan argumen dengan Object.is) benar-benar mengena: objek pilihan
+ *  yang isinya sama tapi identitasnya beda akan meminta ulang ke CMS setiap
+ *  kali. Kuncinya disusun dari urutan tingkat yang tetap, bukan dari urutan
+ *  kunci objek yang kebetulan. */
+export function loadIkanOptions(
+  level: IkanFilterLevel,
+  selection: IkanSelection,
+): Promise<IkanOption[]> {
+  return loadIkanOptionsMemo(level, JSON.stringify(ancestorSelection(level, selection)));
+}
+
+/**
+ * Dua grafik tab Summary `/data/ikan` dalam satu permintaan
+ * (`/ext/ikan/grafik/trip`).
+ *
+ * null = grafiknya tidak bisa diambil. Termasuk di dalamnya kiriman yang
+ * DITOLAK CMS (HTTP 422: `tipe_tanggal` di luar enum, tanggal salah bentuk,
+ * rentang terbalik) -- fetchEnvelope melemparkan status itu seperti status
+ * galat lainnya, dan di sini lemparannya ditangkap supaya satu kartu grafik
+ * yang kosong tidak menjatuhkan seluruh halaman. Pemanggilnya menampilkan
+ * keadaan gagal; form filternya tetap bisa dipakai untuk mencoba lagi.
+ *
+ * Kombinasi yang memang tidak punya catatan BUKAN kasus itu: CMS menjawab 200
+ * dengan dua daftar kosong dan `total_trip: 0`, dan itu tiba di sini sebagai
+ * data yang sah.
+ */
+const loadIkanTripChartMemo = cache(async (queryKey: string): Promise<IkanTripChart | null> => {
+  const query = JSON.parse(queryKey) as IkanTripQuery;
+
+  if (mode !== 'api') {
+    return validateIkanTripChart(await fetchLocal('ikanTripChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/ikan/grafik/trip`);
+
+  for (const level of IKAN_TRIP_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) url.searchParams.set(IKAN_LEVEL_PARAM[level], value);
+  }
+
+  url.searchParams.set('tipe_tanggal', query.period);
+  // Tanggal yang salah bentuk tidak dikirim sama sekali: lebih baik grafiknya
+  // menampilkan seluruh rentang daripada CMS menolak permintaannya.
+  if (isIsoDate(query.dari)) url.searchParams.set('dari', query.dari);
+  if (isIsoDate(query.sampai)) url.searchParams.set('sampai', query.sampai);
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'ikanTrip', null, true);
+  } catch (error) {
+    console.error('[konten] grafik trip IKAN gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const filter = (data.filter ?? {}) as Record<string, unknown>;
+
+  return validateIkanTripChart({
+    tipeTanggal: filter.tipe_tanggal,
+    dari: optionalText(filter.dari),
+    sampai: optionalText(filter.sampai),
+    totalTrip: optionalNumber(data.total_trip) ?? 0,
+    perPeriode: asArray(data.per_tanggal).map((row) => ({
+      periode: optionalText(row.periode),
+      jumlahTrip: optionalNumber(row.jumlah_trip) ?? 0,
+    })),
+    perLokasi: asArray(data.per_lokasi_pendaratan).map((row) => ({
+      lokasi: optionalText(row.lokasi_pendaratan),
+      jumlahTrip: optionalNumber(row.jumlah_trip) ?? 0,
+    })),
+  });
+});
+
+function validateIkanTripChart(raw: unknown): IkanTripChart | null {
+  const parsed = ikanTripChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik trip IKAN dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/** Kuncinya disusun dari field yang TETAP urutannya, bukan dari JSON objek apa
+ *  adanya: memo React membandingkan argumen dengan Object.is, dan dua objek
+ *  filter yang isinya sama tapi urutan kuncinya berbeda akan terbaca sebagai
+ *  dua permintaan berbeda. */
+export function loadIkanTripChart(query: IkanTripQuery): Promise<IkanTripChart | null> {
+  const selection: IkanSelection = {};
+  for (const level of IKAN_TRIP_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) selection[level] = value;
+  }
+
+  return loadIkanTripChartMemo(
+    JSON.stringify({
+      selection,
+      period: query.period,
+      dari: query.dari,
+      sampai: query.sampai,
+    }),
+  );
+}
+
+/**
+ * Komposisi tangkapan per spesies (`/ext/ikan/grafik/tangkapan`).
+ *
+ * Penanganan galatnya sama persis dengan loadIkanTripChart -- termasuk
+ * menangkap HTTP 422 dari kiriman yang ditolak CMS -- karena kegagalannya
+ * berujung ke tempat yang sama: satu kartu grafik yang mengaku gagal, bukan
+ * halaman yang jatuh.
+ */
+const loadIkanCatchChartMemo = cache(async (queryKey: string): Promise<IkanCatchChart | null> => {
+  const query = JSON.parse(queryKey) as IkanCatchQuery;
+
+  if (mode !== 'api') {
+    return validateIkanCatchChart(await fetchLocal('ikanCatchChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/ikan/grafik/tangkapan`);
+
+  for (const level of IKAN_CATCH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) url.searchParams.set(IKAN_LEVEL_PARAM[level], value);
+  }
+
+  if (isIsoDate(query.dari)) url.searchParams.set('dari', query.dari);
+  if (isIsoDate(query.sampai)) url.searchParams.set('sampai', query.sampai);
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'ikanTangkapan', null, true);
+  } catch (error) {
+    console.error('[konten] grafik tangkapan IKAN gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const filter = (data.filter ?? {}) as Record<string, unknown>;
+
+  return validateIkanCatchChart({
+    dari: optionalText(filter.dari),
+    sampai: optionalText(filter.sampai),
+    unit: optionalText(data.unit) ?? 'kg',
+    totalCatch: optionalNumber(data.total_catch) ?? 0,
+    perSpesies: asArray(data.per_spesies).map((row) => ({
+      spesies: optionalText(row.spesies),
+      totalCatch: optionalNumber(row.total_catch) ?? 0,
+    })),
+  });
+});
+
+function validateIkanCatchChart(raw: unknown): IkanCatchChart | null {
+  const parsed = ikanCatchChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik tangkapan IKAN dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/** Kunci memo disusun dari field berurutan tetap, alasannya sama dengan
+ *  loadIkanTripChart. */
+export function loadIkanCatchChart(query: IkanCatchQuery): Promise<IkanCatchChart | null> {
+  const selection: IkanSelection = {};
+  for (const level of IKAN_CATCH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) selection[level] = value;
+  }
+
+  return loadIkanCatchChartMemo(
+    JSON.stringify({ selection, dari: query.dari, sampai: query.sampai }),
+  );
+}
+
+/**
+ * Sebaran panjang ikan (`/ext/ikan/grafik/frekuensi-panjang`).
+ *
+ * Endpoint dengan parameter terbanyak di dataset ini: delapan tingkat filter
+ * ditambah rentang tanggal, cara ukur, lebar selang kelas, dan Lm.
+ *
+ * `tipe_panjang` HANYA dikirim kalau terisi: dikosongkan berarti TL dan FL
+ * digabung, dan mengirim string kosong akan ditolak 422 oleh enum-nya.
+ */
+const loadIkanLengthChartMemo = cache(async (queryKey: string): Promise<IkanLengthChart | null> => {
+  const query = JSON.parse(queryKey) as IkanLengthQuery;
+
+  if (mode !== 'api') {
+    return validateIkanLengthChart(await fetchLocal('ikanLengthChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/ikan/grafik/frekuensi-panjang`);
+
+  for (const level of IKAN_LENGTH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) url.searchParams.set(IKAN_LEVEL_PARAM[level], value);
+  }
+
+  if (isIsoDate(query.dari)) url.searchParams.set('dari', query.dari);
+  if (isIsoDate(query.sampai)) url.searchParams.set('sampai', query.sampai);
+  if (query.tipePanjang) url.searchParams.set('tipe_panjang', query.tipePanjang);
+  url.searchParams.set('selang_kelas', String(query.selangKelas));
+  if (query.lm !== null) url.searchParams.set('lm', String(query.lm));
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'ikanFrekuensiPanjang', null, true);
+  } catch (error) {
+    console.error('[konten] grafik frekuensi panjang IKAN gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const ringkasan = (data.ringkasan ?? {}) as Record<string, unknown>;
+  const indikator = (data.indikator ?? {}) as Record<string, unknown>;
+  // `filter` datang sebagai objek saat ada isinya dan sebagai ARRAY KOSONG saat
+  // tidak -- bentuk khas PHP yang tidak membedakan keduanya. Yang dibaca cuma
+  // tipe_panjang-nya, jadi array kosong cukup diperlakukan sebagai "tidak ada".
+  const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<string, unknown>;
+
+  return validateIkanLengthChart({
+    unit: optionalText(data.unit) ?? 'cm',
+    selangKelas: optionalNumber(data.selang_kelas) ?? 1,
+    tipePanjang: optionalText(filter.tipe_panjang),
+    ringkasan: {
+      jumlahIkan: optionalNumber(ringkasan.jumlah_ikan) ?? 0,
+      panjangMin: optionalNumber(ringkasan.panjang_min),
+      panjangMaks: optionalNumber(ringkasan.panjang_maks),
+      rataRata: optionalNumber(ringkasan.rata_rata),
+      median: optionalNumber(ringkasan.median),
+      modus: optionalNumber(ringkasan.modus),
+    },
+    komposisiTipePanjang: asArray(data.komposisi_tipe_panjang).map((row) => ({
+      tipe: optionalText(row.tipe_panjang),
+      jumlah: optionalNumber(row.jumlah) ?? 0,
+    })),
+    indikator: {
+      lc: optionalNumber(indikator.lc),
+      lcMetode: optionalText(indikator.lc_metode),
+      lm: optionalNumber(indikator.lm),
+      persenDiBawahLm: optionalNumber(indikator.persen_di_bawah_lm),
+    },
+    kelas: asArray(data.kelas).map((row) => ({
+      batasBawah: optionalNumber(row.batas_bawah),
+      batasAtas: optionalNumber(row.batas_atas),
+      nilaiTengah: optionalNumber(row.nilai_tengah),
+      jumlah: optionalNumber(row.jumlah) ?? 0,
+      persen: optionalNumber(row.persen) ?? 0,
+      kumulatifPersen: optionalNumber(row.kumulatif_persen) ?? 0,
+    })),
+  });
+});
+
+function validateIkanLengthChart(raw: unknown): IkanLengthChart | null {
+  const parsed = ikanLengthChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik frekuensi panjang IKAN dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+export function loadIkanLengthChart(query: IkanLengthQuery): Promise<IkanLengthChart | null> {
+  const selection: IkanSelection = {};
+  for (const level of IKAN_LENGTH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) selection[level] = value;
+  }
+
+  return loadIkanLengthChartMemo(
+    JSON.stringify({
+      selection,
+      dari: query.dari,
+      sampai: query.sampai,
+      tipePanjang: query.tipePanjang,
+      selangKelas: query.selangKelas,
+      lm: query.lm,
+    }),
+  );
+}
 
 /** Sama kebijakannya dengan validateVillageDetail: yang cacat dicatat lalu
  *  dianggap tidak ada. Kartu totalannya hilang, halaman Our Impact selebihnya

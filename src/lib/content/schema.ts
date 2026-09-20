@@ -501,6 +501,138 @@ export const villageDetailSchema = z.object({
 
 export type VillageDetail = z.output<typeof villageDetailSchema>;
 
+/** Satu pilihan pada dropdown filter dataset IKAN, dari
+ *  `/ext/ikan/opsi/{tingkat}`.
+ *
+ *  Bentuk responsnya sama untuk kedelapan tingkat (WPPNRI sampai spesies), jadi
+ *  satu skema melayani semuanya -- yang berbeda cuma endpoint dan parameter
+ *  penyaringnya, dan keduanya tinggal di src/lib/ikan-filters.ts.
+ *
+ *  `jumlah_trip` ikut divalidasi walau dropdown-nya tidak mencetaknya: ia
+ *  bagian dari respons, dan membuangnya di lapisan ini berarti tampilan
+ *  berikutnya yang membutuhkannya harus membongkar skema, bukan sekadar
+ *  membacanya. */
+export const ikanOptionSchema = z.object({
+  value: z.string().min(1),
+  jumlahTrip: z.number().default(0),
+});
+
+export type IkanOptionItem = z.output<typeof ikanOptionSchema>;
+
+export const ikanOptionsSchema = z.array(ikanOptionSchema);
+
+/** Isi grafik tab Summary `/data/ikan`, dari `/ext/ikan/grafik/trip`.
+ *
+ *  SATU respons memberi DUA grafik: `perPeriode` (jumlah trip per bulan/tahun)
+ *  dan `perLokasi` (jumlah trip per lokasi pendaratan). Keduanya tidak
+ *  dipisah jadi dua permintaan karena API memang mengirimnya sekaligus --
+ *  dan keduanya menjawab pertanyaan yang sama dari dua sisi, jadi menampilkan
+ *  yang satu lebih baru dari yang lain justru salah.
+ *
+ *  `periode` dibiarkan STRING apa adanya ("2026-01" untuk monthly, "2026"
+ *  untuk yearly): ia label sumbu-x, bukan tanggal yang dihitung. Mengubahnya
+ *  jadi Date berarti memilih zona waktu untuk sesuatu yang tidak punya jam. */
+export const ikanTripChartSchema = z.object({
+  /** Gema filter dari API -- dipakai untuk memastikan grafik yang tampil
+   *  benar-benar menjawab filter yang diminta, bukan sisa permintaan
+   *  sebelumnya. */
+  tipeTanggal: z.enum(['monthly', 'yearly']).default('monthly'),
+  dari: z.iso.date().nullable().default(null),
+  sampai: z.iso.date().nullable().default(null),
+  totalTrip: z.number().default(0),
+  perPeriode: z
+    .array(z.object({ periode: z.string().min(1), jumlahTrip: z.number().default(0) }))
+    .default([]),
+  perLokasi: z
+    .array(z.object({ lokasi: z.string().min(1), jumlahTrip: z.number().default(0) }))
+    .default([]),
+});
+
+export type IkanTripChart = z.output<typeof ikanTripChartSchema>;
+
+/** Isi grafik tab Catch Composition `/data/ikan`, dari
+ *  `/ext/ikan/grafik/tangkapan`.
+ *
+ *  SATU daftar saja -- berat tangkapan per spesies -- beda dari endpoint trip
+ *  yang memberi dua grafik sekaligus. Tidak ada deret waktu di sini: yang
+ *  ditanyakan komposisi, bukan perkembangan.
+ *
+ *  `unit` datang dari API ("kg"), tidak ditulis tetap di frontend: satuannya
+ *  properti datanya, dan menuliskannya di kode berarti label yang diam-diam
+ *  salah kalau CMS suatu saat mengirim ton. */
+export const ikanCatchChartSchema = z.object({
+  dari: z.iso.date().nullable().default(null),
+  sampai: z.iso.date().nullable().default(null),
+  unit: z.string().min(1).default('kg'),
+  totalCatch: z.number().default(0),
+  perSpesies: z
+    .array(z.object({ spesies: z.string().min(1), totalCatch: z.number().default(0) }))
+    .default([]),
+});
+
+export type IkanCatchChart = z.output<typeof ikanCatchChartSchema>;
+
+/** Isi tab Length Frequency `/data/ikan`, dari
+ *  `/ext/ikan/grafik/frekuensi-panjang`.
+ *
+ *  Bukan cuma histogram: responsnya membawa ringkasan sebaran, komposisi cara
+ *  ukur, dan dua indikator perikanan (Lc dan Lm). Ketiganya ikut divalidasi
+ *  karena histogram tanpa angka pendampingnya adalah bentuk tanpa kesimpulan --
+ *  "berapa ikan yang tertangkap sebelum sempat memijah" justru pertanyaan yang
+ *  membuat grafik ini dibuat. */
+export const ikanLengthChartSchema = z.object({
+  /** Satuan panjang dari API ("cm"). */
+  unit: z.string().min(1).default('cm'),
+  /** Lebar selang kelas yang BENAR-BENAR dipakai server -- bukan yang diminta.
+   *  Keduanya bisa berbeda kalau server membulatkan. */
+  selangKelas: z.number().default(1),
+  tipePanjang: z.enum(['TL', 'FL']).nullable().default(null),
+  /** `ringkasan` dan `indikator` di bawah sengaja TANPA .default(): mapper di
+   *  source.ts selalu menyusun kedua objek itu, jadi salah satunya yang hilang
+   *  berarti bentuk responsnya berubah -- dan itu memang harus gagal validasi,
+   *  bukan diam-diam jadi nol. */
+  ringkasan: z.object({
+    jumlahIkan: z.number().default(0),
+    panjangMin: z.number().nullable().default(null),
+    panjangMaks: z.number().nullable().default(null),
+    rataRata: z.number().nullable().default(null),
+    median: z.number().nullable().default(null),
+    modus: z.number().nullable().default(null),
+  }),
+  /** Cacah pengukuran per cara ukur. `tipe` null = catatan yang tidak menyebut
+   *  caranya (311 dari 76.007 hari ini) -- ikut ditampilkan, bukan dibuang:
+   *  pembaca berhak tahu bagian mana dari histogram yang asal ukurnya tidak
+   *  diketahui. */
+  komposisiTipePanjang: z
+    .array(z.object({ tipe: z.string().nullable().default(null), jumlah: z.number().default(0) }))
+    .default([]),
+  indikator: z.object({
+    /** Panjang pertama kali tertangkap. */
+    lc: z.number().nullable().default(null),
+    /** Kalimat metode dari API, ditampilkan apa adanya: cara Lc dihitung bagian
+     *  dari artinya, dan menuliskannya ulang di frontend berarti dua versi yang
+     *  bisa berbeda. */
+    lcMetode: z.string().nullable().default(null),
+    /** Panjang matang gonad -- gema dari parameter `lm`, bukan hitungan API. */
+    lm: z.number().nullable().default(null),
+    persenDiBawahLm: z.number().nullable().default(null),
+  }),
+  kelas: z
+    .array(
+      z.object({
+        batasBawah: z.number(),
+        batasAtas: z.number(),
+        nilaiTengah: z.number(),
+        jumlah: z.number().default(0),
+        persen: z.number().default(0),
+        kumulatifPersen: z.number().default(0),
+      }),
+    )
+    .default([]),
+});
+
+export type IkanLengthChart = z.output<typeof ikanLengthChartSchema>;
+
 /** Daftar koleksi yang dikenal. Kunci di sini menentukan nama file
  *  (src/data/<key>.json) dan cache tag revalidasi. Nama resource CMS yang
  *  sesungguhnya (kalau berbeda, seperti "articles" -> "news") dipetakan

@@ -37,6 +37,53 @@ function BarLabels({ labels, every }: { labels: string[]; every: number }) {
   );
 }
 
+/** Tooltip satu batang.
+ *
+ *  CSS murni (`group-hover`), bukan state React: yang dibutuhkan hanya
+ *  "tampil saat kursor di slot ini", dan menyimpannya sebagai state berarti
+ *  satu render ulang seluruh grafik untuk tiap gerakan tetikus melewati 59
+ *  batang.
+ *
+ *  Sasaran hover-nya SELURUH TINGGI SLOT, bukan batangnya: pada 59 batang satu
+ *  batang cuma selebar ~13 px dan tingginya bisa 2 px, jadi menempelkan hover
+ *  pada batangnya sendiri berarti tooltip yang praktis tidak bisa dikenai.
+ *
+ *  aria-hidden, dan itu bukan kelalaian: area plot ChartFrame ber-role="img",
+ *  yang membuat pembaca layar mengumumkan aria-label-nya saja dan mengabaikan
+ *  seluruh isinya. Teks di sini karena itu TIDAK akan terbaca -- ia murni
+ *  lapisan visual, dan angka untuk pembaca layar harus datang dari tempat
+ *  lain (ringkasan di aria-label, atau daftar angka di luar bingkai). */
+function BarTooltip({
+  text,
+  bottom,
+  align,
+}: {
+  text: string;
+  /** Tinggi batangnya dalam persen -- tooltip duduk tepat di atas ujungnya,
+   *  bukan di tempat tetap: pada batang pendek, tooltip di puncak bingkai
+   *  membuat pembaca harus mencari batang mana yang sedang dijelaskan. */
+  bottom: number;
+  /** Batang di tepi kiri/kanan tidak bisa memusatkan tooltipnya -- separuhnya
+   *  akan keluar dari kartu. */
+  align: 'start' | 'center' | 'end';
+}) {
+  return (
+    <span
+      aria-hidden
+      className={`pointer-events-none absolute z-10 mb-1 hidden whitespace-nowrap rounded-sm border border-border bg-bg px-2 py-1 font-mono text-xs text-primary group-hover:block ${
+        align === 'start'
+          ? 'start-0'
+          : align === 'end'
+            ? 'end-0'
+            : 'start-1/2 -translate-x-1/2'
+      }`}
+      style={{ bottom: `${bottom}%` }}
+    >
+      {text}
+    </span>
+  );
+}
+
 /** Grafik batang dengan dasar NOL dan galat opsional (± 1 simpangan baku).
  *
  *  Dasarnya selalu nol, tidak pernah nilai minimum data. Batang yang dipotong
@@ -67,6 +114,7 @@ export function ColumnChart({
   labelEvery = 3,
   ariaLabel,
   markers,
+  tooltip,
 }: {
   labels: string[];
   values: number[];
@@ -81,6 +129,14 @@ export function ColumnChart({
   /** Garis referensi vertikal opsional. Mensyaratkan `labels` numerik
    *  berjarak sama (mis. "0", "15", "30", ...) -- lihat `ColumnMarker`. */
   markers?: ColumnMarker[];
+  /** Isi tooltip saat kursor berada di atas satu batang. Tanpa prop ini
+   *  grafiknya berperilaku persis seperti sebelumnya -- tidak ada tooltip sama
+   *  sekali (itu yang masih dipakai dasbor Jogo Laut).
+   *
+   *  Fungsi, bukan boolean: yang ditulis di tooltip bukan sekadar label sumbu
+   *  apa adanya. Grafik trip IKAN memakai "2025-05" sebagai label sumbu yang
+   *  ringkas, tapi "Mei 2025 -- 830 trip" sebagai kalimat tooltipnya. */
+  tooltip?: (label: string, value: number) => string;
 }) {
   const upper = values.map((v, i) => v + (errors?.[i] ?? 0));
   const domain = niceDomain(0, Math.max(...upper));
@@ -112,11 +168,22 @@ export function ColumnChart({
           {values.map((value, i) => {
             const error = errors?.[i] ?? 0;
             return (
-              <div key={labels[i]} className="relative h-full min-w-0 flex-1">
+              // `group` cuma berguna kalau ada tooltipnya; kelasnya tetap
+              // dipasang tanpa syarat karena Tailwind memindai berkas ini
+              // sebagai teks (lihat chart-theme.ts) dan kelas yang cuma muncul
+              // di cabang kondisional tetap harus utuh di sumbernya.
+              <div key={labels[i]} className="group relative h-full min-w-0 flex-1">
                 <div
                   className={`absolute inset-x-0 bottom-0 rounded-t-sm ${SERIES_CLASSES[color].swatch}`}
                   style={{ height: `${pct(value)}%`, opacity: 0.75 }}
                 />
+                {tooltip ? (
+                  <BarTooltip
+                    text={tooltip(labels[i], value)}
+                    bottom={pct(value)}
+                    align={i < 2 ? 'start' : i > values.length - 3 ? 'end' : 'center'}
+                  />
+                ) : null}
                 {error > 0 ? (
                   <span
                     aria-hidden

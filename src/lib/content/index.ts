@@ -6,11 +6,25 @@ import {
   loadArticlesQuery,
   loadCoastStats,
   loadCollection,
+  loadIkanCatchChart,
+  loadIkanLengthChart,
+  loadIkanOptions,
+  loadIkanTripChart,
   loadVillageDetail,
   type ArticlePage,
   type ArticleQuery,
 } from './source';
 import { getCmsSlugByFrontendSlug } from './program-taxonomy';
+import {
+  IKAN_FILTER_LEVELS,
+  type IkanFilterLevel,
+  type IkanOption,
+  type IkanOptionsByLevel,
+  type IkanCatchQuery,
+  type IkanLengthQuery,
+  type IkanSelection,
+  type IkanTripQuery,
+} from '@/lib/ikan-filters';
 import type {
   Article,
   ArticleListItem,
@@ -21,6 +35,9 @@ import type {
   NewsCategory,
   CoastStats,
   ConservationArea,
+  IkanCatchChart,
+  IkanLengthChart,
+  IkanTripChart,
   ImpactVillage,
   VillageDetail,
 } from './schema';
@@ -42,6 +59,9 @@ export type {
   NewsCategory,
   CoastStats,
   ConservationArea,
+  IkanCatchChart,
+  IkanLengthChart,
+  IkanTripChart,
   ImpactVillage,
   VillageDetail,
   VillageMetric,
@@ -562,6 +582,70 @@ export async function getConservationAreas(): Promise<ConservationArea[]> {
 export async function getInterventionMpaIds(): Promise<string[]> {
   const areas = await getConservationAreas();
   return areas.map((area) => area.idMpa);
+}
+
+/** Opsi satu tingkat filter IKAN. Daftar kosong = kombinasi yang dipilih memang
+ *  tidak punya catatan, bukan galat. */
+export async function getIkanOptions(
+  level: IkanFilterLevel,
+  selection: IkanSelection = {},
+): Promise<IkanOption[]> {
+  return loadIkanOptions(level, selection);
+}
+
+/**
+ * Beberapa tingkat sekaligus, masing-masing disaring pilihan di atasnya.
+ *
+ * Dipakai dua tempat dengan alasan yang sama: halaman /data/ikan memintanya
+ * untuk SELURUH tingkat saat render pertama, dan Server Action memintanya untuk
+ * tingkat-tingkat DI BAWAH yang barusan diubah. Keduanya butuh "beberapa daftar
+ * sekaligus", jadi penggabungannya tinggal di sini alih-alih ditulis dua kali.
+ *
+ * Promise.all, bukan berurutan -- tapi jangan berharap semuanya berangkat
+ * bersamaan: withRequestSlot di source.ts menahan jumlah permintaan serentak ke
+ * CMS di angka 2, dan itu memang disengaja (CMS-nya menjawab 500 begitu
+ * dibanjiri). Yang didapat di sini bukan delapan permintaan paralel, melainkan
+ * antrean yang tidak menganggur.
+ *
+ * Tingkat yang gagal mengembalikan daftar KOSONG, tidak menjatuhkan yang lain:
+ * satu dropdown yang tidak terisi jauh lebih baik daripada form filter yang
+ * hilang seluruhnya.
+ */
+export async function getIkanFilterOptions(
+  selection: IkanSelection = {},
+  levels: readonly IkanFilterLevel[] = IKAN_FILTER_LEVELS,
+): Promise<IkanOptionsByLevel> {
+  const results = await Promise.all(
+    levels.map(async (level) => {
+      try {
+        return [level, await loadIkanOptions(level, selection)] as const;
+      } catch (error) {
+        console.error(`[konten] opsi filter IKAN "${level}" gagal diambil:`, error);
+        return [level, [] as IkanOption[]] as const;
+      }
+    }),
+  );
+
+  return Object.fromEntries(results) as IkanOptionsByLevel;
+}
+
+/** Dua grafik tab Summary /data/ikan. null = gagal diambil; pemanggil
+ *  menampilkan keadaan galat, bukan grafik kosong yang terbaca seolah-olah
+ *  "tidak ada trip". */
+export async function getIkanTripChart(query: IkanTripQuery): Promise<IkanTripChart | null> {
+  return loadIkanTripChart(query);
+}
+
+/** Komposisi tangkapan per spesies untuk tab Catch Composition /data/ikan.
+ *  null = gagal diambil. */
+export async function getIkanCatchChart(query: IkanCatchQuery): Promise<IkanCatchChart | null> {
+  return loadIkanCatchChart(query);
+}
+
+/** Sebaran panjang untuk tab Length Frequency /data/ikan. null = gagal
+ *  diambil. */
+export async function getIkanLengthChart(query: IkanLengthQuery): Promise<IkanLengthChart | null> {
+  return loadIkanLengthChart(query);
 }
 
 /** Totalan statistik seluruh desa, untuk kartu berjalan di bawah peta Our

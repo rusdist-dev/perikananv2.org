@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import type { ReactElement } from 'react';
+import { createContext, useContext, useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { ColumnChart } from '@/components/program/jogolaut/BarChart';
@@ -15,7 +15,21 @@ import type { SeriesColor } from '@/components/program/jogolaut/chart-theme';
  * markup filter+tab, cuma datanya yang beda per dataset.
  */
 
-type TabId = 'summary' | 'catch-composition' | 'length-frequency';
+export type TabId = 'summary' | 'catch-composition' | 'length-frequency';
+
+/** Tab yang sedang aktif, dibagikan ke panel filter yang dipasang lewat prop
+ *  `filterPanel`.
+ *
+ *  Context, bukan prop, karena panelnya datang sebagai ELEMEN yang sudah jadi:
+ *  halaman ini server component, dan server component tidak bisa mengoper
+ *  fungsi render ke komponen klien -- yang bisa dioper cuma elemen. Elemen itu
+ *  dirender di dalam pohon dasbor, jadi ia bisa membaca context ini, sementara
+ *  dasbor tetap tidak perlu tahu apa-apa soal isi filter dataset mana pun. */
+const FisheriesTabContext = createContext<TabId>('summary');
+
+export function useFisheriesTab(): TabId {
+  return useContext(FisheriesTabContext);
+}
 
 export type FisheriesChartData = {
   labels: string[];
@@ -112,6 +126,11 @@ export function FisheriesDataDashboard({
   trips,
   catchComposition,
   lengthFrequency,
+  filterPanel,
+  summaryCharts,
+  catchCharts,
+  lengthCharts,
+  note,
 }: {
   breadcrumb: BreadcrumbItem[];
   /** Nama diri dataset (mis. "IKAN", "Data Crab") -- proper noun, ditulis apa
@@ -121,24 +140,63 @@ export function FisheriesDataDashboard({
   trips: FisheriesChartData;
   catchComposition: FisheriesChartData;
   lengthFrequency: FisheriesChartData;
+  /** Panel filter dataset ini, menggantikan kartu filter statis bawaan.
+   *
+   *  Satu elemen untuk KETIGA tab, bukan satu per tab: filternya bertingkat
+   *  (WPPNRI -> provinsi -> ...), dan panel yang dibuat ulang tiap ganti tab
+   *  akan kehilangan pilihan yang sudah dibuat beserta daftar opsi yang sudah
+   *  diambil dari CMS. Yang berbeda per tab cukup dibaca panelnya sendiri lewat
+   *  useFisheriesTab().
+   *
+   *  Tanpa prop ini, dasbor tetap menggambar field statis seperti semula --
+   *  itulah yang masih dipakai halaman Data Crab, yang belum punya endpoint. */
+  filterPanel?: ReactNode;
+  /** Grafik tab Summary dataset ini, menggantikan kartu "Number of Trips"
+   *  bawaan yang berisi data contoh. Tab lain tidak terpengaruh -- keduanya
+   *  masih memakai grafik contoh sampai endpoint-nya ada. */
+  summaryCharts?: ReactNode;
+  /** Sama untuk tab Catch Composition. Dipisah dari `summaryCharts` karena
+   *  keduanya datang dari endpoint berbeda: sebuah dataset bisa punya yang satu
+   *  tanpa yang lain, dan satu prop untuk keduanya memaksa halaman menunggu
+   *  endpoint yang paling terlambat. */
+  catchCharts?: ReactNode;
+  /** Sama untuk tab Length Frequency. */
+  lengthCharts?: ReactNode;
+  /** Catatan di bawah deskripsi. Bawaannya menyatakan seluruh halaman masih
+   *  data contoh; halaman yang sebagian datanya sudah nyata mengganti
+   *  kalimatnya supaya catatannya tidak jadi keliru. */
+  note?: ReactNode;
 }) {
   const [tab, setTab] = useState<TabId>('summary');
   const idPrefix = datasetName.toLowerCase().replace(/\s+/g, '-');
 
   return (
     <div className="bg-surface">
-      <Container className="page-gutter py-14 lg:pe-(--spacing-panel-gutter)">
+      {/* DUA Container, bukan satu.
+          Yang pertama menyisakan gutter kanan selebar panel navigasi supaya
+          judul dan deskripsi tidak melebar sampai ke tepi layar. Yang kedua
+          sengaja TIDAK: grafik yang dipotong 17rem di kanan membuang ruang
+          persis di tempat yang paling dibutuhkannya -- 59 batang bulanan di
+          kartu selebar 556px berjarak 9px satu sama lain. */}
+      <Container className="page-gutter pt-14 lg:pe-(--spacing-panel-gutter)">
         <Breadcrumb items={breadcrumb} />
 
         <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">Data</p>
         <h1 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">{datasetName}</h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted md:text-base">{description}</p>
         <p className="mt-3 max-w-3xl rounded-md border border-border bg-bg p-3 text-xs leading-relaxed text-muted">
-          <strong className="font-bold text-primary">Catatan:</strong> filter dan grafik di halaman
-          ini masih data contoh untuk keperluan tampilan -- belum tersambung ke sumber data {datasetName}{' '}
-          sesungguhnya.
+          <strong className="font-bold text-primary">Catatan:</strong>{' '}
+          {note ?? (
+            <>
+              filter dan grafik di halaman ini masih data contoh untuk keperluan tampilan -- belum
+              tersambung ke sumber data {datasetName} sesungguhnya.
+            </>
+          )}
         </p>
 
+      </Container>
+
+      <Container className="page-gutter pb-14">
         <div className="mt-8 flex flex-wrap items-center gap-6 border-b border-border">
           {TABS.map(({ id, label, icon: TabIcon }) => {
             const isActive = tab === id;
@@ -162,7 +220,11 @@ export function FisheriesDataDashboard({
         </div>
 
         <div className="mt-8 grid gap-5 lg:grid-cols-[20rem_1fr] lg:items-start">
-          {tab === 'summary' ? (
+          {filterPanel ? (
+            <FisheriesTabContext.Provider value={tab}>{filterPanel}</FisheriesTabContext.Provider>
+          ) : null}
+
+          {!filterPanel && tab === 'summary' ? (
             <ChartCard title="Filter">
               <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
                 <CommonFields idPrefix={idPrefix} withFishingGear={false} />
@@ -177,7 +239,7 @@ export function FisheriesDataDashboard({
             </ChartCard>
           ) : null}
 
-          {tab === 'catch-composition' ? (
+          {!filterPanel && tab === 'catch-composition' ? (
             <ChartCard title="Filter">
               <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
                 <CommonFields idPrefix={idPrefix} withFishingGear />
@@ -192,7 +254,7 @@ export function FisheriesDataDashboard({
             </ChartCard>
           ) : null}
 
-          {tab === 'length-frequency' ? (
+          {!filterPanel && tab === 'length-frequency' ? (
             <ChartCard title="Filter">
               <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
                 <CommonFields idPrefix={idPrefix} withFishingGear />
@@ -226,7 +288,11 @@ export function FisheriesDataDashboard({
             </ChartCard>
           ) : null}
 
-          {tab === 'summary' ? (
+          {summaryCharts && tab === 'summary' ? summaryCharts : null}
+          {catchCharts && tab === 'catch-composition' ? catchCharts : null}
+          {lengthCharts && tab === 'length-frequency' ? lengthCharts : null}
+
+          {!summaryCharts && tab === 'summary' ? (
             <ChartCard
               title="Number of Trips"
               meta="contoh · per bulan"
@@ -245,7 +311,7 @@ export function FisheriesDataDashboard({
             </ChartCard>
           ) : null}
 
-          {tab === 'catch-composition' ? (
+          {!catchCharts && tab === 'catch-composition' ? (
             <ChartCard
               title="Catch Composition"
               meta="contoh · per spesies"
@@ -264,7 +330,7 @@ export function FisheriesDataDashboard({
             </ChartCard>
           ) : null}
 
-          {tab === 'length-frequency' ? (
+          {!lengthCharts && tab === 'length-frequency' ? (
             <ChartCard
               title="Length Frequency"
               meta="contoh · sebaran panjang"
