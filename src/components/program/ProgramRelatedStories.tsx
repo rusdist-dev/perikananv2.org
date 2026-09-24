@@ -9,6 +9,10 @@ export type RelatedStory = {
   image?: StaticImageData | string;
   date: string;
   category: string;
+  /** Label program sudah dilokalkan dan digabung koma (getProgramsLabel di
+   *  lib/content/program-taxonomy.ts) -- null kalau artikelnya tidak ditandai
+   *  program apa pun, dan kartu melewati separatornya. */
+  programsLabel: string | null;
   title: string;
   excerpt: string;
   href: string;
@@ -54,6 +58,7 @@ export function ProgramRelatedStories({
             <div className="flex flex-1 flex-col gap-3 p-6">
               <p className="text-xs font-bold uppercase tracking-wide text-secondary">
                 {story.date} · {story.category}
+                {story.programsLabel ? ` · ${story.programsLabel}` : null}
               </p>
               <h3 className="text-lg font-bold text-primary">{story.title}</h3>
               <p className="text-sm text-muted">{story.excerpt}</p>

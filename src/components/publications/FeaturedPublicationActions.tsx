@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
 import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 /**
- * Dua tombol kartu Featured Publication: Download PDF (unduhan langsung
- * lewat <a download>, BUKAN AppLink -- berkas publik seperti ini tidak boleh
- * diberi prefiks locale, sama seperti PdfViewerModal yang menunjuk pdfUrl
- * langsung ke iframe) dan Read Online (membuka PdfViewerModal yang sama
- * dengan kartu publikasi lain).
+ * Dua tombol kartu Featured Publication: Download PDF (membuka
+ * DownloadGateModal -- nama/email wajib diisi dulu sebelum <a download>
+ * yang sesungguhnya dijalankan di sana, lihat komentar di modalnya) dan Read
+ * Online (membuka PdfViewerModal yang sama dengan kartu publikasi lain).
  */
 export function FeaturedPublicationActions({
   pdfUrl,
@@ -18,6 +18,9 @@ export function FeaturedPublicationActions({
   readLabel,
   unavailableLabel,
   closeLabel,
+  downloadGateDescription,
+  downloadGateNameLabel,
+  downloadGateEmailLabel,
 }: {
   pdfUrl: string;
   title: string;
@@ -26,30 +29,46 @@ export function FeaturedPublicationActions({
   readLabel: string;
   unavailableLabel: string;
   closeLabel: string;
+  downloadGateDescription: string;
+  downloadGateNameLabel: string;
+  downloadGateEmailLabel: string;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isReadOpen, setIsReadOpen] = useState(false);
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   return (
     <>
       <PdfViewerModal
-        isOpen={isOpen}
+        isOpen={isReadOpen}
         pdfUrl={pdfUrl}
         title={title}
         unavailableLabel={unavailableLabel}
         closeLabel={closeLabel}
-        onClose={() => setIsOpen(false)}
+        onClose={() => setIsReadOpen(false)}
+      />
+      <DownloadGateModal
+        isOpen={isDownloadOpen}
+        pdfUrl={pdfUrl}
+        downloadFileName={downloadFileName}
+        title={title}
+        downloadLabel={downloadLabel}
+        description={downloadGateDescription}
+        nameLabel={downloadGateNameLabel}
+        emailLabel={downloadGateEmailLabel}
+        closeLabel={closeLabel}
+        onClose={() => setIsDownloadOpen(false)}
       />
       <div className="mt-6 flex flex-wrap items-center gap-4">
-        <a
-          href={pdfUrl}
-          download={downloadFileName}
+        <button
+          type="button"
+          onClick={() => setIsDownloadOpen(true)}
           className="inline-flex w-fit items-center gap-2 rounded-full bg-primary-fg/15 px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary-fg hover:bg-primary-fg/25"
         >
           {downloadLabel} &darr;
-        </a>
+        </button>
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsReadOpen(true)}
           className="inline-flex w-fit items-center gap-2 rounded-full bg-white px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary hover:opacity-90"
         >
           {readLabel} &#8599;

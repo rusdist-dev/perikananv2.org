@@ -17,6 +17,7 @@ import { ProgramRelatedStories, type RelatedStory } from '@/components/program/P
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
 import { resolveArticleImage } from '@/data/article-images';
 import { getArticlesByProgram, type ArticleListItem } from '@/lib/content';
+import { getProgramsLabel } from '@/lib/content/program-taxonomy';
 import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { isLocale, type Locale } from '@/i18n/config';
@@ -77,6 +78,7 @@ function toRelatedStories(articles: ArticleListItem[], locale: Locale, t: Dictio
     image: resolveArticleImage(article.image),
     date: formatArticleDate(article.publishedAt, locale),
     category: article.category ?? t.news,
+    programsLabel: getProgramsLabel(article.programs, locale)?.toUpperCase() ?? null,
     title: article.title,
     excerpt: article.excerpt,
     href: `/berita/${article.slug}`,

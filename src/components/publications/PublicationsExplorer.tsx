@@ -95,6 +95,9 @@ type Labels = {
   navDiscover: string;
   navPublications: string;
   download: string;
+  downloadGateDescription: string;
+  downloadGateNameLabel: string;
+  downloadGateEmailLabel: string;
   read: string;
   watch: string;
   pdfUnavailable: string;
@@ -347,6 +350,9 @@ export function PublicationsExplorer({ publications, knowledgeProducts, labels: 
                 readLabel={t.featuredReadCta}
                 unavailableLabel={t.pdfUnavailable}
                 closeLabel={t.close}
+                downloadGateDescription={t.downloadGateDescription}
+                downloadGateNameLabel={t.downloadGateNameLabel}
+                downloadGateEmailLabel={t.downloadGateEmailLabel}
               />
             </div>
           </div>
@@ -373,6 +379,9 @@ export function PublicationsExplorer({ publications, knowledgeProducts, labels: 
               nextLabel={t.galleryNext}
               pdfUnavailableLabel={t.pdfUnavailable}
               closeLabel={t.close}
+              downloadGateDescription={t.downloadGateDescription}
+              downloadGateNameLabel={t.downloadGateNameLabel}
+              downloadGateEmailLabel={t.downloadGateEmailLabel}
             />
           )}
         </Container>
@@ -398,6 +407,9 @@ export function PublicationsExplorer({ publications, knowledgeProducts, labels: 
               nextLabel={t.galleryNext}
               pdfUnavailableLabel={t.pdfUnavailable}
               closeLabel={t.close}
+              downloadGateDescription={t.downloadGateDescription}
+              downloadGateNameLabel={t.downloadGateNameLabel}
+              downloadGateEmailLabel={t.downloadGateEmailLabel}
             />
           )}
         </Container>

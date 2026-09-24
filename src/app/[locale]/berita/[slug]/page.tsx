@@ -14,6 +14,7 @@ import {
   type ArticleListItem,
 } from '@/lib/content';
 import { getBodyParagraphs } from '@/lib/article-body';
+import { getProgramsLabel } from '@/lib/content/program-taxonomy';
 import { formatArticleDate } from '@/lib/date';
 import { stripHtml } from '@/lib/html';
 import { estimateReadingMinutes } from '@/lib/reading-time';
@@ -46,6 +47,7 @@ function RelatedCard({
 }) {
   const image = resolveArticleImage(article.image);
   const category = article.category;
+  const programsLabel = getProgramsLabel(article.programs, locale);
 
   return (
     <article className="flex flex-col border border-border">
@@ -67,6 +69,7 @@ function RelatedCard({
             {formatArticleDate(article.publishedAt, locale)}
           </time>
           {category ? ` · ${category.toUpperCase()}` : null}
+          {programsLabel ? ` · ${programsLabel.toUpperCase()}` : null}
         </p>
         <h3 className="text-lg font-bold text-primary">
           <AppLink href={`/berita/${article.slug}`}>{article.title}</AppLink>
@@ -131,6 +134,7 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
   const t = getDictionary(locale);
   const image = resolveArticleImage(article.image);
   const category = article.category;
+  const programsLabel = getProgramsLabel(article.programs, locale);
   const readingMinutes = estimateReadingMinutes(stripHtml(article.body));
   const bodyParagraphs = getBodyParagraphs(article.body);
 
@@ -177,6 +181,7 @@ export default async function ArticlePage({ params }: { params: Promise<Params> 
               {formatArticleDate(article.publishedAt, locale)}
             </time>
             {category ? ` · ${category}` : null}
+            {programsLabel ? ` · ${programsLabel}` : null}
             {' · '}
             {t.minRead.replace('{count}', String(readingMinutes))}
           </p>

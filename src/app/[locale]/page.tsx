@@ -11,6 +11,7 @@ import { Container } from '@/components/layout/Container';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
 import { getLatestArticles, getPublications } from '@/lib/content';
+import { getProgramsLabel } from '@/lib/content/program-taxonomy';
 import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
@@ -226,6 +227,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {articles.map((article) => {
               const image = resolveArticleImage(article.image);
               const category = article.category;
+              const programsLabel = getProgramsLabel(article.programs, locale);
 
               return (
                 <article key={article.slug} className="flex flex-col border border-border">
@@ -247,6 +249,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <p className="text-xs font-bold uppercase tracking-wide text-secondary">
                       <time dateTime={article.publishedAt}>{formatArticleDate(article.publishedAt, locale)}</time>
                       {category ? ` · ${category.toUpperCase()}` : null}
+                      {programsLabel ? ` · ${programsLabel.toUpperCase()}` : null}
                     </p>
                     <h3 className="text-lg font-bold text-primary">
                       <AppLink href={`/berita/${article.slug}`}>{article.title}</AppLink>
@@ -342,6 +345,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           readLabel={t.read}
           pdfUnavailableLabel={t.pdfUnavailable}
           closeLabel={t.close}
+          downloadGateDescription={t.downloadGateDescription}
+          downloadGateNameLabel={t.downloadGateNameLabel}
+          downloadGateEmailLabel={t.downloadGateEmailLabel}
         />
       </Container>
 
