@@ -1,19 +1,24 @@
-'use client';
+import type { ReactNode } from 'react';
 
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
-import { ChartCard } from '@/components/program/jogolaut/ChartCard';
-import { FMA_CODES } from './sample-data';
+import { WppLegend } from '@/components/data/stsc/WppLegend';
 
 /**
- * Kerangka disamakan persis dengan Production Data: belum ada grafik, hanya
- * dropdown filter WPP + legenda warnanya. Lihat catatan di
- * ProductionDataDashboard.tsx untuk alasan kerangka ini yang dipilih.
+ * Kerangka disamakan persis dengan Production Data -- keduanya menampilkan
+ * dataset STSC yang sama dari dua sisi. Lihat catatan di
+ * ProductionDataDashboard.tsx untuk alasan dua Container-nya.
  */
-export function VesselDataDashboard({ breadcrumb }: { breadcrumb: BreadcrumbItem[] }) {
+export function VesselDataDashboard({
+  breadcrumb,
+  children,
+}: {
+  breadcrumb: BreadcrumbItem[];
+  children: ReactNode;
+}) {
   return (
     <div className="bg-surface">
-      <Container className="page-gutter py-14 lg:pe-(--spacing-panel-gutter)">
+      <Container className="page-gutter pt-14 lg:pe-(--spacing-panel-gutter)">
         <Breadcrumb items={breadcrumb} />
 
         <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">Data</p>
@@ -28,62 +33,15 @@ export function VesselDataDashboard({ breadcrumb }: { breadcrumb: BreadcrumbItem
           the data. Suggestions and corrections to the data are highly expected.
         </p>
         <p className="mt-3 max-w-3xl rounded-md border border-border bg-bg p-3 text-xs leading-relaxed text-muted">
-          <strong className="font-bold text-primary">Catatan:</strong> filter di halaman ini masih
-          statis untuk keperluan tampilan -- belum tersambung ke sumber data vessel sesungguhnya.
+          <strong className="font-bold text-primary">Catatan:</strong> filter dan grafik di halaman
+          ini sudah tersambung ke statistik perikanan tangkap di CMS. Angkanya tahunan per WPP-RI,
+          bukan per trip pendataan seperti halaman IKAN dan Data Crab.
         </p>
+      </Container>
 
-        <div className="mt-8 max-w-md">
-          <ChartCard title="Vessel Data">
-            <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor="vessel-data-fma"
-                  className="text-xs font-bold uppercase tracking-wide text-muted"
-                >
-                  Fisheries Management Area
-                </label>
-                <select
-                  id="vessel-data-fma"
-                  disabled
-                  defaultValue=""
-                  className="rounded-md border border-border bg-bg px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-surface"
-                >
-                  <option value="">All Fisheries Management Area</option>
-                  {FMA_CODES.map(({ code }) => (
-                    <option key={code} value={code}>
-                      FMA-RI {code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled
-                className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Show Chart
-              </button>
-            </form>
-          </ChartCard>
-        </div>
-
-        <div className="mt-8">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-secondary">
-            Wilayah Pengelolaan Perikanan (WPP-RI)
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {FMA_CODES.map(({ code, color }) => (
-              <span
-                key={code}
-                style={{ backgroundColor: color }}
-                className="rounded-md px-4 py-2 text-sm font-semibold text-white"
-              >
-                FMA-RI {code}
-              </span>
-            ))}
-          </div>
-        </div>
+      <Container className="page-gutter pb-14">
+        {children}
+        <WppLegend />
       </Container>
     </div>
   );

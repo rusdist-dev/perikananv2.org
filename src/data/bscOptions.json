@@ -1,0 +1,176 @@
+{
+  "provinsi": [
+    {
+      "value": "JAWA TENGAH",
+      "jumlahTrip": 3496
+    },
+    {
+      "value": "MALUKU",
+      "jumlahTrip": 5
+    },
+    {
+      "value": "NUSA TENGGARA BARAT",
+      "jumlahTrip": 1363
+    }
+  ],
+  "kabupaten": [
+    {
+      "value": "DEMAK",
+      "jumlahTrip": 2304
+    },
+    {
+      "value": "JEPARA",
+      "jumlahTrip": 386
+    },
+    {
+      "value": "KABUPATEN DEMAK",
+      "jumlahTrip": 667
+    },
+    {
+      "value": "Kabupaten Jepara",
+      "jumlahTrip": 139
+    },
+    {
+      "value": "KEPULAUAN ARU",
+      "jumlahTrip": 5
+    },
+    {
+      "value": "SUMBAWA",
+      "jumlahTrip": 1363
+    }
+  ],
+  "lokasiPendaratan": [
+    {
+      "value": "BETAHWALANG",
+      "jumlahTrip": 1261
+    },
+    {
+      "value": "GOJOYO",
+      "jumlahTrip": 179
+    },
+    {
+      "value": "LABUHAN BONTONG",
+      "jumlahTrip": 113
+    },
+    {
+      "value": "LABUHAN KURIS",
+      "jumlahTrip": 71
+    },
+    {
+      "value": "LABUHAN SANGGORO",
+      "jumlahTrip": 214
+    },
+    {
+      "value": "LORANG",
+      "jumlahTrip": 5
+    },
+    {
+      "value": "TELUK AWUR",
+      "jumlahTrip": 541
+    },
+    {
+      "value": "TELUK SANTONG",
+      "jumlahTrip": 965
+    },
+    {
+      "value": "WEDUNG",
+      "jumlahTrip": 1515
+    }
+  ],
+  "jenisPendataan": [
+    {
+      "value": "ARU",
+      "jumlahTrip": 5
+    },
+    {
+      "value": "BCAF",
+      "jumlahTrip": 2748
+    },
+    {
+      "value": "PANTURA",
+      "jumlahTrip": 2111
+    }
+  ],
+  "alatTangkap": [
+    {
+      "value": "ARAD",
+      "jumlahTrip": 2
+    },
+    {
+      "value": "BUBU",
+      "jumlahTrip": 577
+    },
+    {
+      "value": "BUBU LIPAT",
+      "jumlahTrip": 1083
+    },
+    {
+      "value": "JARING",
+      "jumlahTrip": 226
+    },
+    {
+      "value": "JARING ARAD",
+      "jumlahTrip": 410
+    },
+    {
+      "value": "JARING INSANG HANYUT",
+      "jumlahTrip": 45
+    },
+    {
+      "value": "JARING INSANG TETAP",
+      "jumlahTrip": 721
+    },
+    {
+      "value": "KAKAR",
+      "jumlahTrip": 1661
+    },
+    {
+      "value": "PENGKIT/PENGAIT",
+      "jumlahTrip": 104
+    },
+    {
+      "value": "SESER",
+      "jumlahTrip": 35
+    }
+  ],
+  "jenisTangkapan": [
+    {
+      "value": "KEPITING",
+      "jumlahTrip": 1750
+    },
+    {
+      "value": "KEPITING & RAJUNGAN",
+      "jumlahTrip": 5
+    },
+    {
+      "value": "RAJUNGAN",
+      "jumlahTrip": 3109
+    }
+  ],
+  "spesies": [
+    {
+      "value": "Charybdis feriata",
+      "jumlahTrip": 26
+    },
+    {
+      "value": "Portunus gladiator",
+      "jumlahTrip": 1
+    },
+    {
+      "value": "Portunus pelagicus",
+      "jumlahTrip": 2949
+    },
+    {
+      "value": "Portunus sanguinolentus",
+      "jumlahTrip": 1
+    },
+    {
+      "value": "Scylla olivacea",
+      "jumlahTrip": 109
+    },
+    {
+      "value": "Scylla serrata",
+      "jumlahTrip": 1752
+    }
+  ]
+}

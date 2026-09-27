@@ -21,7 +21,44 @@ import {
   type IkanTripQuery,
 } from '@/lib/ikan-filters';
 import {
+  BSC_CATCH_CHART_LEVELS,
+  BSC_LEVEL_ENDPOINT,
+  BSC_LEVEL_PARAM,
+  BSC_TRIP_CHART_LEVELS,
+  BSC_WIDTH_CHART_LEVELS,
+  // Dialiaskan karena ikan-filters mengekspor nama yang sama: keduanya
+  // memotong hierarki yang BERBEDA (BSC tanpa WPPNRI), jadi memanggil yang
+  // salah akan mengirim parameter yang tidak dikenal endpointnya.
+  ancestorSelection as bscAncestorSelection,
+  type BscCatchQuery,
+  type BscFilterLevel,
+  type BscOption,
+  type BscSelection,
+  type BscTripQuery,
+  type BscWidthQuery,
+} from '@/lib/bsc-filters';
+import {
+  type HiupariLengthQuery,
+  type HiupariOption,
+} from '@/lib/hiupari-filters';
+import {
+  type StscArmadaQuery,
+  type StscKomoditasOption,
+  type StscProduksiQuery,
+  type StscWppOption,
+} from '@/lib/stsc-filters';
+import {
   articleSchema,
+  bscCatchChartSchema,
+  bscOptionsSchema,
+  bscTripChartSchema,
+  bscWidthChartSchema,
+  hiupariLengthChartSchema,
+  hiupariOptionsSchema,
+  stscArmadaChartSchema,
+  stscKomoditasOptionsSchema,
+  stscProduksiChartSchema,
+  stscWppOptionsSchema,
   coastStatsSchema,
   collectionItems,
   collections,
@@ -32,8 +69,14 @@ import {
   villageDetailSchema,
   type Article,
   type ArticleListItem,
+  type BscCatchChart,
+  type BscTripChart,
+  type BscWidthChart,
   type CoastStats,
   type CollectionName,
+  type HiupariLengthChart,
+  type StscArmadaChart,
+  type StscProduksiChart,
   type IkanCatchChart,
   type IkanLengthChart,
   type IkanTripChart,
@@ -74,7 +117,17 @@ type LocalFixture =
   | 'ikanOptions'
   | 'ikanTripChart'
   | 'ikanCatchChart'
-  | 'ikanLengthChart';
+  | 'ikanLengthChart'
+  | 'bscOptions'
+  | 'bscTripChart'
+  | 'bscCatchChart'
+  | 'bscWidthChart'
+  | 'hiupariOptions'
+  | 'hiupariLengthChart'
+  | 'stscWppOptions'
+  | 'stscKomoditasOptions'
+  | 'stscArmadaChart'
+  | 'stscProduksiChart';
 
 async function fetchLocal(name: LocalFixture): Promise<unknown> {
   const file = path.join(DATA_DIR, `${name}.json`);
@@ -1508,6 +1561,825 @@ export function loadIkanLengthChart(query: IkanLengthQuery): Promise<IkanLengthC
       tipePanjang: query.tipePanjang,
       selangKelas: query.selangKelas,
       lm: query.lm,
+    }),
+  );
+}
+
+/**
+ * Opsi satu tingkat filter BSC, disaring oleh pilihan tingkat-tingkat di
+ * atasnya (`/ext/bsc/opsi/{tingkat}`).
+ *
+ * Alasannya sama persis dengan loadIkanOptions: parameternya berubah mengikuti
+ * pilihan pengunjung, jadi tidak ada satu "koleksi" yang bisa ditarik sekali
+ * lalu disaring di sisi kita -- CMS yang tahu kombinasi mana yang punya
+ * catatan.
+ *
+ * Array kosong adalah jawaban yang SAH, bukan kegagalan: "MALUKU + BUBU LIPAT"
+ * memang tidak pernah tercatat, dan dropdown kosong adalah cara paling jujur
+ * menyampaikannya.
+ */
+const loadBscOptionsMemo = cache(
+  async (level: BscFilterLevel, selectionKey: string): Promise<BscOption[]> => {
+    const selection = JSON.parse(selectionKey) as BscSelection;
+
+    if (mode !== 'api') {
+      const fixture = (await fetchLocal('bscOptions')) as Record<string, unknown>;
+      return validateBscOptions(level, fixture[level] ?? []);
+    }
+
+    const { base, headers } = cmsAccess();
+    const url = new URL(`${base}/ext/bsc/opsi/${BSC_LEVEL_ENDPOINT[level]}`);
+
+    // Hanya tingkat DI ATAS `level` yang ikut -- lihat bscAncestorSelection.
+    for (const [ancestor, value] of Object.entries(bscAncestorSelection(level, selection))) {
+      url.searchParams.set(BSC_LEVEL_PARAM[ancestor as BscFilterLevel], value);
+    }
+
+    const json = await fetchEnvelope(url, headers, 'bscOptions', null, true);
+    if (!json) return [];
+
+    return validateBscOptions(
+      level,
+      asArray(json.data).map((raw) => ({
+        value: optionalText(raw.value),
+        jumlahTrip: optionalNumber(raw.jumlah_trip) ?? 0,
+      })),
+    );
+  },
+);
+
+/** Opsi yang cacat dibuang SELURUH daftarnya, bukan per entri -- alasannya sama
+ *  dengan validateIkanOptions: pilihan yang hilang diam-diam tidak terlihat
+ *  hilang, dan orang menyimpulkan datanya yang tidak ada. */
+function validateBscOptions(level: BscFilterLevel, raw: unknown): BscOption[] {
+  const parsed = bscOptionsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] opsi filter BSC "${level}" dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return [];
+}
+
+/** `selection` diserialkan jadi kunci string supaya memo React (yang
+ *  membandingkan argumen dengan Object.is) benar-benar mengena. */
+export function loadBscOptions(
+  level: BscFilterLevel,
+  selection: BscSelection,
+): Promise<BscOption[]> {
+  return loadBscOptionsMemo(level, JSON.stringify(bscAncestorSelection(level, selection)));
+}
+
+/**
+ * Dua grafik tab Summary `/data/data-crab` dalam satu permintaan
+ * (`/ext/bsc/grafik/trip`).
+ *
+ * null = grafiknya tidak bisa diambil, termasuk kiriman yang DITOLAK CMS.
+ * Lemparan fetchEnvelope ditangkap di sini supaya satu kartu grafik yang
+ * kosong tidak menjatuhkan seluruh halaman.
+ *
+ * Kombinasi yang memang tidak punya catatan BUKAN kasus itu: CMS menjawab 200
+ * dengan dua daftar kosong dan `total_trip: 0`.
+ */
+const loadBscTripChartMemo = cache(async (queryKey: string): Promise<BscTripChart | null> => {
+  const query = JSON.parse(queryKey) as BscTripQuery;
+
+  if (mode !== 'api') {
+    return validateBscTripChart(await fetchLocal('bscTripChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/bsc/grafik/trip`);
+
+  for (const level of BSC_TRIP_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) url.searchParams.set(BSC_LEVEL_PARAM[level], value);
+  }
+
+  url.searchParams.set('tipe_tanggal', query.period);
+  // Tanggal salah bentuk tidak dikirim sama sekali: lebih baik grafiknya
+  // menampilkan seluruh rentang daripada CMS menolak permintaannya.
+  if (isIsoDate(query.dari)) url.searchParams.set('dari', query.dari);
+  if (isIsoDate(query.sampai)) url.searchParams.set('sampai', query.sampai);
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'bscTrip', null, true);
+  } catch (error) {
+    console.error('[konten] grafik trip BSC gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<string, unknown>;
+
+  return validateBscTripChart({
+    tipeTanggal: filter.tipe_tanggal,
+    dari: optionalText(filter.dari),
+    sampai: optionalText(filter.sampai),
+    totalTrip: optionalNumber(data.total_trip) ?? 0,
+    perPeriode: asArray(data.per_tanggal).map((row) => ({
+      periode: optionalText(row.periode),
+      jumlahTrip: optionalNumber(row.jumlah_trip) ?? 0,
+    })),
+    perLokasi: asArray(data.per_lokasi_pendaratan).map((row) => ({
+      lokasi: optionalText(row.lokasi_pendaratan),
+      jumlahTrip: optionalNumber(row.jumlah_trip) ?? 0,
+    })),
+  });
+});
+
+function validateBscTripChart(raw: unknown): BscTripChart | null {
+  const parsed = bscTripChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik trip BSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/** Kunci memo disusun dari field yang TETAP urutannya, bukan dari JSON objek apa
+ *  adanya -- dua objek filter yang isinya sama tapi urutan kuncinya berbeda
+ *  akan terbaca sebagai dua permintaan berbeda. */
+export function loadBscTripChart(query: BscTripQuery): Promise<BscTripChart | null> {
+  const selection: BscSelection = {};
+  for (const level of BSC_TRIP_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) selection[level] = value;
+  }
+
+  return loadBscTripChartMemo(
+    JSON.stringify({
+      selection,
+      period: query.period,
+      dari: query.dari,
+      sampai: query.sampai,
+    }),
+  );
+}
+
+/**
+ * Komposisi tangkapan per spesies (`/ext/bsc/grafik/tangkapan`).
+ *
+ * Bedanya dengan padanan IKAN ada di nama field bobotnya (`total_bobot`, bukan
+ * `total_catch`) dan satuannya (gram, bukan kg) -- dua hal yang justru membuat
+ * mapper-nya tidak bisa dipakai bersama.
+ */
+const loadBscCatchChartMemo = cache(async (queryKey: string): Promise<BscCatchChart | null> => {
+  const query = JSON.parse(queryKey) as BscCatchQuery;
+
+  if (mode !== 'api') {
+    return validateBscCatchChart(await fetchLocal('bscCatchChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/bsc/grafik/tangkapan`);
+
+  for (const level of BSC_CATCH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) url.searchParams.set(BSC_LEVEL_PARAM[level], value);
+  }
+
+  if (isIsoDate(query.dari)) url.searchParams.set('dari', query.dari);
+  if (isIsoDate(query.sampai)) url.searchParams.set('sampai', query.sampai);
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'bscTangkapan', null, true);
+  } catch (error) {
+    console.error('[konten] grafik tangkapan BSC gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<string, unknown>;
+
+  return validateBscCatchChart({
+    dari: optionalText(filter.dari),
+    sampai: optionalText(filter.sampai),
+    unit: optionalText(data.unit) ?? 'gram',
+    totalBobot: optionalNumber(data.total_bobot) ?? 0,
+    perSpesies: asArray(data.per_spesies).map((row) => ({
+      spesies: optionalText(row.spesies),
+      totalBobot: optionalNumber(row.total_bobot) ?? 0,
+    })),
+  });
+});
+
+function validateBscCatchChart(raw: unknown): BscCatchChart | null {
+  const parsed = bscCatchChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik tangkapan BSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+export function loadBscCatchChart(query: BscCatchQuery): Promise<BscCatchChart | null> {
+  const selection: BscSelection = {};
+  for (const level of BSC_CATCH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) selection[level] = value;
+  }
+
+  return loadBscCatchChartMemo(
+    JSON.stringify({ selection, dari: query.dari, sampai: query.sampai }),
+  );
+}
+
+/**
+ * Sebaran lebar karapas (`/ext/bsc/grafik/frekuensi-lebar`).
+ *
+ * `jenis_kelamin` HANYA dikirim kalau terisi: dikosongkan berarti jantan dan
+ * betina digabung, dan mengirim string kosong akan ditolak enum-nya.
+ *
+ * `selang_kelas` dan `tkg_matang` SELALU dikirim: keduanya punya bawaan di
+ * server (1 dan 2), tapi mengandalkan bawaan berarti nilai yang tampil di form
+ * dan nilai yang dipakai server bisa berbeda tanpa ada yang tahu.
+ */
+const loadBscWidthChartMemo = cache(async (queryKey: string): Promise<BscWidthChart | null> => {
+  const query = JSON.parse(queryKey) as BscWidthQuery;
+
+  if (mode !== 'api') {
+    return validateBscWidthChart(await fetchLocal('bscWidthChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/bsc/grafik/frekuensi-lebar`);
+
+  for (const level of BSC_WIDTH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) url.searchParams.set(BSC_LEVEL_PARAM[level], value);
+  }
+
+  if (isIsoDate(query.dari)) url.searchParams.set('dari', query.dari);
+  if (isIsoDate(query.sampai)) url.searchParams.set('sampai', query.sampai);
+  if (query.jenisKelamin) url.searchParams.set('jenis_kelamin', query.jenisKelamin);
+  url.searchParams.set('selang_kelas', String(query.selangKelas));
+  url.searchParams.set('tkg_matang', String(query.tkgMatang));
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'bscFrekuensiLebar', null, true);
+  } catch (error) {
+    console.error('[konten] grafik frekuensi lebar BSC gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const ringkasan = (data.ringkasan ?? {}) as Record<string, unknown>;
+  const indikator = (data.indikator ?? {}) as Record<string, unknown>;
+  // `filter` datang sebagai objek saat ada isinya dan sebagai ARRAY KOSONG saat
+  // tidak -- bentuk khas PHP yang tidak membedakan keduanya. Yang dibaca cuma
+  // jenis_kelamin-nya, jadi array kosong cukup diperlakukan sebagai "tidak ada".
+  const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<string, unknown>;
+
+  return validateBscWidthChart({
+    unit: optionalText(data.unit) ?? 'cm',
+    selangKelas: optionalNumber(data.selang_kelas) ?? 1,
+    tkgMatang: optionalNumber(data.tkg_matang) ?? 2,
+    jenisKelamin: optionalText(filter.jenis_kelamin),
+    ringkasan: {
+      jumlahIndividu: optionalNumber(ringkasan.jumlah_individu) ?? 0,
+      lebarMin: optionalNumber(ringkasan.lebar_min),
+      lebarMaks: optionalNumber(ringkasan.lebar_maks),
+      rataRata: optionalNumber(ringkasan.rata_rata),
+      median: optionalNumber(ringkasan.median),
+      modus: optionalNumber(ringkasan.modus),
+      tanpaTkg: optionalNumber(ringkasan.tanpa_tkg) ?? 0,
+    },
+    komposisiJenisKelamin: asArray(data.komposisi_jenis_kelamin).map((row) => ({
+      jenisKelamin: optionalText(row.jenis_kelamin),
+      jumlah: optionalNumber(row.jumlah) ?? 0,
+    })),
+    indikator: {
+      lc: optionalNumber(indikator.lc),
+      lcMetode: optionalText(indikator.lc_metode),
+      lm: optionalNumber(indikator.lm),
+      lmMetode: optionalText(indikator.lm_metode),
+      persenMatang: optionalNumber(indikator.persen_matang),
+    },
+    kelas: asArray(data.kelas).map((row) => ({
+      batasBawah: optionalNumber(row.batas_bawah),
+      batasAtas: optionalNumber(row.batas_atas),
+      nilaiTengah: optionalNumber(row.nilai_tengah),
+      jumlah: optionalNumber(row.jumlah) ?? 0,
+      jumlahMatang: optionalNumber(row.jumlah_matang) ?? 0,
+      persen: optionalNumber(row.persen) ?? 0,
+      kumulatifPersen: optionalNumber(row.kumulatif_persen) ?? 0,
+      // TANPA `?? 0`, tidak seperti tetangganya: null di sini berarti kelasnya
+      // kosong sehingga persentasenya tak terdefinisi, dan menjadikannya nol
+      // mengarang angka yang tidak pernah dihitung.
+      persenMatang: optionalNumber(row.persen_matang),
+    })),
+  });
+});
+
+function validateBscWidthChart(raw: unknown): BscWidthChart | null {
+  const parsed = bscWidthChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik frekuensi lebar BSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+export function loadBscWidthChart(query: BscWidthQuery): Promise<BscWidthChart | null> {
+  const selection: BscSelection = {};
+  for (const level of BSC_WIDTH_CHART_LEVELS) {
+    const value = query.selection[level];
+    if (value) selection[level] = value;
+  }
+
+  return loadBscWidthChartMemo(
+    JSON.stringify({
+      selection,
+      dari: query.dari,
+      sampai: query.sampai,
+      jenisKelamin: query.jenisKelamin,
+      selangKelas: query.selangKelas,
+      tkgMatang: query.tkgMatang,
+    }),
+  );
+}
+
+/**
+ * Daftar spesies HIUPARI (`/ext/hiupari/opsi/spesies`).
+ *
+ * Tanpa parameter penyaring apa pun -- tidak seperti opsi IKAN dan BSC yang
+ * menyempit mengikuti pilihan di atasnya. Dataset ini tidak punya hierarki
+ * wilayah, jadi daftarnya SATU dan selalu sama: 20 spesies hari ini.
+ *
+ * Itu juga yang membuatnya tidak butuh kunci memo: tidak ada argumen yang bisa
+ * membedakan satu panggilan dari panggilan lain.
+ */
+const loadHiupariOptionsMemo = cache(async (): Promise<HiupariOption[]> => {
+  if (mode !== 'api') {
+    return validateHiupariOptions(await fetchLocal('hiupariOptions'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/hiupari/opsi/spesies`);
+
+  const json = await fetchEnvelope(url, headers, 'hiupariOptions', null, true);
+  if (!json) return [];
+
+  return validateHiupariOptions(
+    asArray(json.data).map((raw) => ({
+      value: optionalText(raw.value),
+      // `jumlah_individu`, bukan `jumlah_trip`: dataset ini mencacah individu
+      // yang diukur, dan tidak mengenal trip sama sekali.
+      jumlahIndividu: optionalNumber(raw.jumlah_individu) ?? 0,
+    })),
+  );
+});
+
+/** Opsi yang cacat dibuang SELURUH daftarnya, bukan per entri -- alasannya sama
+ *  dengan validateIkanOptions: pilihan yang hilang diam-diam tidak terlihat
+ *  hilang, dan orang menyimpulkan datanya yang tidak ada. */
+function validateHiupariOptions(raw: unknown): HiupariOption[] {
+  const parsed = hiupariOptionsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] opsi spesies HIUPARI dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return [];
+}
+
+export function loadHiupariOptions(): Promise<HiupariOption[]> {
+  return loadHiupariOptionsMemo();
+}
+
+/**
+ * Sebaran panjang hiu dan pari (`/ext/hiupari/grafik/frekuensi-panjang`).
+ *
+ * SATU-SATUNYA endpoint grafik dataset ini -- halaman Shark and Ray memang
+ * cuma punya satu bagian, bukan tiga tab seperti IKAN dan Data Crab.
+ *
+ * `spesies` dan `jenis_kelamin` HANYA dikirim kalau terisi: dikosongkan berarti
+ * "semua", dan mengirim string kosong akan ditolak enum-nya. `jenis_ukuran`,
+ * `selang_kelas`, dan `kematangan_matang` SELALU dikirim: ketiganya punya
+ * bawaan di server, tapi mengandalkan bawaan berarti nilai yang tampil di form
+ * dan nilai yang dipakai server bisa berbeda tanpa ada yang tahu.
+ *
+ * null = grafiknya tidak bisa diambil. Kiriman yang ditolak CMS termasuk di
+ * dalamnya: lemparan fetchEnvelope ditangkap di sini supaya satu kartu grafik
+ * yang kosong tidak menjatuhkan seluruh halaman.
+ */
+const loadHiupariLengthChartMemo = cache(
+  async (queryKey: string): Promise<HiupariLengthChart | null> => {
+    const query = JSON.parse(queryKey) as HiupariLengthQuery;
+
+    if (mode !== 'api') {
+      return validateHiupariLengthChart(await fetchLocal('hiupariLengthChart'));
+    }
+
+    const { base, headers } = cmsAccess();
+    const url = new URL(`${base}/ext/hiupari/grafik/frekuensi-panjang`);
+
+    if (query.spesies) url.searchParams.set('spesies', query.spesies);
+    if (query.jenisKelamin) url.searchParams.set('jenis_kelamin', query.jenisKelamin);
+    url.searchParams.set('jenis_ukuran', query.jenisUkuran);
+    url.searchParams.set('selang_kelas', String(query.selangKelas));
+    url.searchParams.set('kematangan_matang', String(query.kematanganMatang));
+
+    let json;
+    try {
+      json = await fetchEnvelope(url, headers, 'hiupariFrekuensiPanjang', null, true);
+    } catch (error) {
+      console.error('[konten] grafik frekuensi panjang HIUPARI gagal diambil:', error);
+      return null;
+    }
+
+    if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data))
+      return null;
+
+    const data = json.data as Record<string, unknown>;
+    const ringkasan = (data.ringkasan ?? {}) as Record<string, unknown>;
+    const indikator = (data.indikator ?? {}) as Record<string, unknown>;
+    // `filter` datang sebagai objek saat ada isinya dan sebagai ARRAY KOSONG
+    // saat tidak -- bentuk khas PHP yang tidak membedakan keduanya.
+    const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<
+      string,
+      unknown
+    >;
+
+    return validateHiupariLengthChart({
+      jenisUkuran: optionalText(data.jenis_ukuran) ?? 'panjang_total',
+      jenisKelamin: optionalText(filter.jenis_kelamin),
+      spesies: optionalText(filter.spesies),
+      unit: optionalText(data.unit) ?? 'cm',
+      selangKelas: optionalNumber(data.selang_kelas) ?? 1,
+      kematanganMatang: optionalNumber(data.kematangan_matang) ?? 3,
+      ringkasan: {
+        jumlahIndividu: optionalNumber(ringkasan.jumlah_individu) ?? 0,
+        jumlahTanpaUkuran: optionalNumber(ringkasan.jumlah_tanpa_ukuran) ?? 0,
+        panjangMin: optionalNumber(ringkasan.panjang_min),
+        panjangMaks: optionalNumber(ringkasan.panjang_maks),
+        rataRata: optionalNumber(ringkasan.rata_rata),
+        median: optionalNumber(ringkasan.median),
+        modus: optionalNumber(ringkasan.modus),
+      },
+      ketersediaanUkuran: asArray(data.ketersediaan_ukuran).map((row) => ({
+        jenisUkuran: optionalText(row.jenis_ukuran),
+        jumlahIndividu: optionalNumber(row.jumlah_individu) ?? 0,
+      })),
+      indikator: {
+        linf: optionalNumber(indikator.linf),
+        linfMetode: optionalText(indikator.linf_metode),
+        lm: optionalNumber(indikator.lm),
+        lmMetode: optionalText(indikator.lm_metode),
+        persenMatang: optionalNumber(indikator.persen_matang),
+      },
+      // TANPA `?? 0` pada dua field kematangan: null di sini berarti kematangan
+      // tidak terdefinisi (jenis kelamin bukan M), dan menjadikannya nol akan
+      // terbaca sebagai "tidak ada yang matang" -- jawaban yang berbeda.
+      kelas: asArray(data.kelas).map((row) => ({
+        batasBawah: optionalNumber(row.batas_bawah),
+        batasAtas: optionalNumber(row.batas_atas),
+        nilaiTengah: optionalNumber(row.nilai_tengah),
+        jumlah: optionalNumber(row.jumlah) ?? 0,
+        jumlahMatang: optionalNumber(row.jumlah_matang),
+        persen: optionalNumber(row.persen) ?? 0,
+        kumulatifPersen: optionalNumber(row.kumulatif_persen) ?? 0,
+        persenMatang: optionalNumber(row.persen_matang),
+      })),
+    });
+  },
+);
+
+function validateHiupariLengthChart(raw: unknown): HiupariLengthChart | null {
+  const parsed = hiupariLengthChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik frekuensi panjang HIUPARI dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/** Kunci memo disusun dari field yang TETAP urutannya, bukan dari JSON objek
+ *  apa adanya: memo React membandingkan argumen dengan Object.is, dan dua objek
+ *  filter yang isinya sama tapi urutan kuncinya berbeda akan terbaca sebagai
+ *  dua permintaan berbeda. */
+export function loadHiupariLengthChart(
+  query: HiupariLengthQuery,
+): Promise<HiupariLengthChart | null> {
+  return loadHiupariLengthChartMemo(
+    JSON.stringify({
+      spesies: query.spesies,
+      jenisKelamin: query.jenisKelamin,
+      jenisUkuran: query.jenisUkuran,
+      selangKelas: query.selangKelas,
+      kematanganMatang: query.kematanganMatang,
+    }),
+  );
+}
+
+/**
+ * Daftar WPP untuk dropdown `/data/production-data` dan `/data/vessel-data`
+ * (`/ext/stsc/opsi/wpp`).
+ *
+ * Tanpa parameter penyaring: kesebelas WPP laut RI adalah daftar tetap, dan
+ * yang berubah cuma rentang tahun yang dimiliki masing-masing. Itu sebabnya ia
+ * tidak butuh kunci memo -- tidak ada argumen yang bisa membedakan satu
+ * panggilan dari panggilan lain.
+ */
+const loadStscWppOptionsMemo = cache(async (): Promise<StscWppOption[]> => {
+  if (mode !== 'api') {
+    return validateStscWppOptions(await fetchLocal('stscWppOptions'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/stsc/opsi/wpp`);
+
+  const json = await fetchEnvelope(url, headers, 'stscWppOptions', null, true);
+  if (!json) return [];
+
+  return validateStscWppOptions(
+    asArray(json.data).map((raw) => ({
+      value: optionalText(raw.value),
+      tahunAwal: optionalNumber(raw.tahun_awal),
+      tahunAkhir: optionalNumber(raw.tahun_akhir),
+      // Inline, bukan lewat asArray: yang datang array STRING, sementara
+      // asArray membentuk array objek.
+      sumber: Array.isArray(raw.sumber)
+        ? raw.sumber.filter((item): item is string => typeof item === 'string')
+        : [],
+    })),
+  );
+});
+
+/** Opsi yang cacat dibuang SELURUH daftarnya, bukan per entri -- alasannya sama
+ *  dengan validateIkanOptions: pilihan yang hilang diam-diam tidak terlihat
+ *  hilang, dan orang menyimpulkan datanya yang tidak ada. */
+function validateStscWppOptions(raw: unknown): StscWppOption[] {
+  const parsed = stscWppOptionsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] opsi WPP STSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return [];
+}
+
+export function loadStscWppOptions(): Promise<StscWppOption[]> {
+  return loadStscWppOptionsMemo();
+}
+
+/**
+ * Daftar komoditas untuk dropdown `/data/production-data`
+ * (`/ext/stsc/opsi/komoditas`).
+ *
+ * `wpp` menyaring CACAHNYA (`jumlah_wpp`), bukan daftarnya: kesebelas komoditas
+ * tercatat di kesebelas WPP, jadi `?wpp=712` mengembalikan sebelas entri yang
+ * sama dengan `jumlah_wpp: 1`. Parameternya tetap dikirim karena angka itu yang
+ * dicetak di dropdown.
+ */
+const loadStscKomoditasOptionsMemo = cache(
+  async (wpp: string | null): Promise<StscKomoditasOption[]> => {
+    if (mode !== 'api') {
+      return validateStscKomoditasOptions(await fetchLocal('stscKomoditasOptions'));
+    }
+
+    const { base, headers } = cmsAccess();
+    const url = new URL(`${base}/ext/stsc/opsi/komoditas`);
+    if (wpp) url.searchParams.set('wpp', wpp);
+
+    const json = await fetchEnvelope(url, headers, 'stscKomoditasOptions', null, true);
+    if (!json) return [];
+
+    return validateStscKomoditasOptions(
+      asArray(json.data).map((raw) => ({
+        value: optionalText(raw.value),
+        jumlahWpp: optionalNumber(raw.jumlah_wpp) ?? 0,
+        tahunAwal: optionalNumber(raw.tahun_awal),
+        tahunAkhir: optionalNumber(raw.tahun_akhir),
+      })),
+    );
+  },
+);
+
+function validateStscKomoditasOptions(raw: unknown): StscKomoditasOption[] {
+  const parsed = stscKomoditasOptionsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] opsi komoditas STSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return [];
+}
+
+export function loadStscKomoditasOptions(wpp: string | null): Promise<StscKomoditasOption[]> {
+  return loadStscKomoditasOptionsMemo(wpp);
+}
+
+/** Sumbu-x bersama: array TAHUN mentah, bukan array objek -- jadi asArray
+ *  (yang membentuk Record[]) tidak berlaku di sini. Entri yang bukan angka
+ *  dibiarkan lewat sebagai null supaya skema yang MENOLAKNYA, bukan mapper
+ *  yang diam-diam menambalnya dengan nol: tahun nol di sumbu waktu adalah
+ *  kesalahan yang harus terlihat. */
+function mapStscYears(raw: unknown): (number | null)[] {
+  return Array.isArray(raw) ? raw.map((value) => optionalNumber(value)) : [];
+}
+
+/** Deret per WPP, bentuk yang sama di ketiga tempat ia muncul (armada, GT, dan
+ *  produksi per komoditas). Satu mapper, bukan tiga salinan.
+ *
+ *  Tipe kembaliannya membiarkan null lewat, sama seperti mapper lain di berkas
+ *  ini: yang keluar dari sini CALON data, dan skema zod yang memutuskan ia sah
+ *  atau tidak. Memaksakan `string` di sini cuma memindahkan kebohongan dari
+ *  runtime ke tipe. */
+function mapStscSeries(
+  raw: unknown,
+): { wpp: string | null; titik: { tahun: number | null; nilai: number }[] }[] {
+  return asArray(raw).map((series) => ({
+    wpp: optionalText(series.wpp),
+    titik: asArray(series.titik).map((point) => ({
+      tahun: optionalNumber(point.tahun),
+      nilai: optionalNumber(point.nilai) ?? 0,
+    })),
+  }));
+}
+
+/**
+ * Jumlah armada dan total tonase per WPP (`/ext/stsc/grafik/armada`).
+ *
+ * `wpp` HANYA dikirim kalau terisi: dikosongkan berarti kesebelas WPP
+ * sekaligus, dan itu keadaan bawaan halamannya.
+ *
+ * Kedua tahun SELALU dikirim. Bukan kerapian: tanpa keduanya API memakai
+ * rentang penuh, dan rentang penuh yang tidak disebut di kiriman berarti
+ * kartu grafik tidak tahu tahun berapa yang sedang digambarnya.
+ *
+ * null = grafiknya tidak bisa diambil. Kiriman yang DITOLAK CMS termasuk di
+ * dalamnya, dan penolakannya di sini berbentuk khusus: endpoint STSC menjawab
+ * tahun salah bentuk atau WPP tak dikenal dengan PENGALIHAN 302 ke halaman
+ * depan, bukan 422. Yang tiba kemudian HTML, bukan JSON, jadi lemparannya
+ * datang dari parser -- dan tetap ditangkap di sini supaya satu kartu grafik
+ * yang kosong tidak menjatuhkan seluruh halaman.
+ */
+const loadStscArmadaChartMemo = cache(async (queryKey: string): Promise<StscArmadaChart | null> => {
+  const query = JSON.parse(queryKey) as StscArmadaQuery;
+
+  if (mode !== 'api') {
+    return validateStscArmadaChart(await fetchLocal('stscArmadaChart'));
+  }
+
+  const { base, headers } = cmsAccess();
+  const url = new URL(`${base}/ext/stsc/grafik/armada`);
+
+  if (query.wpp) url.searchParams.set('wpp', query.wpp);
+  url.searchParams.set('dari_tahun', String(query.dariTahun));
+  url.searchParams.set('sampai_tahun', String(query.sampaiTahun));
+
+  let json;
+  try {
+    json = await fetchEnvelope(url, headers, 'stscArmada', null, true);
+  } catch (error) {
+    console.error('[konten] grafik armada STSC gagal diambil:', error);
+    return null;
+  }
+
+  if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data)) return null;
+
+  const data = json.data as Record<string, unknown>;
+  const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<string, unknown>;
+  const unit = (Array.isArray(data.unit) ? {} : (data.unit ?? {})) as Record<string, unknown>;
+
+  return validateStscArmadaChart({
+    wpp: optionalText(filter.wpp),
+    dariTahun: optionalNumber(filter.dari_tahun),
+    sampaiTahun: optionalNumber(filter.sampai_tahun),
+    unitArmada: optionalText(unit.armada) ?? 'unit',
+    unitGt: optionalText(unit.gt) ?? 'GT',
+    tahun: mapStscYears(data.tahun),
+    armada: mapStscSeries(data.armada),
+    gt: mapStscSeries(data.gt),
+  });
+});
+
+function validateStscArmadaChart(raw: unknown): StscArmadaChart | null {
+  const parsed = stscArmadaChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik armada STSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+/** Kunci memo disusun dari field yang TETAP urutannya, bukan dari JSON objek
+ *  apa adanya: memo React membandingkan argumen dengan Object.is, dan dua objek
+ *  filter yang isinya sama tapi urutan kuncinya berbeda akan terbaca sebagai
+ *  dua permintaan berbeda. */
+export function loadStscArmadaChart(query: StscArmadaQuery): Promise<StscArmadaChart | null> {
+  return loadStscArmadaChartMemo(
+    JSON.stringify({
+      wpp: query.wpp,
+      dariTahun: query.dariTahun,
+      sampaiTahun: query.sampaiTahun,
+    }),
+  );
+}
+
+/**
+ * Produksi per komoditas per WPP (`/ext/stsc/grafik/produksi`).
+ *
+ * Penanganan galatnya sama persis dengan loadStscArmadaChart -- termasuk
+ * pengalihan 302 yang menyamar sebagai kegagalan parser.
+ *
+ * Komoditas yang tidak dikenal BUKAN kasus itu: API menjawab 200 dengan
+ * `komoditas: []` dan `total_produksi_ton: 0`, dan itu tiba di sini sebagai
+ * data yang sah -- "tidak ada catatan", bukan "permintaannya gagal".
+ */
+const loadStscProduksiChartMemo = cache(
+  async (queryKey: string): Promise<StscProduksiChart | null> => {
+    const query = JSON.parse(queryKey) as StscProduksiQuery;
+
+    if (mode !== 'api') {
+      return validateStscProduksiChart(await fetchLocal('stscProduksiChart'));
+    }
+
+    const { base, headers } = cmsAccess();
+    const url = new URL(`${base}/ext/stsc/grafik/produksi`);
+
+    if (query.wpp) url.searchParams.set('wpp', query.wpp);
+    if (query.komoditas) url.searchParams.set('komoditas', query.komoditas);
+    url.searchParams.set('dari_tahun', String(query.dariTahun));
+    url.searchParams.set('sampai_tahun', String(query.sampaiTahun));
+
+    let json;
+    try {
+      json = await fetchEnvelope(url, headers, 'stscProduksi', null, true);
+    } catch (error) {
+      console.error('[konten] grafik produksi STSC gagal diambil:', error);
+      return null;
+    }
+
+    if (!json || !json.data || typeof json.data !== 'object' || Array.isArray(json.data))
+      return null;
+
+    const data = json.data as Record<string, unknown>;
+    const filter = (Array.isArray(data.filter) ? {} : (data.filter ?? {})) as Record<
+      string,
+      unknown
+    >;
+
+    return validateStscProduksiChart({
+      wpp: optionalText(filter.wpp),
+      komoditasFilter: optionalText(filter.komoditas),
+      dariTahun: optionalNumber(filter.dari_tahun),
+      sampaiTahun: optionalNumber(filter.sampai_tahun),
+      unit: optionalText(data.unit) ?? 'ton',
+      tahun: mapStscYears(data.tahun),
+      totalProduksi: optionalNumber(data.total_produksi_ton) ?? 0,
+      komoditas: asArray(data.komoditas).map((row) => ({
+        komoditas: optionalText(row.komoditas),
+        totalProduksi: optionalNumber(row.total_produksi_ton) ?? 0,
+        seri: mapStscSeries(row.seri),
+      })),
+    });
+  },
+);
+
+function validateStscProduksiChart(raw: unknown): StscProduksiChart | null {
+  const parsed = stscProduksiChartSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  console.error(
+    `[konten] grafik produksi STSC dibuang karena tidak lolos validasi (${mode}): ` +
+      formatIssues(parsed.error.issues),
+  );
+  return null;
+}
+
+export function loadStscProduksiChart(query: StscProduksiQuery): Promise<StscProduksiChart | null> {
+  return loadStscProduksiChartMemo(
+    JSON.stringify({
+      wpp: query.wpp,
+      komoditas: query.komoditas,
+      dariTahun: query.dariTahun,
+      sampaiTahun: query.sampaiTahun,
     }),
   );
 }

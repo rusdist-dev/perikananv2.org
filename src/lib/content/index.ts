@@ -1,5 +1,15 @@
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import {
+  loadStscArmadaChart,
+  loadStscKomoditasOptions,
+  loadStscProduksiChart,
+  loadStscWppOptions,
+  loadHiupariLengthChart,
+  loadHiupariOptions,
+  loadBscCatchChart,
+  loadBscOptions,
+  loadBscTripChart,
+  loadBscWidthChart,
   loadArticleBySlug,
   loadArticlePreviews,
   loadArticlesByProgram,
@@ -25,9 +35,32 @@ import {
   type IkanSelection,
   type IkanTripQuery,
 } from '@/lib/ikan-filters';
+import {
+  BSC_FILTER_LEVELS,
+  type BscCatchQuery,
+  type BscFilterLevel,
+  type BscOption,
+  type BscOptionsByLevel,
+  type BscSelection,
+  type BscTripQuery,
+  type BscWidthQuery,
+} from '@/lib/bsc-filters';
+import type { HiupariLengthQuery, HiupariOption } from '@/lib/hiupari-filters';
+import type {
+  StscArmadaQuery,
+  StscKomoditasOption,
+  StscProduksiQuery,
+  StscWppOption,
+} from '@/lib/stsc-filters';
 import type {
   Article,
   ArticleListItem,
+  BscCatchChart,
+  BscTripChart,
+  BscWidthChart,
+  HiupariLengthChart,
+  StscArmadaChart,
+  StscProduksiChart,
   Publication,
   TeamMember,
   Milestone,
@@ -52,6 +85,12 @@ import type {
 export type {
   Article,
   ArticleListItem,
+  BscCatchChart,
+  BscTripChart,
+  BscWidthChart,
+  HiupariLengthChart,
+  StscArmadaChart,
+  StscProduksiChart,
   Publication,
   TeamMember,
   Milestone,
@@ -646,6 +685,116 @@ export async function getIkanCatchChart(query: IkanCatchQuery): Promise<IkanCatc
  *  diambil. */
 export async function getIkanLengthChart(query: IkanLengthQuery): Promise<IkanLengthChart | null> {
   return loadIkanLengthChart(query);
+}
+
+/** Opsi satu tingkat filter BSC (`/data/data-crab`). Daftar kosong = kombinasi
+ *  yang dipilih memang tidak punya catatan, bukan galat. */
+export async function getBscOptions(
+  level: BscFilterLevel,
+  selection: BscSelection = {},
+): Promise<BscOption[]> {
+  return loadBscOptions(level, selection);
+}
+
+/**
+ * Beberapa tingkat filter BSC sekaligus, masing-masing disaring pilihan di
+ * atasnya. Kembarannya untuk IKAN ada di getIkanFilterOptions -- dan
+ * catatannya berlaku sama di sini: Promise.all tidak berarti tujuh permintaan
+ * paralel, karena withRequestSlot di source.ts menahan jumlah permintaan
+ * serentak ke CMS di angka 2.
+ *
+ * Tingkat yang gagal mengembalikan daftar KOSONG, tidak menjatuhkan yang lain:
+ * satu dropdown yang tidak terisi jauh lebih baik daripada form filter yang
+ * hilang seluruhnya.
+ */
+export async function getBscFilterOptions(
+  selection: BscSelection = {},
+  levels: readonly BscFilterLevel[] = BSC_FILTER_LEVELS,
+): Promise<BscOptionsByLevel> {
+  const results = await Promise.all(
+    levels.map(async (level) => {
+      try {
+        return [level, await loadBscOptions(level, selection)] as const;
+      } catch (error) {
+        console.error(`[konten] opsi filter BSC "${level}" gagal diambil:`, error);
+        return [level, [] as BscOption[]] as const;
+      }
+    }),
+  );
+
+  return Object.fromEntries(results) as BscOptionsByLevel;
+}
+
+/** Dua grafik tab Summary /data/data-crab. null = gagal diambil; pemanggil
+ *  menampilkan keadaan galat, bukan grafik kosong yang terbaca seolah-olah
+ *  "tidak ada trip". */
+export async function getBscTripChart(query: BscTripQuery): Promise<BscTripChart | null> {
+  return loadBscTripChart(query);
+}
+
+/** Komposisi tangkapan per spesies untuk tab Catch Composition
+ *  /data/data-crab. null = gagal diambil. */
+export async function getBscCatchChart(query: BscCatchQuery): Promise<BscCatchChart | null> {
+  return loadBscCatchChart(query);
+}
+
+/** Sebaran lebar karapas untuk tab Length Frequency /data/data-crab. null =
+ *  gagal diambil. */
+export async function getBscWidthChart(query: BscWidthQuery): Promise<BscWidthChart | null> {
+  return loadBscWidthChart(query);
+}
+
+/** Daftar spesies untuk dropdown /data/shark-and-ray.
+ *
+ *  Tanpa argumen, tidak seperti getIkanOptions dan getBscOptions: dataset
+ *  HIUPARI tidak punya hierarki wilayah, jadi tidak ada pilihan di atasnya yang
+ *  bisa menyempitkan daftar ini. */
+export async function getHiupariOptions(): Promise<HiupariOption[]> {
+  return loadHiupariOptions();
+}
+
+/** Sebaran panjang hiu dan pari -- satu-satunya grafik /data/shark-and-ray.
+ *  null = gagal diambil; pemanggil menampilkan keadaan galat, bukan grafik
+ *  kosong yang terbaca seolah-olah "tidak ada pengukuran". */
+export async function getHiupariLengthChart(
+  query: HiupariLengthQuery,
+): Promise<HiupariLengthChart | null> {
+  return loadHiupariLengthChart(query);
+}
+
+/** Daftar WPP untuk dropdown /data/production-data dan /data/vessel-data.
+ *
+ *  Satu fungsi yang melayani DUA halaman: keduanya menyaring dengan daftar WPP
+ *  yang sama, dan memisahkannya berarti dua daftar yang bisa menyimpang. */
+export async function getStscWppOptions(): Promise<StscWppOption[]> {
+  return loadStscWppOptions();
+}
+
+/** Daftar komoditas untuk dropdown /data/production-data.
+ *
+ *  `wpp` menyaring CACAHNYA (`jumlahWpp`), bukan daftarnya -- lihat catatan di
+ *  loadStscKomoditasOptions. */
+export async function getStscKomoditasOptions(
+  wpp: string | null = null,
+): Promise<StscKomoditasOption[]> {
+  return loadStscKomoditasOptions(wpp);
+}
+
+/** Jumlah armada dan total tonase per WPP untuk /data/vessel-data. null =
+ *  gagal diambil; pemanggil menampilkan keadaan galat, bukan grafik kosong
+ *  yang terbaca seolah-olah "tidak ada kapal". */
+export async function getStscArmadaChart(
+  query: StscArmadaQuery,
+): Promise<StscArmadaChart | null> {
+  return loadStscArmadaChart(query);
+}
+
+/** Produksi per komoditas per WPP untuk /data/production-data. null = gagal
+ *  diambil. */
+export async function getStscProduksiChart(
+  query: StscProduksiQuery,
+): Promise<StscProduksiChart | null> {
+  return loadStscProduksiChart(query);
 }
 
 /** Totalan statistik seluruh desa, untuk kartu berjalan di bawah peta Our

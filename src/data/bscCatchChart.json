@@ -1,0 +1,32 @@
+{
+  "dari": null,
+  "sampai": null,
+  "unit": "gram",
+  "totalBobot": 6632100.65,
+  "perSpesies": [
+    {
+      "spesies": "Portunus pelagicus",
+      "totalBobot": 3709396.78
+    },
+    {
+      "spesies": "Scylla serrata",
+      "totalBobot": 2875650
+    },
+    {
+      "spesies": "Scylla olivacea",
+      "totalBobot": 40142
+    },
+    {
+      "spesies": "Charybdis feriata",
+      "totalBobot": 6724.87
+    },
+    {
+      "spesies": "Portunus sanguinolentus",
+      "totalBobot": 120
+    },
+    {
+      "spesies": "Portunus gladiator",
+      "totalBobot": 67
+    }
+  ]
+}

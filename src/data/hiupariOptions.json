@@ -1,0 +1,82 @@
+[
+  {
+    "value": "Alopias pelagicus",
+    "jumlahIndividu": 116
+  },
+  {
+    "value": "Alopias superciliosus",
+    "jumlahIndividu": 212
+  },
+  {
+    "value": "Carcharhinus brevipina",
+    "jumlahIndividu": 3
+  },
+  {
+    "value": "Carcharhinus falciformis",
+    "jumlahIndividu": 536
+  },
+  {
+    "value": "Carcharhinus limbatus",
+    "jumlahIndividu": 2
+  },
+  {
+    "value": "Carcharhinus plumbeus",
+    "jumlahIndividu": 11
+  },
+  {
+    "value": "Carcharhinus sorrah",
+    "jumlahIndividu": 35
+  },
+  {
+    "value": "Galeocerdo cuvier",
+    "jumlahIndividu": 20
+  },
+  {
+    "value": "Glaucostegus thouin",
+    "jumlahIndividu": 236
+  },
+  {
+    "value": "Glaucostegus typus",
+    "jumlahIndividu": 623
+  },
+  {
+    "value": "Hexanchus griceus",
+    "jumlahIndividu": 2
+  },
+  {
+    "value": "Isurus oxyrinchus",
+    "jumlahIndividu": 45
+  },
+  {
+    "value": "Isurus paucus",
+    "jumlahIndividu": 42
+  },
+  {
+    "value": "Mustelus manazo",
+    "jumlahIndividu": 5
+  },
+  {
+    "value": "Prionace glauca",
+    "jumlahIndividu": 247
+  },
+  {
+    "value": "Rhina ancylostoma",
+    "jumlahIndividu": 1245
+  },
+  {
+    "value": "Rhynchobatus australiae",
+    "jumlahIndividu": 7558
+  },
+  {
+    "value": "Rhynchobatus laevis",
+    "jumlahIndividu": 1972
+  },
+  {
+    "value": "Rhynchobatus springeri",
+    "jumlahIndividu": 6327
+  },
+  {
+    "value": "Squalus crassispinus ",
+    "jumlahIndividu": 31
+  }
+]

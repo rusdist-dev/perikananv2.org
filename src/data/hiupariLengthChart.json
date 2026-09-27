@@ -1,0 +1,418 @@
+{
+  "jenisUkuran": "panjang_total",
+  "jenisKelamin": null,
+  "spesies": null,
+  "unit": "cm",
+  "selangKelas": 10,
+  "kematanganMatang": 3,
+  "ringkasan": {
+    "jumlahIndividu": 18637,
+    "jumlahTanpaUkuran": 631,
+    "panjangMin": 34,
+    "panjangMaks": 392,
+    "rataRata": 118.05,
+    "median": 108.06,
+    "modus": 105
+  },
+  "ketersediaanUkuran": [
+    {
+      "jenisUkuran": "precaudal_length",
+      "jumlahIndividu": 18778
+    },
+    {
+      "jenisUkuran": "panjang_total",
+      "jumlahIndividu": 18637
+    },
+    {
+      "jenisUkuran": "fork_length",
+      "jumlahIndividu": 6922
+    },
+    {
+      "jenisUkuran": "predorsal_length",
+      "jumlahIndividu": 268
+    },
+    {
+      "jenisUkuran": "panjang_headless",
+      "jumlahIndividu": 49
+    }
+  ],
+  "indikator": {
+    "linf": 412.63,
+    "linfMetode": "empiris Lmax / 0.95 (Froese & Binohlan 2000)",
+    "lm": null,
+    "lmMetode": "hanya tersedia untuk jantan: kematangan klasper adalah ciri jantan, dan betina tercatat 0 karena tidak berklasper",
+    "persenMatang": null
+  },
+  "kelas": [
+    {
+      "batasBawah": 30,
+      "batasAtas": 40,
+      "nilaiTengah": 35,
+      "jumlah": 12,
+      "jumlahMatang": null,
+      "persen": 0.0644,
+      "kumulatifPersen": 0.0644,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 40,
+      "batasAtas": 50,
+      "nilaiTengah": 45,
+      "jumlah": 67,
+      "jumlahMatang": null,
+      "persen": 0.3595,
+      "kumulatifPersen": 0.4239,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 50,
+      "batasAtas": 60,
+      "nilaiTengah": 55,
+      "jumlah": 430,
+      "jumlahMatang": null,
+      "persen": 2.3072,
+      "kumulatifPersen": 2.7311,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 60,
+      "batasAtas": 70,
+      "nilaiTengah": 65,
+      "jumlah": 1112,
+      "jumlahMatang": null,
+      "persen": 5.9666,
+      "kumulatifPersen": 8.6978,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 70,
+      "batasAtas": 80,
+      "nilaiTengah": 75,
+      "jumlah": 1760,
+      "jumlahMatang": null,
+      "persen": 9.4436,
+      "kumulatifPersen": 18.1413,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 80,
+      "batasAtas": 90,
+      "nilaiTengah": 85,
+      "jumlah": 1983,
+      "jumlahMatang": null,
+      "persen": 10.6401,
+      "kumulatifPersen": 28.7815,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 90,
+      "batasAtas": 100,
+      "nilaiTengah": 95,
+      "jumlah": 2176,
+      "jumlahMatang": null,
+      "persen": 11.6757,
+      "kumulatifPersen": 40.4572,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 100,
+      "batasAtas": 110,
+      "nilaiTengah": 105,
+      "jumlah": 2207,
+      "jumlahMatang": null,
+      "persen": 11.842,
+      "kumulatifPersen": 52.2992,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 110,
+      "batasAtas": 120,
+      "nilaiTengah": 115,
+      "jumlah": 1731,
+      "jumlahMatang": null,
+      "persen": 9.288,
+      "kumulatifPersen": 61.5872,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 120,
+      "batasAtas": 130,
+      "nilaiTengah": 125,
+      "jumlah": 1478,
+      "jumlahMatang": null,
+      "persen": 7.9305,
+      "kumulatifPersen": 69.5176,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 130,
+      "batasAtas": 140,
+      "nilaiTengah": 135,
+      "jumlah": 1053,
+      "jumlahMatang": null,
+      "persen": 5.6501,
+      "kumulatifPersen": 75.1677,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 140,
+      "batasAtas": 150,
+      "nilaiTengah": 145,
+      "jumlah": 791,
+      "jumlahMatang": null,
+      "persen": 4.2442,
+      "kumulatifPersen": 79.4119,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 150,
+      "batasAtas": 160,
+      "nilaiTengah": 155,
+      "jumlah": 637,
+      "jumlahMatang": null,
+      "persen": 3.4179,
+      "kumulatifPersen": 82.8299,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 160,
+      "batasAtas": 170,
+      "nilaiTengah": 165,
+      "jumlah": 576,
+      "jumlahMatang": null,
+      "persen": 3.0906,
+      "kumulatifPersen": 85.9205,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 170,
+      "batasAtas": 180,
+      "nilaiTengah": 175,
+      "jumlah": 483,
+      "jumlahMatang": null,
+      "persen": 2.5916,
+      "kumulatifPersen": 88.5121,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 180,
+      "batasAtas": 190,
+      "nilaiTengah": 185,
+      "jumlah": 482,
+      "jumlahMatang": null,
+      "persen": 2.5863,
+      "kumulatifPersen": 91.0984,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 190,
+      "batasAtas": 200,
+      "nilaiTengah": 195,
+      "jumlah": 322,
+      "jumlahMatang": null,
+      "persen": 1.7277,
+      "kumulatifPersen": 92.8261,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 200,
+      "batasAtas": 210,
+      "nilaiTengah": 205,
+      "jumlah": 350,
+      "jumlahMatang": null,
+      "persen": 1.878,
+      "kumulatifPersen": 94.7041,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 210,
+      "batasAtas": 220,
+      "nilaiTengah": 215,
+      "jumlah": 214,
+      "jumlahMatang": null,
+      "persen": 1.1483,
+      "kumulatifPersen": 95.8523,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 220,
+      "batasAtas": 230,
+      "nilaiTengah": 225,
+      "jumlah": 204,
+      "jumlahMatang": null,
+      "persen": 1.0946,
+      "kumulatifPersen": 96.9469,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 230,
+      "batasAtas": 240,
+      "nilaiTengah": 235,
+      "jumlah": 185,
+      "jumlahMatang": null,
+      "persen": 0.9926,
+      "kumulatifPersen": 97.9396,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 240,
+      "batasAtas": 250,
+      "nilaiTengah": 245,
+      "jumlah": 106,
+      "jumlahMatang": null,
+      "persen": 0.5688,
+      "kumulatifPersen": 98.5083,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 250,
+      "batasAtas": 260,
+      "nilaiTengah": 255,
+      "jumlah": 80,
+      "jumlahMatang": null,
+      "persen": 0.4293,
+      "kumulatifPersen": 98.9376,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 260,
+      "batasAtas": 270,
+      "nilaiTengah": 265,
+      "jumlah": 61,
+      "jumlahMatang": null,
+      "persen": 0.3273,
+      "kumulatifPersen": 99.2649,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 270,
+      "batasAtas": 280,
+      "nilaiTengah": 275,
+      "jumlah": 53,
+      "jumlahMatang": null,
+      "persen": 0.2844,
+      "kumulatifPersen": 99.5493,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 280,
+      "batasAtas": 290,
+      "nilaiTengah": 285,
+      "jumlah": 33,
+      "jumlahMatang": null,
+      "persen": 0.1771,
+      "kumulatifPersen": 99.7264,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 290,
+      "batasAtas": 300,
+      "nilaiTengah": 295,
+      "jumlah": 17,
+      "jumlahMatang": null,
+      "persen": 0.0912,
+      "kumulatifPersen": 99.8176,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 300,
+      "batasAtas": 310,
+      "nilaiTengah": 305,
+      "jumlah": 4,
+      "jumlahMatang": null,
+      "persen": 0.0215,
+      "kumulatifPersen": 99.839,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 310,
+      "batasAtas": 320,
+      "nilaiTengah": 315,
+      "jumlah": 11,
+      "jumlahMatang": null,
+      "persen": 0.059,
+      "kumulatifPersen": 99.8981,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 320,
+      "batasAtas": 330,
+      "nilaiTengah": 325,
+      "jumlah": 3,
+      "jumlahMatang": null,
+      "persen": 0.0161,
+      "kumulatifPersen": 99.9141,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 330,
+      "batasAtas": 340,
+      "nilaiTengah": 335,
+      "jumlah": 4,
+      "jumlahMatang": null,
+      "persen": 0.0215,
+      "kumulatifPersen": 99.9356,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 340,
+      "batasAtas": 350,
+      "nilaiTengah": 345,
+      "jumlah": 4,
+      "jumlahMatang": null,
+      "persen": 0.0215,
+      "kumulatifPersen": 99.9571,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 350,
+      "batasAtas": 360,
+      "nilaiTengah": 355,
+      "jumlah": 3,
+      "jumlahMatang": null,
+      "persen": 0.0161,
+      "kumulatifPersen": 99.9732,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 360,
+      "batasAtas": 370,
+      "nilaiTengah": 365,
+      "jumlah": 4,
+      "jumlahMatang": null,
+      "persen": 0.0215,
+      "kumulatifPersen": 99.9946,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 370,
+      "batasAtas": 380,
+      "nilaiTengah": 375,
+      "jumlah": 0,
+      "jumlahMatang": null,
+      "persen": 0,
+      "kumulatifPersen": 99.9946,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 380,
+      "batasAtas": 390,
+      "nilaiTengah": 385,
+      "jumlah": 0,
+      "jumlahMatang": null,
+      "persen": 0,
+      "kumulatifPersen": 99.9946,
+      "persenMatang": null
+    },
+    {
+      "batasBawah": 390,
+      "batasAtas": 400,
+      "nilaiTengah": 395,
+      "jumlah": 1,
+      "jumlahMatang": null,
+      "persen": 0.0054,
+      "kumulatifPersen": 100,
+      "persenMatang": null
+    }
+  ]
+}

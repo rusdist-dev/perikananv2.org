@@ -1,0 +1,202 @@
+{
+  "tipeTanggal": "monthly",
+  "dari": null,
+  "sampai": null,
+  "totalTrip": 4864,
+  "perPeriode": [
+    {
+      "periode": "2023-05",
+      "jumlahTrip": 17
+    },
+    {
+      "periode": "2023-06",
+      "jumlahTrip": 67
+    },
+    {
+      "periode": "2023-07",
+      "jumlahTrip": 114
+    },
+    {
+      "periode": "2023-08",
+      "jumlahTrip": 122
+    },
+    {
+      "periode": "2023-09",
+      "jumlahTrip": 135
+    },
+    {
+      "periode": "2023-10",
+      "jumlahTrip": 125
+    },
+    {
+      "periode": "2023-11",
+      "jumlahTrip": 106
+    },
+    {
+      "periode": "2023-12",
+      "jumlahTrip": 126
+    },
+    {
+      "periode": "2024-01",
+      "jumlahTrip": 125
+    },
+    {
+      "periode": "2024-02",
+      "jumlahTrip": 74
+    },
+    {
+      "periode": "2024-03",
+      "jumlahTrip": 107
+    },
+    {
+      "periode": "2024-04",
+      "jumlahTrip": 85
+    },
+    {
+      "periode": "2024-05",
+      "jumlahTrip": 113
+    },
+    {
+      "periode": "2024-06",
+      "jumlahTrip": 97
+    },
+    {
+      "periode": "2024-07",
+      "jumlahTrip": 70
+    },
+    {
+      "periode": "2024-08",
+      "jumlahTrip": 85
+    },
+    {
+      "periode": "2024-09",
+      "jumlahTrip": 104
+    },
+    {
+      "periode": "2024-10",
+      "jumlahTrip": 126
+    },
+    {
+      "periode": "2024-11",
+      "jumlahTrip": 164
+    },
+    {
+      "periode": "2024-12",
+      "jumlahTrip": 149
+    },
+    {
+      "periode": "2025-01",
+      "jumlahTrip": 138
+    },
+    {
+      "periode": "2025-02",
+      "jumlahTrip": 165
+    },
+    {
+      "periode": "2025-03",
+      "jumlahTrip": 93
+    },
+    {
+      "periode": "2025-04",
+      "jumlahTrip": 136
+    },
+    {
+      "periode": "2025-05",
+      "jumlahTrip": 110
+    },
+    {
+      "periode": "2025-06",
+      "jumlahTrip": 82
+    },
+    {
+      "periode": "2025-07",
+      "jumlahTrip": 94
+    },
+    {
+      "periode": "2025-08",
+      "jumlahTrip": 120
+    },
+    {
+      "periode": "2025-09",
+      "jumlahTrip": 214
+    },
+    {
+      "periode": "2025-10",
+      "jumlahTrip": 229
+    },
+    {
+      "periode": "2025-11",
+      "jumlahTrip": 229
+    },
+    {
+      "periode": "2025-12",
+      "jumlahTrip": 121
+    },
+    {
+      "periode": "2026-01",
+      "jumlahTrip": 66
+    },
+    {
+      "periode": "2026-02",
+      "jumlahTrip": 150
+    },
+    {
+      "periode": "2026-03",
+      "jumlahTrip": 132
+    },
+    {
+      "periode": "2026-04",
+      "jumlahTrip": 166
+    },
+    {
+      "periode": "2026-05",
+      "jumlahTrip": 195
+    },
+    {
+      "periode": "2026-06",
+      "jumlahTrip": 181
+    },
+    {
+      "periode": "2026-07",
+      "jumlahTrip": 132
+    }
+  ],
+  "perLokasi": [
+    {
+      "lokasi": "BETAHWALANG",
+      "jumlahTrip": 1261
+    },
+    {
+      "lokasi": "GOJOYO",
+      "jumlahTrip": 179
+    },
+    {
+      "lokasi": "LABUHAN BONTONG",
+      "jumlahTrip": 113
+    },
+    {
+      "lokasi": "LABUHAN KURIS",
+      "jumlahTrip": 71
+    },
+    {
+      "lokasi": "LABUHAN SANGGORO",
+      "jumlahTrip": 214
+    },
+    {
+      "lokasi": "LORANG",
+      "jumlahTrip": 5
+    },
+    {
+      "lokasi": "TELUK AWUR",
+      "jumlahTrip": 541
+    },
+    {
+      "lokasi": "TELUK SANTONG",
+      "jumlahTrip": 965
+    },
+    {
+      "lokasi": "WEDUNG",
+      "jumlahTrip": 1515
+    }
+  ]
+}

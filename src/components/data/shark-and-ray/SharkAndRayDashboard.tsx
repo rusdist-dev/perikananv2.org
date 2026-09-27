@@ -1,21 +1,41 @@
-'use client';
+import type { ReactNode } from 'react';
 
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
-import { ColumnChart } from '@/components/program/jogolaut/BarChart';
-import { ChartCard } from '@/components/program/jogolaut/ChartCard';
-import { LENGTH_CLASS_LABELS, SAMPLE_LENGTH_FREQUENCY, SAMPLE_MARKERS, SAMPLE_SPECIES } from './sample-data';
 
 /**
- * Beda dari FisheriesDataDashboard (IKAN, Data Crab): halaman ini hanya
- * punya satu bagian, Length Frequency -- tidak ada tab Summary/Catch
- * Composition di rancangan acuannya, jadi tidak dipaksakan ke kerangka tab
- * yang dibuat untuk tiga bagian.
+ * Kerangka halaman Shark and Ray: breadcrumb, judul, catatan, lalu satu slot
+ * isi.
+ *
+ * Beda dari FisheriesDataDashboard (IKAN, Data Crab): halaman ini hanya punya
+ * SATU bagian, Length Frequency -- tidak ada tab Summary/Catch Composition di
+ * rancangan acuannya, dan API-nya pun cuma menyediakan satu endpoint grafik.
+ * Memaksakannya ke kerangka tiga tab berarti dua tab yang tidak punya data.
+ *
+ * TANPA 'use client', tidak seperti sebelumnya: begitu form contoh yang mati
+ * digantikan HiupariExplorer yang sungguhan, tidak ada satu pun keadaan yang
+ * tinggal di sini. Yang interaktif ada di dalam `children`, dan ia membawa
+ * batas kliennya sendiri.
  */
-export function SharkAndRayDashboard({ breadcrumb }: { breadcrumb: BreadcrumbItem[] }) {
+export function SharkAndRayDashboard({
+  breadcrumb,
+  children,
+}: {
+  breadcrumb: BreadcrumbItem[];
+  /** Isi halaman -- hari ini HiupariExplorer, yang merender kolom filter dan
+   *  kolom grafiknya sendiri. */
+  children: ReactNode;
+}) {
   return (
     <div className="bg-surface">
-      <Container className="page-gutter py-14 lg:pe-(--spacing-panel-gutter)">
+      {/* DUA Container, bukan satu -- pola yang sama dengan
+          FisheriesDataDashboard, dan alasannya sama.
+          Yang pertama menyisakan gutter kanan selebar panel navigasi supaya
+          judul dan deskripsi tidak melebar sampai ke tepi layar. Yang kedua
+          sengaja TIDAK: histogram yang dipotong 17rem di kanan membuang ruang
+          persis di tempat yang paling dibutuhkannya -- 72 batang pada selang
+          5 cm berdesakan di lebar yang tersisa. */}
+      <Container className="page-gutter pt-14 lg:pe-(--spacing-panel-gutter)">
         <Breadcrumb items={breadcrumb} />
 
         <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">Data</p>
@@ -25,60 +45,13 @@ export function SharkAndRayDashboard({ breadcrumb }: { breadcrumb: BreadcrumbIte
         </p>
         <p className="mt-3 max-w-3xl rounded-md border border-border bg-bg p-3 text-xs leading-relaxed text-muted">
           <strong className="font-bold text-primary">Catatan:</strong> filter dan grafik di halaman
-          ini masih data contoh untuk keperluan tampilan -- belum tersambung ke sumber data Shark
-          and Ray sesungguhnya.
+          ini sudah tersambung ke data hiu dan pari di CMS. Dataset ini tidak dikelompokkan per
+          wilayah maupun per tanggal, jadi penyaringnya hanya spesies, jenis kelamin, dan cara
+          ukurnya.
         </p>
-
-        <div className="mt-8 grid gap-5 lg:grid-cols-[20rem_1fr] lg:items-start">
-          <ChartCard title="Filter">
-            <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="shark-ray-species" className="text-xs font-bold uppercase tracking-wide text-muted">
-                  Species
-                </label>
-                <select
-                  id="shark-ray-species"
-                  disabled
-                  defaultValue={SAMPLE_SPECIES[0]}
-                  className="rounded-md border border-border bg-bg px-3 py-2 text-sm italic disabled:cursor-not-allowed disabled:bg-surface"
-                >
-                  {SAMPLE_SPECIES.map((species) => (
-                    <option key={species} value={species}>
-                      {species}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled
-                className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Show Chart
-              </button>
-            </form>
-          </ChartCard>
-
-          <ChartCard
-            title={`Length Frequency — ${SAMPLE_SPECIES[0]}`}
-            meta="contoh · Total Length (cm)"
-            note="Data contoh untuk pratinjau tampilan grafik. Grafik akan menampilkan sebaran panjang sesungguhnya per spesies setelah halaman ini tersambung ke sumber data Shark and Ray. Lm menandai perkiraan panjang saat matang gonad, Linf menandai perkiraan panjang asimtotik -- keduanya juga masih nilai contoh."
-          >
-            <ColumnChart
-              labels={LENGTH_CLASS_LABELS}
-              values={SAMPLE_LENGTH_FREQUENCY}
-              markers={SAMPLE_MARKERS}
-              color="series-2"
-              unit="individu"
-              seriesLabel="Frequency"
-              labelEvery={1}
-              height={340}
-              ariaLabel={`Grafik batang contoh frekuensi panjang total untuk ${SAMPLE_SPECIES[0]}, dengan garis acuan Lm dan Linf`}
-            />
-          </ChartCard>
-        </div>
       </Container>
+
+      <Container className="page-gutter pb-14">{children}</Container>
     </div>
   );
 }

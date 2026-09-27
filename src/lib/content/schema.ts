@@ -633,6 +633,335 @@ export const ikanLengthChartSchema = z.object({
 
 export type IkanLengthChart = z.output<typeof ikanLengthChartSchema>;
 
+/** Satu pilihan pada dropdown filter dataset BSC, dari
+ *  `/ext/bsc/opsi/{tingkat}`.
+ *
+ *  Bentuknya sama persis dengan padanan IKAN-nya, tapi skemanya berdiri
+ *  sendiri: keduanya memvalidasi respons dua endpoint yang BERBEDA, dan
+ *  memakai ulang satu skema berarti perubahan bentuk di salah satu API
+ *  memaksa yang lain ikut berubah. */
+export const bscOptionSchema = z.object({
+  value: z.string().min(1),
+  jumlahTrip: z.number().default(0),
+});
+
+export type BscOptionItem = z.output<typeof bscOptionSchema>;
+
+export const bscOptionsSchema = z.array(bscOptionSchema);
+
+/** Isi grafik tab Summary `/data/data-crab`, dari `/ext/bsc/grafik/trip`.
+ *
+ *  SATU respons memberi DUA grafik -- jumlah trip per periode dan per lokasi
+ *  pendaratan -- persis seperti endpoint trip IKAN.
+ *
+ *  `periode` dibiarkan STRING apa adanya ("2026-01" untuk monthly, "2026"
+ *  untuk yearly): ia label sumbu-x, bukan tanggal yang dihitung. */
+export const bscTripChartSchema = z.object({
+  tipeTanggal: z.enum(['monthly', 'yearly']).default('monthly'),
+  dari: z.iso.date().nullable().default(null),
+  sampai: z.iso.date().nullable().default(null),
+  totalTrip: z.number().default(0),
+  perPeriode: z
+    .array(z.object({ periode: z.string().min(1), jumlahTrip: z.number().default(0) }))
+    .default([]),
+  perLokasi: z
+    .array(z.object({ lokasi: z.string().min(1), jumlahTrip: z.number().default(0) }))
+    .default([]),
+});
+
+export type BscTripChart = z.output<typeof bscTripChartSchema>;
+
+/** Isi tab Catch Composition `/data/data-crab`, dari
+ *  `/ext/bsc/grafik/tangkapan`.
+ *
+ *  `unit` datang dari API dan bawaannya "gram" -- BUKAN "kg" seperti IKAN.
+ *  Bedanya nyata: total hari ini 6.632.100,65 gram, angka yang dicetak sebagai
+ *  kilogram akan salah seribu kali lipat. Itu sebabnya satuannya dibaca dari
+ *  respons alih-alih ditulis tetap di komponen. */
+export const bscCatchChartSchema = z.object({
+  dari: z.iso.date().nullable().default(null),
+  sampai: z.iso.date().nullable().default(null),
+  unit: z.string().min(1).default('gram'),
+  totalBobot: z.number().default(0),
+  perSpesies: z
+    .array(z.object({ spesies: z.string().min(1), totalBobot: z.number().default(0) }))
+    .default([]),
+});
+
+export type BscCatchChart = z.output<typeof bscCatchChartSchema>;
+
+/** Isi tab Length Frequency `/data/data-crab`, dari
+ *  `/ext/bsc/grafik/frekuensi-lebar`.
+ *
+ *  Yang diukur LEBAR KARAPAS, bukan panjang, dan bedanya bukan istilah belaka:
+ *  responsnya membawa hitungan kematangan gonad yang tidak ada padanannya di
+ *  dataset ikan (`jumlahMatang`/`persenMatang` per kelas, `tanpaTkg` di
+ *  ringkasan). Karena itu skemanya terpisah dari ikanLengthChartSchema, bukan
+ *  dipakai bersama dengan beberapa field opsional.
+ *
+ *  Perbedaan terpenting: di sini Lm DIHITUNG API (interpolasi lebar saat 50%
+ *  individu mencapai TKG ambang), sementara pada IKAN ia angka yang diketik
+ *  pembaca. `lmMetode` ikut dibawa supaya cara hitungnya bisa dicetak apa
+ *  adanya alih-alih ditulis ulang di frontend. */
+export const bscWidthChartSchema = z.object({
+  /** Satuan lebar dari API ("cm"). */
+  unit: z.string().min(1).default('cm'),
+  /** Lebar selang kelas yang BENAR-BENAR dipakai server -- bukan yang diminta.
+   *  Keduanya bisa berbeda kalau server membulatkan. */
+  selangKelas: z.number().default(1),
+  /** Ambang TKG yang dipakai server, gema dari parameter `tkg_matang`. */
+  tkgMatang: z.number().default(2),
+  jenisKelamin: z.enum(['JANTAN', 'BETINA']).nullable().default(null),
+  ringkasan: z.object({
+    jumlahIndividu: z.number().default(0),
+    lebarMin: z.number().nullable().default(null),
+    lebarMaks: z.number().nullable().default(null),
+    rataRata: z.number().nullable().default(null),
+    median: z.number().nullable().default(null),
+    modus: z.number().nullable().default(null),
+    /** Individu yang terukur lebarnya tapi TKG-nya tidak dicatat. Ikut
+     *  ditampilkan, tidak dibuang: mereka masuk histogram tapi tidak bisa
+     *  masuk hitungan persen matang, dan selisih itu harus terbaca. */
+    tanpaTkg: z.number().default(0),
+  }),
+  /** Cacah individu per jenis kelamin. `jenisKelamin` null = catatan yang tidak
+   *  menyebutkannya (3 dari 46.093 hari ini). */
+  komposisiJenisKelamin: z
+    .array(
+      z.object({
+        jenisKelamin: z.string().nullable().default(null),
+        jumlah: z.number().default(0),
+      }),
+    )
+    .default([]),
+  indikator: z.object({
+    /** Lebar pertama kali tertangkap. */
+    lc: z.number().nullable().default(null),
+    /** Kalimat metode dari API, ditampilkan apa adanya: cara Lc dihitung bagian
+     *  dari artinya. */
+    lcMetode: z.string().nullable().default(null),
+    /** Lebar matang gonad, HITUNGAN API. null = datanya tidak cukup untuk
+     *  interpolasinya (terjadi saat penyaringnya menyisakan sedikit kelas). */
+    lm: z.number().nullable().default(null),
+    lmMetode: z.string().nullable().default(null),
+    persenMatang: z.number().nullable().default(null),
+  }),
+  kelas: z
+    .array(
+      z.object({
+        batasBawah: z.number(),
+        batasAtas: z.number(),
+        nilaiTengah: z.number(),
+        jumlah: z.number().default(0),
+        jumlahMatang: z.number().default(0),
+        persen: z.number().default(0),
+        kumulatifPersen: z.number().default(0),
+        /** null -- BUKAN nol -- untuk kelas yang kosong: API mengirimnya null
+         *  justru pada kelas ber-`jumlah: 0` (63 dari 83 kelas pada selang 1
+         *  cm hari ini), dan "0% matang" di kelas tanpa satu pun individu
+         *  adalah angka yang tidak pernah dihitung siapa pun. */
+        persenMatang: z.number().nullable().default(null),
+      }),
+    )
+    .default([]),
+});
+
+export type BscWidthChart = z.output<typeof bscWidthChartSchema>;
+
+/** Satu pilihan pada dropdown spesies HIUPARI, dari
+ *  `/ext/hiupari/opsi/spesies`.
+ *
+ *  Field cacahnya `jumlah_individu`, BUKAN `jumlah_trip` seperti dua dataset
+ *  lain -- itu sebabnya skemanya berdiri sendiri alih-alih memakai ulang
+ *  ikanOptionSchema. */
+export const hiupariOptionSchema = z.object({
+  value: z.string().min(1),
+  jumlahIndividu: z.number().default(0),
+});
+
+export type HiupariOptionItem = z.output<typeof hiupariOptionSchema>;
+
+export const hiupariOptionsSchema = z.array(hiupariOptionSchema);
+
+/** Isi `/data/shark-and-ray`, dari `/ext/hiupari/grafik/frekuensi-panjang`.
+ *
+ *  SATU-SATUNYA endpoint grafik dataset ini: tidak ada trip, tidak ada
+ *  komposisi tangkapan. Halaman ini memang cuma punya satu bagian.
+ *
+ *  Yang membedakannya dari dua skema frekuensi lain:
+ *
+ *  - `indikator.linf` ADA di sini dan tidak ada di IKAN maupun BSC. Ia
+ *    dihitung empiris (Lmax / 0,95, Froese & Binohlan 2000), jadi nilainya
+ *    hampir selalu di LUAR rentang histogramnya -- panjang asimtotik memang
+ *    bukan panjang yang pernah terukur.
+ *  - `lm` dan seluruh turunannya (`persen_matang`, `jumlahMatang` dan
+ *    `persenMatang` per kelas) bisa null SEKALIGUS, dan itu keadaan yang
+ *    normal: kematangan dihitung dari klasper, organ jantan, jadi betina dan
+ *    gabungan kedua jenis kelamin tidak punya angkanya. Nullable di sini
+ *    bukan pertahanan terhadap data rusak melainkan bentuk yang sah.
+ *  - `ketersediaanUkuran` memberi cacah individu per jenis ukuran, yang
+ *    menjelaskan kenapa mengganti jenis ukuran bisa memangkas sampelnya dari
+ *    18.637 jadi 268. */
+export const hiupariLengthChartSchema = z.object({
+  /** Gema jenis ukuran yang BENAR-BENAR dipakai server. */
+  jenisUkuran: z
+    .enum(['panjang_total', 'precaudal_length', 'fork_length', 'predorsal_length', 'panjang_headless'])
+    .default('panjang_total'),
+  jenisKelamin: z.enum(['M', 'F']).nullable().default(null),
+  spesies: z.string().nullable().default(null),
+  /** Satuan panjang dari API ("cm"). */
+  unit: z.string().min(1).default('cm'),
+  /** Lebar selang kelas yang BENAR-BENAR dipakai server -- bukan yang diminta.
+   *  Keduanya bisa berbeda kalau server membulatkan. */
+  selangKelas: z.number().default(1),
+  /** Ambang kematangan klasper yang dipakai server, gema dari parameter
+   *  `kematangan_matang`. */
+  kematanganMatang: z.number().default(3),
+  ringkasan: z.object({
+    jumlahIndividu: z.number().default(0),
+    /** Individu yang tercatat tapi TIDAK punya ukuran jenis ini. Ikut
+     *  ditampilkan, tidak dibuang: mereka ada di dataset tapi tidak ada di
+     *  histogram, dan selisih itu harus terbaca. */
+    jumlahTanpaUkuran: z.number().default(0),
+    panjangMin: z.number().nullable().default(null),
+    panjangMaks: z.number().nullable().default(null),
+    rataRata: z.number().nullable().default(null),
+    median: z.number().nullable().default(null),
+    modus: z.number().nullable().default(null),
+  }),
+  /** Berapa individu yang punya ukuran untuk TIAP jenis ukuran, termasuk yang
+   *  sedang tidak dipilih -- itu gunanya: ia menjawab "kalau saya pindah ke
+   *  fork length, sampelnya tinggal berapa" sebelum pembaca menekan tombolnya. */
+  ketersediaanUkuran: z
+    .array(z.object({ jenisUkuran: z.string().min(1), jumlahIndividu: z.number().default(0) }))
+    .default([]),
+  indikator: z.object({
+    /** Panjang asimtotik. Satu-satunya dataset yang mengirimkannya. */
+    linf: z.number().nullable().default(null),
+    /** Kalimat metode dari API, ditampilkan apa adanya: cara Linf dihitung
+     *  bagian dari artinya, dan menuliskannya ulang di frontend berarti dua
+     *  versi yang bisa berbeda. */
+    linfMetode: z.string().nullable().default(null),
+    /** Panjang matang. null = jenis kelaminnya bukan M -- lihat catatan di
+     *  kepala skema ini. */
+    lm: z.number().nullable().default(null),
+    lmMetode: z.string().nullable().default(null),
+    persenMatang: z.number().nullable().default(null),
+  }),
+  kelas: z
+    .array(
+      z.object({
+        batasBawah: z.number(),
+        batasAtas: z.number(),
+        nilaiTengah: z.number(),
+        jumlah: z.number().default(0),
+        /** null -- BUKAN nol: tanpa jenis kelamin M, kematangan tidak
+         *  terdefinisi, dan nol akan terbaca sebagai "tidak ada yang matang". */
+        jumlahMatang: z.number().nullable().default(null),
+        persen: z.number().default(0),
+        kumulatifPersen: z.number().default(0),
+        persenMatang: z.number().nullable().default(null),
+      }),
+    )
+    .default([]),
+});
+
+export type HiupariLengthChart = z.output<typeof hiupariLengthChartSchema>;
+
+/** Satu WPP pada dropdown `/data/production-data` dan `/data/vessel-data`,
+ *  dari `/ext/stsc/opsi/wpp`.
+ *
+ *  `tahunAwal`/`tahunAkhir` divalidasi karena keduanya jadi batas min/max
+ *  kolom tahun di form: API MENOLAK tahun di luar rentang yang dimilikinya
+ *  (dengan pengalihan, bukan 422), jadi batas yang salah berarti form yang
+ *  menawarkan kegagalan. */
+export const stscWppOptionSchema = z.object({
+  value: z.string().min(1),
+  tahunAwal: z.number().int(),
+  tahunAkhir: z.number().int(),
+  sumber: z.array(z.string().min(1)).default([]),
+});
+
+export type StscWppOptionItem = z.output<typeof stscWppOptionSchema>;
+
+export const stscWppOptionsSchema = z.array(stscWppOptionSchema);
+
+/** Satu komoditas pada dropdown `/data/production-data`, dari
+ *  `/ext/stsc/opsi/komoditas`. */
+export const stscKomoditasOptionSchema = z.object({
+  value: z.string().min(1),
+  jumlahWpp: z.number().default(0),
+  tahunAwal: z.number().int(),
+  tahunAkhir: z.number().int(),
+});
+
+export type StscKomoditasOptionItem = z.output<typeof stscKomoditasOptionSchema>;
+
+export const stscKomoditasOptionsSchema = z.array(stscKomoditasOptionSchema);
+
+/** Satu deret tahunan milik satu WPP. Dipakai BERTIGA -- armada, GT, dan
+ *  produksi per komoditas -- karena API memang mengirim ketiganya dalam bentuk
+ *  yang sama persis. Satu skema, bukan tiga salinan. */
+const stscSeriesSchema = z.object({
+  wpp: z.string().min(1),
+  titik: z
+    .array(z.object({ tahun: z.number().int(), nilai: z.number() }))
+    .default([]),
+});
+
+/** Isi `/data/vessel-data`, dari `/ext/stsc/grafik/armada`.
+ *
+ *  DUA besaran dalam satu respons: jumlah armada (unit) dan total tonase (GT).
+ *  Keduanya per WPP dan per tahun, dan keduanya TIDAK bisa ditumpuk di satu
+ *  sumbu -- 60.000 unit dan 230.000 GT punya satuan yang berbeda arti. Halaman
+ *  menggambar dua kartu, bukan satu kartu dua sumbu: dengan sebelas WPP,
+ *  satu kartu berarti 22 garis. */
+export const stscArmadaChartSchema = z.object({
+  wpp: z.string().nullable().default(null),
+  dariTahun: z.number().int().nullable().default(null),
+  sampaiTahun: z.number().int().nullable().default(null),
+  /** Satuan kedua besaran, dari API ("unit" dan "GT"). */
+  unitArmada: z.string().min(1).default('unit'),
+  unitGt: z.string().min(1).default('GT'),
+  /** Sumbu-x bersama kedua besaran -- dikirim API sekali, bukan diturunkan
+   *  dari titik-titiknya: tahun yang tidak punya catatan pun ikut di sini,
+   *  dan itulah yang membuat garis kedua deret sejajar. */
+  tahun: z.array(z.number().int()).default([]),
+  armada: z.array(stscSeriesSchema).default([]),
+  gt: z.array(stscSeriesSchema).default([]),
+});
+
+export type StscArmadaChart = z.output<typeof stscArmadaChartSchema>;
+
+/** Isi `/data/production-data`, dari `/ext/stsc/grafik/produksi`.
+ *
+ *  `komoditas` adalah DAFTAR kelompok, satu per komoditas, masing-masing
+ *  dengan deret per WPP-nya sendiri. Tanpa penyaring komoditas, API mengirim
+ *  kesebelas kelompok sekaligus -- dan halaman menggambar satu kartu grafik
+ *  untuk tiap kelompok, bukan menumpuk 121 garis (11 komoditas x 11 WPP) di
+ *  satu bingkai. */
+export const stscProduksiChartSchema = z.object({
+  wpp: z.string().nullable().default(null),
+  komoditasFilter: z.string().nullable().default(null),
+  dariTahun: z.number().int().nullable().default(null),
+  sampaiTahun: z.number().int().nullable().default(null),
+  /** Satuan dari API ("ton"), tidak ditulis tetap di frontend. */
+  unit: z.string().min(1).default('ton'),
+  tahun: z.array(z.number().int()).default([]),
+  totalProduksi: z.number().default(0),
+  komoditas: z
+    .array(
+      z.object({
+        komoditas: z.string().min(1),
+        totalProduksi: z.number().default(0),
+        seri: z.array(stscSeriesSchema).default([]),
+      }),
+    )
+    .default([]),
+});
+
+export type StscProduksiChart = z.output<typeof stscProduksiChartSchema>;
+
 /** Daftar koleksi yang dikenal. Kunci di sini menentukan nama file
  *  (src/data/<key>.json) dan cache tag revalidasi. Nama resource CMS yang
  *  sesungguhnya (kalau berbeda, seperti "articles" -> "news") dipetakan
