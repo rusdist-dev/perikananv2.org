@@ -132,6 +132,9 @@ type Labels = {
   knowledgeProductEyebrow: string;
   knowledgeProductHeading: string;
   knowledgeProductEmpty: string;
+  bbnjEyebrow: string;
+  bbnjHeading: string;
+  bbnjEmpty: string;
   videoEyebrow: string;
   videoHeading: string;
 };
@@ -139,10 +142,11 @@ type Labels = {
 type Props = {
   publications: PublicationSlide[];
   knowledgeProducts: PublicationSlide[];
+  bbnjPublications: PublicationSlide[];
   labels: Labels;
 };
 
-export function PublicationsExplorer({ publications, knowledgeProducts, labels: t }: Props) {
+export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPublications, labels: t }: Props) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
 
@@ -401,6 +405,34 @@ export function PublicationsExplorer({ publications, knowledgeProducts, labels: 
           ) : (
             <PublicationsSlider
               publications={knowledgeProducts}
+              downloadLabel={t.download}
+              readLabel={t.read}
+              previousLabel={t.galleryPrevious}
+              nextLabel={t.galleryNext}
+              pdfUnavailableLabel={t.pdfUnavailable}
+              closeLabel={t.close}
+              downloadGateDescription={t.downloadGateDescription}
+              downloadGateNameLabel={t.downloadGateNameLabel}
+              downloadGateEmailLabel={t.downloadGateEmailLabel}
+            />
+          )}
+        </Container>
+      </div>
+
+      <div className="bg-surface">
+        <Container className="page-gutter relative py-16 lg:pe-(--spacing-panel-gutter)">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-secondary">
+            {t.bbnjEyebrow}
+          </p>
+          <h2 className="mb-8 text-3xl font-semibold text-primary">
+            {t.bbnjHeading}
+          </h2>
+
+          {bbnjPublications.length === 0 ? (
+            <p className="text-muted">{t.bbnjEmpty}</p>
+          ) : (
+            <PublicationsSlider
+              publications={bbnjPublications}
               downloadLabel={t.download}
               readLabel={t.read}
               previousLabel={t.galleryPrevious}

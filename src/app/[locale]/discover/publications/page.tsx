@@ -21,17 +21,22 @@ export default async function PublicationsPage({ params }: { params: Promise<{ l
 
   const t = getDictionary(locale);
   const allPublications = await getPublications();
-  // "produk-pengetahuan" adalah kategori CMS untuk Knowledge Product --
-  // dipisah dari daftar "Publikasi Kami" di atasnya (yang sudah punya filter
-  // kategori/pencarian sendiri) supaya keempatnya tidak tampil dobel di dua
-  // seksi sekaligus.
+  // "produk-pengetahuan" adalah kategori CMS untuk Knowledge Product, dan
+  // "pusat-pengetahuan-bbnj" untuk BBNJ Knowledge Hub -- keduanya dipisah
+  // dari daftar "Publikasi Kami" di atasnya (yang sudah punya filter
+  // kategori/pencarian sendiri) supaya tidak tampil dobel di dua seksi
+  // sekaligus.
   const knowledgeProducts = allPublications.filter((p) => p.category === 'produk-pengetahuan');
-  const publications = allPublications.filter((p) => p.category !== 'produk-pengetahuan');
+  const bbnjPublications = allPublications.filter((p) => p.category === 'pusat-pengetahuan-bbnj');
+  const publications = allPublications.filter(
+    (p) => p.category !== 'produk-pengetahuan' && p.category !== 'pusat-pengetahuan-bbnj',
+  );
 
   return (
     <PublicationsExplorer
       publications={publications}
       knowledgeProducts={knowledgeProducts}
+      bbnjPublications={bbnjPublications}
       labels={{
         home: t.home,
         navDiscover: t.navDiscover,
@@ -74,6 +79,9 @@ export default async function PublicationsPage({ params }: { params: Promise<{ l
         knowledgeProductEyebrow: t.publicationsKnowledgeProductEyebrow,
         knowledgeProductHeading: t.publicationsKnowledgeProductHeading,
         knowledgeProductEmpty: t.publicationsKnowledgeProductEmpty,
+        bbnjEyebrow: t.publicationsBbnjEyebrow,
+        bbnjHeading: t.publicationsBbnjHeading,
+        bbnjEmpty: t.publicationsBbnjEmpty,
         videoEyebrow: t.publicationsVideoEyebrow,
         videoHeading: t.publicationsVideoHeading,
       }}

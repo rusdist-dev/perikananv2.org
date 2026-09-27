@@ -94,6 +94,9 @@ export type DiscoverDictionary = {
   publicationsKnowledgeProductEyebrow: string;
   publicationsKnowledgeProductHeading: string;
   publicationsKnowledgeProductEmpty: string;
+  publicationsBbnjEyebrow: string;
+  publicationsBbnjHeading: string;
+  publicationsBbnjEmpty: string;
   publicationsVideoEyebrow: string;
   publicationsVideoHeading: string;
 
@@ -229,6 +232,9 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     publicationsKnowledgeProductEyebrow: 'Produk Pengetahuan',
     publicationsKnowledgeProductHeading: 'Mengubah riset kami menjadi pengetahuan untuk semua',
     publicationsKnowledgeProductEmpty: 'Belum ada produk pengetahuan yang cocok dengan kategori ini.',
+    publicationsBbnjEyebrow: 'BBNJ Knowledge Hub',
+    publicationsBbnjHeading: 'Biodiversity Beyond National Jurisdiction',
+    publicationsBbnjEmpty: 'Belum ada materi BBNJ Knowledge Hub yang cocok dengan kategori ini.',
     publicationsVideoEyebrow: 'Publikasi Video',
     publicationsVideoHeading: 'Tonton dan pelajari lebih lanjut tentang laut kita',
 
@@ -365,6 +371,9 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     publicationsKnowledgeProductEyebrow: 'Knowledge Product',
     publicationsKnowledgeProductHeading: 'Turning our research into knowledge for everyone',
     publicationsKnowledgeProductEmpty: 'No knowledge products match this category yet.',
+    publicationsBbnjEyebrow: 'BBNJ Knowledge Hub',
+    publicationsBbnjHeading: 'Biodiversity Beyond National Jurisdiction',
+    publicationsBbnjEmpty: 'No BBNJ Knowledge Hub materials match this category yet.',
     publicationsVideoEyebrow: 'Video Publication',
     publicationsVideoHeading: 'Watch and learn more about our ocean',
 
