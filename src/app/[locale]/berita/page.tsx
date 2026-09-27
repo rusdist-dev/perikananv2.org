@@ -10,6 +10,7 @@ import {
   getProgramOptions,
   NEWS_PAGE_SIZE,
 } from '@/lib/content';
+import { getProgramsLabel } from '@/lib/content/program-taxonomy';
 import { getDictionary } from '@/i18n/dictionary';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
@@ -102,6 +103,7 @@ export default async function NewsPage({
               image: resolveArticleImage(featured.image) ?? berita1,
               date: featured.publishedAt,
               category: featured.category ?? t.news,
+              programsLabel: getProgramsLabel(featured.programs, locale)?.toUpperCase() ?? null,
               title: featured.title,
               excerpt: featured.excerpt,
               href: `/berita/${featured.slug}`,
@@ -123,6 +125,7 @@ export default async function NewsPage({
         publishedAt: article.publishedAt,
         image: article.image,
         category: article.category,
+        programs: article.programs,
       }))}
       filters={filters}
       yearOptions={yearOptions}

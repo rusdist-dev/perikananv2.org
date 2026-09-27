@@ -50,6 +50,20 @@ export function getProgramNameByCmsSlug(cmsSlug: string, locale: Locale): string
   return PROGRAM_TAXONOMY.find((p) => p.cmsSlug === cmsSlug)?.name[locale] ?? null;
 }
 
+/** Label program siap tampil untuk baris metadata kartu berita (`TANGGAL ·
+ *  KATEGORI · PROGRAM`) -- semua `programs` (`related_programs` mentah)
+ *  dilokalkan lalu digabung koma, karena satu berita boleh ditandai lebih
+ *  dari satu program sekaligus. Slug yang tidak dikenal taksonomi (belum
+ *  didaftarkan di atas) dibuang diam-diam alih-alih menampilkan slug mentah.
+ *  null kalau tidak ada satu pun program yang dikenali -- pemanggil melewati
+ *  separatornya, bukan menampilkan " · " kosong. */
+export function getProgramsLabel(programs: string[], locale: Locale): string | null {
+  const names = programs
+    .map((slug) => getProgramNameByCmsSlug(slug, locale))
+    .filter((name): name is string => name !== null);
+  return names.length > 0 ? names.join(', ') : null;
+}
+
 /** Slug taksonomi CMS yang dipakai untuk memfilter berita per halaman
  *  /program/<frontendSlug>. */
 export function getCmsSlugByFrontendSlug(frontendSlug: string): string | null {

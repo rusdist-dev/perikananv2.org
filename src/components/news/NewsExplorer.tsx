@@ -5,6 +5,7 @@ import { Container } from '@/components/layout/Container';
 import type { BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { NewsHero, type FeaturedArticle, type FilterOption } from './NewsHero';
 import { formatArticleDate } from '@/lib/date';
+import { getProgramsLabel } from '@/lib/content/program-taxonomy';
 import { cn } from '@/lib/cn';
 import { localizedPath } from '@/i18n/routing';
 import type { Locale } from '@/i18n/config';
@@ -35,6 +36,10 @@ export type NewsArticleItem = {
    *  lib/content/schema.ts). Slug kategori/program tidak lagi dikirim ke sini:
    *  pencocokannya sudah selesai di server. */
   category: string | null;
+  /** Slug taksonomi program mentah (`programs` di lib/content/schema.ts) --
+   *  dilokalkan di sini lewat getProgramsLabel(), bukan di pemanggil, supaya
+   *  kartu tetap tampil benar walau berpindah locale tanpa refetch. */
+  programs: string[];
 };
 
 /** Keadaan filter sebagaimana adanya di URL. String kosong = tanpa filter. */
@@ -262,6 +267,7 @@ export function NewsExplorer({
             {articles.map((article) => {
               const image = resolveArticleImage(article.image);
               const category = article.category;
+              const programsLabel = getProgramsLabel(article.programs, locale);
 
               return (
                 <article key={article.slug} className="flex flex-col border border-border">
@@ -283,6 +289,7 @@ export function NewsExplorer({
                         {formatArticleDate(article.publishedAt, locale)}
                       </time>
                       {category ? ` · ${category.toUpperCase()}` : null}
+                      {programsLabel ? ` · ${programsLabel.toUpperCase()}` : null}
                     </p>
                     <h3 className="text-lg font-bold text-primary">
                       <AppLink href={`/berita/${article.slug}`}>{article.title}</AppLink>

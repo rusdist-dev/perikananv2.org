@@ -38,6 +38,9 @@ export type CommonDictionary = {
   videoUnavailable: string;
   close: string;
   download: string;
+  downloadGateDescription: string;
+  downloadGateNameLabel: string;
+  downloadGateEmailLabel: string;
   galleryPrevious: string;
   galleryNext: string;
   homeHeroEyebrow: string;
@@ -113,6 +116,9 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     videoUnavailable: 'Video ini belum tersedia.',
     close: 'Tutup',
     download: 'Unduh',
+    downloadGateDescription: 'Isi nama dan email untuk mengunduh dokumen ini.',
+    downloadGateNameLabel: 'Nama',
+    downloadGateEmailLabel: 'Email',
     galleryPrevious: 'Gambar sebelumnya',
     galleryNext: 'Gambar berikutnya',
     homeHeroEyebrow: 'Tempat Data Laut Bertemu Aksi Lokal',
@@ -190,6 +196,9 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     videoUnavailable: 'This video is not available yet.',
     close: 'Close',
     download: 'Download',
+    downloadGateDescription: 'Enter your name and email to download this document.',
+    downloadGateNameLabel: 'Name',
+    downloadGateEmailLabel: 'Email',
     galleryPrevious: 'Previous image',
     galleryNext: 'Next image',
     homeHeroEyebrow: 'Where Ocean Data Meets Local Action',

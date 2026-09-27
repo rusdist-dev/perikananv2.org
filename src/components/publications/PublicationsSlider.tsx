@@ -7,6 +7,7 @@ import { Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
+import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
 import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 import 'swiper/css';
@@ -41,6 +42,9 @@ export function PublicationsSlider({
   nextLabel,
   pdfUnavailableLabel,
   closeLabel,
+  downloadGateDescription,
+  downloadGateNameLabel,
+  downloadGateEmailLabel,
 }: {
   publications: PublicationSlide[];
   downloadLabel: string;
@@ -49,10 +53,15 @@ export function PublicationsSlider({
   nextLabel: string;
   pdfUnavailableLabel: string;
   closeLabel: string;
+  downloadGateDescription: string;
+  downloadGateNameLabel: string;
+  downloadGateEmailLabel: string;
 }) {
   const swiperRef = useRef<SwiperInstance | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const openPublication = openIndex !== null ? publications[openIndex] : null;
+  const [downloadIndex, setDownloadIndex] = useState<number | null>(null);
+  const downloadPublication = downloadIndex !== null ? publications[downloadIndex] : null;
 
   return (
     <>
@@ -63,6 +72,17 @@ export function PublicationsSlider({
         unavailableLabel={pdfUnavailableLabel}
         closeLabel={closeLabel}
         onClose={() => setOpenIndex(null)}
+      />
+      <DownloadGateModal
+        isOpen={downloadPublication !== null}
+        pdfUrl={downloadPublication?.pdfUrl ?? null}
+        title={downloadPublication?.title ?? ''}
+        downloadLabel={downloadLabel}
+        description={downloadGateDescription}
+        nameLabel={downloadGateNameLabel}
+        emailLabel={downloadGateEmailLabel}
+        closeLabel={closeLabel}
+        onClose={() => setDownloadIndex(null)}
       />
     <div className="relative px-9 sm:px-12">
       <Swiper
@@ -106,21 +126,22 @@ export function PublicationsSlider({
                 <h3 className="line-clamp-2 min-h-[2.5rem] text-sm leading-snug font-semibold text-primary">
                   {publication.title}
                 </h3>
-                {/* Download langsung lewat <a download> ke pdfUrl -- BUKAN
-                    AppLink, berkas publik seperti ini tidak boleh diberi
-                    prefiks locale (lihat PdfViewerModal). §4j: publikasi yang
+                {/* Download membuka DownloadGateModal (nama/email wajib
+                    diisi dulu -- <a download> sesungguhnya dijalankan di
+                    sana, lihat komentar di modalnya), BUKAN <a> langsung ke
+                    pdfUrl seperti sebelumnya. §4j: publikasi yang
                     `pdfUrl`-nya masih null tetap href="#" apa adanya; Read
                     sudah tersambung ke PdfViewerModal, yang menampilkan pesan
                     "belum tersedia" untuk kasus itu. */}
                 <div className="mt-auto flex gap-1 pt-2">
                   {publication.pdfUrl ? (
-                    <a
-                      href={publication.pdfUrl}
-                      download
+                    <button
+                      type="button"
+                      onClick={() => setDownloadIndex(index)}
                       className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
                     >
                       {downloadLabel}
-                    </a>
+                    </button>
                   ) : (
                     <AppLink
                       href="#"

@@ -3,6 +3,7 @@
 import Image, { type StaticImageData } from 'next/image';
 import { useState } from 'react';
 import { AppLink } from '@/components/ui/AppLink';
+import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
 import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 type Publication = {
@@ -15,8 +16,9 @@ type Publication = {
 
 /**
  * Sama seperti PublicationsSlider di /discover/publications: tombol "Read"
- * di sini juga membuka PdfViewerModal, bukan href="#" seperti "Download"
- * yang berkasnya belum ada.
+ * membuka PdfViewerModal, dan "Download" membuka DownloadGateModal -- nama/
+ * email wajib diisi dulu sebelum <a download> yang sesungguhnya dijalankan
+ * di sana (lihat komentar di modalnya).
  */
 export function HomePublicationsGrid({
   publications,
@@ -24,15 +26,23 @@ export function HomePublicationsGrid({
   readLabel,
   pdfUnavailableLabel,
   closeLabel,
+  downloadGateDescription,
+  downloadGateNameLabel,
+  downloadGateEmailLabel,
 }: {
   publications: Publication[];
   downloadLabel: string;
   readLabel: string;
   pdfUnavailableLabel: string;
   closeLabel: string;
+  downloadGateDescription: string;
+  downloadGateNameLabel: string;
+  downloadGateEmailLabel: string;
 }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const openPublication = openIndex !== null ? publications[openIndex] : null;
+  const [downloadIndex, setDownloadIndex] = useState<number | null>(null);
+  const downloadPublication = downloadIndex !== null ? publications[downloadIndex] : null;
 
   return (
     <>
@@ -43,6 +53,17 @@ export function HomePublicationsGrid({
         unavailableLabel={pdfUnavailableLabel}
         closeLabel={closeLabel}
         onClose={() => setOpenIndex(null)}
+      />
+      <DownloadGateModal
+        isOpen={downloadPublication !== null}
+        pdfUrl={downloadPublication?.pdfUrl ?? null}
+        title={downloadPublication?.title ?? ''}
+        downloadLabel={downloadLabel}
+        description={downloadGateDescription}
+        nameLabel={downloadGateNameLabel}
+        emailLabel={downloadGateEmailLabel}
+        closeLabel={closeLabel}
+        onClose={() => setDownloadIndex(null)}
       />
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {publications.map((publication, index) => (
@@ -62,19 +83,20 @@ export function HomePublicationsGrid({
             <div className="flex flex-1 flex-col gap-2 p-4">
               <p className="text-xs font-bold uppercase tracking-wide text-secondary">{publication.category}</p>
               <h3 className="text-base font-semibold text-primary">{publication.title}</h3>
-              {/* Download langsung lewat <a download> ke pdfUrl -- BUKAN
-                  AppLink, berkas publik seperti ini tidak boleh diberi
-                  prefiks locale (lihat PdfViewerModal). §4j: publikasi yang
-                  `pdfUrl`-nya masih null tetap href="#" apa adanya. */}
+              {/* Download membuka DownloadGateModal (nama/email wajib diisi
+                  dulu -- <a download> sesungguhnya dijalankan di sana, lihat
+                  komentar di modalnya), BUKAN <a> langsung ke pdfUrl seperti
+                  sebelumnya. §4j: publikasi yang `pdfUrl`-nya masih null
+                  tetap href="#" apa adanya. */}
               <div className="mt-auto flex gap-2 pt-2">
                 {publication.pdfUrl ? (
-                  <a
-                    href={publication.pdfUrl}
-                    download
+                  <button
+                    type="button"
+                    onClick={() => setDownloadIndex(index)}
                     className="min-w-0 flex-1 truncate rounded-md border border-primary px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-fg"
                   >
                     {downloadLabel}
-                  </a>
+                  </button>
                 ) : (
                   <AppLink
                     href="#"
