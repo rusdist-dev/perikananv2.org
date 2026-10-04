@@ -1,5 +1,7 @@
 import type { Locale } from '@/i18n/config';
 import type { VillageMetric } from '@/lib/content';
+import { formatNumber } from '@/lib/number';
+import { lookupMetricLabel, translateMetricUnit } from '@/i18n/dictionaries/impact-metrics';
 
 /**
  * Pemformatan angka metrik pendataan pesisir.
@@ -27,16 +29,13 @@ const COMPACT_THRESHOLD = 1_000_000;
  *  salah dengan cara yang halus. */
 export function formatMetricValue(value: number, decimals: number, locale: Locale): string {
   if (Math.abs(value) >= COMPACT_THRESHOLD) {
-    return new Intl.NumberFormat(locale, {
-      notation: 'compact',
-      maximumFractionDigits: 2,
-    }).format(value);
+    return formatNumber(value, locale, { notation: 'compact', maximumFractionDigits: 2 });
   }
 
-  return new Intl.NumberFormat(locale, {
+  return formatNumber(value, locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value);
+  });
 }
 
 /** Satu sel angka. "—" untuk null: metrik itu memang tidak punya nilai di tahun
@@ -56,7 +55,21 @@ export function formatMetricCell(
  *  akan tercetak dua kali setiap kali -- dan satuan yang berulang justru
  *  membuat dua angka yang seharusnya dibandingkan jadi sulit disejajarkan mata.
  *  null (nilai_stok_karbon per-desa) berarti labelnya berdiri sendiri, tanpa
- *  satuan karangan. */
-export function metricLabel(metric: Pick<VillageMetric, 'label' | 'unit'>): string {
-  return metric.unit ? `${metric.label} (${metric.unit})` : metric.label;
+ *  satuan karangan.
+ *
+ *  Labelnya dicari lewat `key` di kamus (i18n/dictionaries/impact-metrics.ts),
+ *  bukan diambil dari `metric.label`: CMS hanya mengirim label bahasa
+ *  Indonesia. Key yang belum ada di kamus jatuh ke label CMS, jadi kategori
+ *  isian baru tetap tampil -- hanya belum diterjemahkan.
+ *
+ *  `nested` = metrik ini tampil sebagai rincian di bawah induknya, yang
+ *  memakai label pendek bila kamus menyediakannya ("Mangrove", bukan "Luas
+ *  Ekosistem Mangrove" di bawah "Total Luas Ekosistem"). */
+export function metricLabel(
+  metric: Pick<VillageMetric, 'key' | 'label' | 'unit'>,
+  locale: Locale,
+  nested = false,
+): string {
+  const label = lookupMetricLabel(metric.key, locale, nested) ?? metric.label;
+  return metric.unit ? `${label} (${translateMetricUnit(metric.unit, locale)})` : label;
 }

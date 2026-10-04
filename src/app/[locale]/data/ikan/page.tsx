@@ -13,6 +13,7 @@ import {
 } from '@/lib/content';
 import { monthlyLabels, sampleTripCounts, SAMPLE_CATCH_COMPOSITION, SAMPLE_LENGTH_FREQUENCY } from '@/components/data/ikan/sample-data';
 import { getDictionary } from '@/i18n/dictionary';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
 
@@ -27,6 +28,7 @@ export default async function IkanDataPage({ params }: { params: Promise<{ local
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  const tf = getFisheriesDictionary(locale);
 
   // Opsi kedelapan tingkat TANPA penyaring, diambil di server: formnya sudah
   // terisi di HTML pertama, dan kunci API CMS tidak pernah ikut ke browser.
@@ -57,12 +59,14 @@ export default async function IkanDataPage({ params }: { params: Promise<{ local
 
   return (
     <IkanFilterProvider
+      locale={locale}
       initialOptions={filterOptions}
       initialChart={initialChart}
       initialCatchChart={initialCatchChart}
       initialLengthChart={initialLengthChart}
     >
       <FisheriesDataDashboard
+        locale={locale}
         breadcrumb={[
           { label: t.home, href: '/' },
           // Belum ada halaman indeks /data -- "#" menyatakan itu apa adanya,
@@ -73,12 +77,8 @@ export default async function IkanDataPage({ params }: { params: Promise<{ local
         ]}
         datasetName="IKAN"
         description={t.dataIkanDescription}
-        note={
-          <>
-            seluruh filter dan grafik di halaman ini sudah tersambung ke data IKAN di CMS.
-          </>
-        }
-        filterPanel={<IkanFilterPanel datasetName="IKAN" />}
+        note={tf.ikanNote}
+        filterPanel={<IkanFilterPanel datasetName="IKAN" locale={locale} />}
         summaryCharts={<IkanTripCharts locale={locale} />}
         catchCharts={<IkanCatchChart locale={locale} />}
         lengthCharts={<IkanLengthChart locale={locale} />}

@@ -1,5 +1,5 @@
-import { LEVEL_CLASSES, fmt } from './chart-theme';
-import type { Level } from './data';
+import type { Locale } from '@/i18n/config';
+import { SERIES_CLASSES, fmt, type SeriesColor } from './chart-theme';
 
 /* =========================================================================
    PENGUKUR RADIAL
@@ -38,26 +38,33 @@ export function Gauge({
   max,
   digits = 1,
   unit,
-  level,
+  color,
   levelLabel,
   /** Nilai ambang yang ditandai sebagai garis kecil melintang busur. Menandai
    *  batasnya membuat pembaca bisa menilai sendiri seberapa jauh angkanya dari
    *  ambang, bukan cuma percaya pada warnanya. */
   thresholds = [],
   ariaLabel,
+  locale = 'id',
+  scaleLabel = 'skala',
 }: {
   value: number;
   min: number;
   max: number;
   digits?: number;
   unit: string;
-  level: Level;
+  /** Warna busur dan teks tingkat -- dari `apiColor()`, selalu bersama
+   *  `levelLabel` sebagai teks. */
+  color: SeriesColor;
   levelLabel: string;
   thresholds?: number[];
   ariaLabel: string;
+  locale?: Locale;
+  /** Kata di depan rentang skala ("skala" / "scale"). */
+  scaleLabel?: string;
 }) {
   const ratio = Math.min(1, Math.max(0, (value - min) / (max - min)));
-  const classes = LEVEL_CLASSES[level];
+  const classes = SERIES_CLASSES[color];
 
   return (
     <div className="mx-auto w-full max-w-52">
@@ -106,7 +113,7 @@ export function Gauge({
         {/* Angka di tengah sebagai HTML: ukurannya mengikuti skala tipografi
             proyek, bukan lebar pengukurnya. */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-3xl leading-none text-primary">{fmt(value, digits)}</span>
+          <span className="font-mono text-3xl leading-none text-primary">{fmt(value, digits, locale)}</span>
           <span className="mt-1 font-mono text-xs text-muted">{unit}</span>
         </div>
       </div>
@@ -115,7 +122,7 @@ export function Gauge({
           satu-satunya penanda (WCAG 1.4.1). */}
       <p className={`mt-3 text-center text-sm font-bold ${classes.text}`}>{levelLabel}</p>
       <p className="mt-1 text-center font-mono text-xs text-muted">
-        skala {fmt(min, 0)} - {fmt(max, 0)}
+        {scaleLabel} {fmt(min, 0, locale)} - {fmt(max, 0, locale)}
       </p>
     </div>
   );

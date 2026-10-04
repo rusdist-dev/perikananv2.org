@@ -5,26 +5,19 @@ import { useId } from 'react';
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { useFisheriesTab } from '@/components/data/FisheriesDataDashboard';
 import { useIkanFilter } from '@/components/data/ikan/IkanFilterContext';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import {
+  IKAN_FILTER_LEVELS,
   IKAN_LENGTH_TYPES,
   IKAN_PERIODS,
   type IkanFilterLevel,
   type IkanLengthType,
 } from '@/lib/ikan-filters';
 
-/** Label dan teks "semua" per tingkat. Bahasa Inggris mengikuti label filter
- *  yang sudah ada di dasbor ini, bukan keputusan baru -- dan seperti label
- *  lamanya, ia belum melewati kamus i18n. */
-const FIELDS: { level: IkanFilterLevel; label: string; all: string }[] = [
-  { level: 'wppnri', label: 'Fisheries Management Area', all: 'All management areas' },
-  { level: 'provinsi', label: 'Province', all: 'All provinces' },
-  { level: 'kabupaten', label: 'Regency/City', all: 'All regencies' },
-  { level: 'lokasiPendaratan', label: 'Landing Site', all: 'All landing sites' },
-  { level: 'jenisData', label: 'Grouping Data', all: 'All data types' },
-  { level: 'alatTangkap', label: 'Fishing Gears', all: 'All fishing gears' },
-  { level: 'family', label: 'Family', all: 'All families' },
-  { level: 'spesies', label: 'Species', all: 'All species' },
-];
+/* Label dan teks "semua" per tingkat ada di kamus (i18n/dictionaries/
+   fisheries.ts, `levels`), urutannya IKAN_FILTER_LEVELS. */
 
 /** Tingkat mana yang tampil di tab mana.
  *
@@ -50,7 +43,8 @@ const CONTROL_CLASS =
  * karena grafik di kolom sebelah membaca pilihan yang sama. Yang jadi milik
  * komponen ini cuma cara menampilkannya.
  */
-export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
+export function IkanFilterPanel({ locale }: { datasetName: string; locale: Locale }) {
+  const t = getFisheriesDictionary(locale);
   const tab = useFisheriesTab();
   const baseId = useId();
 
@@ -80,7 +74,10 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
     isPending,
   } = useIkanFilter();
 
-  const visibleFields = FIELDS.slice(0, FIELDS_PER_TAB[tab] ?? FIELDS.length);
+  const visibleFields = IKAN_FILTER_LEVELS.slice(
+    0,
+    FIELDS_PER_TAB[tab] ?? IKAN_FILTER_LEVELS.length,
+  ).map((level) => ({ level, ...t.levels[level] }));
 
   /** Grafik tab INI yang sedang dimuat -- bukan grafik tab mana pun. Tombol
    *  yang berbunyi "Memuat…" karena tab sebelah sedang menunggu jaringan cuma
@@ -100,7 +97,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
   const adaPeriode = tab === 'summary';
 
   return (
-    <ChartCard title="Filter">
+    <ChartCard title={t.filterTitle}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -132,7 +129,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
                 className={CONTROL_CLASS}
               >
                 <option value="">
-                  {isLoading ? 'Memuat pilihan…' : isEmpty ? 'No option for this combination' : all}
+                  {isLoading ? t.loadingOptions : isEmpty ? t.noOption : all}
                 </option>
                 {/* Nilainya saja. `jumlahTrip` ikut datang dari API dan tetap
                     ada di datanya, tapi tidak dicetak di sini: yang dijawab
@@ -154,7 +151,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
             muat di satu baris, dan yang sedang aktif terbaca tanpa harus dibuka
             dulu. */}
         <fieldset className={`flex flex-col gap-1 ${adaPeriode ? '' : 'hidden'}`}>
-          <legend className={FIELD_LABEL}>Period</legend>
+          <legend className={FIELD_LABEL}>{t.period}</legend>
           <div className="mt-1 flex gap-4">
             {IKAN_PERIODS.map((value) => (
               <label key={value} className="flex items-center gap-2 text-sm text-fg">
@@ -165,7 +162,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
                   checked={period === value}
                   onChange={() => setPeriod(value)}
                 />
-                {value === 'monthly' ? 'Monthly' : 'Yearly'}
+                {value === 'monthly' ? t.monthly : t.yearly}
               </label>
             ))}
           </div>
@@ -180,11 +177,11 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
             Keduanya boleh kosong dan artinya "tidak dibatasi", satu sisi saja
             pun sah: "sejak 1 Januari" adalah pertanyaan yang masuk akal. */}
         <fieldset className="flex flex-col gap-1">
-          <legend className={FIELD_LABEL}>Date Range</legend>
+          <legend className={FIELD_LABEL}>{t.dateRange}</legend>
           <div className="mt-1 grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label htmlFor={`${baseId}-date-from`} className="text-xs text-muted">
-                From
+                {t.dateFrom}
               </label>
               <input
                 id={`${baseId}-date-from`}
@@ -201,7 +198,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor={`${baseId}-date-to`} className="text-xs text-muted">
-                To
+                {t.dateTo}
               </label>
               <input
                 id={`${baseId}-date-to`}
@@ -217,7 +214,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
             // role="alert" supaya pembaca layar mendengar koreksinya saat
             // muncul, bukan baru saat pengguna kebetulan melewatinya.
             <p role="alert" className="mt-1 text-xs font-bold text-(--color-series-6)">
-              Tanggal awal melewati tanggal akhir.
+              {t.rangeInvalid}
             </p>
           ) : null}
         </fieldset>
@@ -231,7 +228,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
                 dilakukan API saat parameternya dikosongkan -- pilihan yang
                 sah, dan kartu grafiknya menjelaskan konsekuensinya. */}
             <fieldset className="flex flex-col gap-1">
-              <legend className={FIELD_LABEL}>Length Type</legend>
+              <legend className={FIELD_LABEL}>{t.lengthType}</legend>
               <div className="mt-1 flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 text-sm text-fg">
                   <input
@@ -264,7 +261,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
                 digambar dan persentasenya tidak dihitung -- bukan galat. */}
             <div className="flex flex-col gap-1">
               <label htmlFor={`${baseId}-lm`} className={FIELD_LABEL}>
-                Lm — panjang matang gonad (cm)
+                {t.lmLabel}
               </label>
               <input
                 id={`${baseId}-lm`}
@@ -273,7 +270,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
                 min={0.1}
                 step={0.1}
                 value={lm}
-                placeholder="Kosongkan bila tidak dipakai"
+                placeholder={t.lmPlaceholder}
                 onChange={(event) => setLm(event.target.value)}
                 className={CONTROL_CLASS}
               />
@@ -281,7 +278,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
 
             <div className="flex flex-col gap-1">
             <label htmlFor={`${baseId}-class-interval`} className={FIELD_LABEL}>
-              Selang Kelas
+              {t.classInterval}
             </label>
             <div className="flex items-center gap-3">
               <input
@@ -294,7 +291,7 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
                 className="w-full"
               />
               <span className="shrink-0 font-mono text-sm whitespace-nowrap text-muted">
-                {classInterval} cm
+                {formatNumber(classInterval, locale)} cm
               </span>
             </div>
             </div>
@@ -307,22 +304,21 @@ export function IkanFilterPanel({ datasetName }: { datasetName: string }) {
             disabled={rangeInvalid || isPending}
             className="flex-1 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {memuat ? 'Memuat…' : tab === 'length-frequency' ? 'Generate' : 'Filter'}
+            {memuat ? t.loadingButton : tab === 'length-frequency' ? t.generate : t.filter}
           </button>
           <button
             type="button"
             onClick={reset}
             className="rounded-md border border-border px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:text-primary"
           >
-            Reset
+            {t.reset}
           </button>
         </div>
 
         {/* aria-live supaya hasil penekanan tombol juga TERDENGAR: grafiknya
             berubah di kolom sebelah, jauh dari fokus yang masih di tombol. */}
         <p aria-live="polite" className="text-xs leading-relaxed text-muted">
-          Mengganti satu filter mengosongkan filter di bawahnya. Tekan{' '}
-          {tab === 'length-frequency' ? 'Generate' : 'Filter'} untuk memperbarui grafik.
+          {t.filterHelp(tab === 'length-frequency' ? t.generate : t.filter)}
         </p>
       </form>
     </ChartCard>

@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 
 import { Container } from '@/components/layout/Container';
 import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 
 /**
  * Kerangka halaman Shark and Ray: breadcrumb, judul, catatan, lalu satu slot
@@ -19,13 +21,20 @@ import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
  */
 export function SharkAndRayDashboard({
   breadcrumb,
+  title,
+  locale,
   children,
 }: {
   breadcrumb: BreadcrumbItem[];
+  /** Judul halaman, dari kamus umum (navSharkAndRay) -- sama dengan label
+   *  menu dan breadcrumb-nya. */
+  title: string;
+  locale: Locale;
   /** Isi halaman -- hari ini HiupariExplorer, yang merender kolom filter dan
    *  kolom grafiknya sendiri. */
   children: ReactNode;
 }) {
+  const t = getFisheriesDictionary(locale);
   return (
     <div className="bg-surface">
       {/* DUA Container, bukan satu -- pola yang sama dengan
@@ -38,16 +47,15 @@ export function SharkAndRayDashboard({
       <Container className="page-gutter pt-14 lg:pe-(--spacing-panel-gutter)">
         <Breadcrumb items={breadcrumb} />
 
-        <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">Data</p>
-        <h1 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">Shark and Ray</h1>
+        <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">
+          {t.eyebrow}
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">{title}</h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted md:text-base">
-          Sebaran frekuensi panjang hiu dan pari per spesies dari data yang dikumpulkan di lapangan.
+          {t.sharkLead}
         </p>
         <p className="mt-3 max-w-3xl rounded-md border border-border bg-bg p-3 text-xs leading-relaxed text-muted">
-          <strong className="font-bold text-primary">Catatan:</strong> filter dan grafik di halaman
-          ini sudah tersambung ke data hiu dan pari di CMS. Dataset ini tidak dikelompokkan per
-          wilayah maupun per tanggal, jadi penyaringnya hanya spesies, jenis kelamin, dan cara
-          ukurnya.
+          <strong className="font-bold text-primary">{t.noteLabel}</strong> {t.sharkNote}
         </p>
       </Container>
 

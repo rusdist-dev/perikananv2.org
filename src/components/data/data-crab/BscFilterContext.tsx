@@ -1,5 +1,8 @@
 'use client';
 
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatArticleDate } from '@/lib/date';
 import { createContext, useContext, useRef, useState, useTransition } from 'react';
 import type { ReactNode } from 'react';
 
@@ -142,19 +145,32 @@ function scopedSelection(selection: BscSelection, scope: TabId): BscSelection {
  *  Satuan waktunya TIDAK ikut -- kartu grafik periode sudah mencetak "per
  *  bulan"/"per tahun" sendiri. String kosong berarti tidak ada penyaring sama
  *  sekali, dan pemanggilnya yang memutuskan cara menyambungnya. */
-function summarize(selection: BscSelection, dateFrom: string, dateTo: string): string {
+function summarize(
+  selection: BscSelection,
+  dateFrom: string,
+  dateTo: string,
+  locale: Locale,
+): string {
   const parts = Object.values(selection).filter(Boolean);
-  if (dateFrom || dateTo) parts.push(`${dateFrom || '…'} s.d. ${dateTo || '…'}`);
+  if (dateFrom || dateTo) {
+    // Tanggal ISO dari <input type="date"> dicetak seperti tanggal lain di
+    // situs ("01 JAN 2024"), bukan "2024-01-01" mentah.
+    const show = (value: string) => (value ? formatArticleDate(value, locale) : '…');
+    parts.push(getFisheriesDictionary(locale).dateSpan(show(dateFrom), show(dateTo)));
+  }
   return parts.join(' · ');
 }
 
 export function BscFilterProvider({
+  locale,
   initialOptions,
   initialChart,
   initialCatchChart,
   initialWidthChart,
   children,
 }: {
+  /** Bahasa ringkasan filter di kepala kartu grafik. */
+  locale: Locale;
   /** Opsi ketujuh tingkat TANPA penyaring, diambil di server. */
   initialOptions: BscOptionsByLevel;
   /** Grafik trip untuk filter bawaan (tanpa penyaring, bulanan, seluruh
@@ -267,7 +283,7 @@ export function BscFilterProvider({
     if (rangeInvalid) return;
 
     const scoped = scopedSelection(selection, scope);
-    const summary = summarize(scoped, dateFrom, dateTo);
+    const summary = summarize(scoped, dateFrom, dateTo, locale);
 
     if (scope === 'length-frequency') {
       const ticket = (widthTicket.current += 1);

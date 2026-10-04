@@ -22,7 +22,9 @@ import { fetchVillageDetail } from '@/app/[locale]/discover/our-impact/actions';
 // Tailwind, supaya keterangan dan peta tidak bisa berbeda warna.
 import '@/components/program/IndonesiaMap.css';
 import type { Locale } from '@/i18n/config';
+import { getImpactDictionary } from '@/i18n/dictionaries/impact';
 import type { ImpactVillage, VillageDetail } from '@/lib/content';
+import { formatNumber } from '@/lib/number';
 
 type ImpactVillageMapProps = {
   /** Daftar desa dari CMS, sudah terurut barat -> timur oleh
@@ -68,14 +70,16 @@ export function ImpactVillageMap({
   villages,
   interventionMpaIds = [],
   locale,
-  selectLabel = 'Find a village',
-  placeholder = 'Search by village, regency, or province',
-  hint = 'Select a village from the list, or click a marker on the map.',
-  emptyLabel = 'No village matches your search',
-  clearLabel = 'Clear selection',
-  mapAriaLabel = 'Interactive map of FRCI village work areas across Indonesia',
+  selectLabel,
+  placeholder,
+  hint,
+  emptyLabel,
+  clearLabel,
+  mapAriaLabel,
   basemap = 'imagery',
 }: ImpactVillageMapProps) {
+  // Teks bawaan mengikuti locale halaman; prop di atas tetap bisa menimpanya.
+  const t = getImpactDictionary(locale);
   const [kode, setKode] = useState<string | null>(null);
   const [detail, setDetail] = useState<VillageDetail | null>(null);
   const [status, setStatus] = useState<VillageDetailStatus>('idle');
@@ -148,10 +152,10 @@ export function ImpactVillageMap({
         value: item.kode,
         // Awalan "Desa" ikut dicetak, bukan cuma namanya: "Bulu" atau "Ayah"
         // sendirian tidak terbaca sebagai nama tempat.
-        label: `Desa ${item.desa}`,
+        label: t.villageName(item.desa),
         description: `${item.kabupaten}, ${item.provinsi}`,
       })),
-    [villages],
+    [villages, t],
   );
 
   /** Disusun di useMemo, bukan di scope modul seperti dulu: daftarnya sekarang
@@ -170,9 +174,9 @@ export function ImpactVillageMap({
           id: item.kode,
           lat: item.lat as number,
           lng: item.lng as number,
-          label: `Desa ${item.desa}`,
+          label: t.villageName(item.desa),
         })),
-    [villages],
+    [villages, t],
   );
 
   /** Batas wilayah desa terpilih, dari detail yang baru saja diambil.
@@ -194,28 +198,28 @@ export function ImpactVillageMap({
   const focus = useMemo<MapFocus | null>(
     () =>
       village && village.lat !== null && village.lng !== null
-        ? { lat: village.lat, lng: village.lng, label: `Desa ${village.desa}` }
+        ? { lat: village.lat, lng: village.lng, label: t.villageName(village.desa) }
         : null,
-    [village],
+    [village, t],
   );
 
   return (
     <>
       <Container className="page-gutter lg:pe-(--spacing-panel-gutter)">
         <SearchableSelect
-          label={selectLabel}
+          label={selectLabel ?? t.selectLabel}
           options={options}
           value={kode}
           onChange={setKode}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t.selectPlaceholder}
           hint={
             village
-              ? `Showing ${village.desa}, ${village.kabupaten}, ${village.provinsi}.`
-              : hint
+              ? t.selectShowing(village.desa, village.kabupaten, village.provinsi)
+              : (hint ?? t.selectHint)
           }
-          emptyLabel={emptyLabel}
-          clearLabel={clearLabel}
-          resultsLabel={(count) => `${count} villages available`}
+          emptyLabel={emptyLabel ?? t.selectEmpty}
+          clearLabel={clearLabel ?? t.selectClear}
+          resultsLabel={(count) => t.selectResults(formatNumber(count, locale))}
           className="max-w-md"
         />
       </Container>
@@ -238,7 +242,8 @@ export function ImpactVillageMap({
               lenyap. Preset 'light' memang disiapkan untuk section terang. */}
           <IndonesiaMap
             theme="light"
-            ariaLabel={mapAriaLabel}
+            locale={locale}
+            ariaLabel={mapAriaLabel ?? t.mapAriaLabel}
             focus={focus}
             shape={shape}
             // Menyala mengikuti PILIHAN, bukan mengikuti `shape`: basemap sudah
@@ -294,11 +299,11 @@ export function ImpactVillageMap({
           >
             <li className="flex items-center gap-2">
               <span aria-hidden className="map-legend-swatch map-legend-swatch-intervention" />
-              Kawasan intervensi ({interventionMpaIds.length})
+              {t.legendIntervention(formatNumber(interventionMpaIds.length, locale))}
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden className="map-legend-swatch" />
-              Kawasan konservasi lain
+              {t.legendOther}
             </li>
           </ul>
         </Container>

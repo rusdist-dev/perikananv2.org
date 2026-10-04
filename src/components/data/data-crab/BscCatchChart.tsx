@@ -4,6 +4,8 @@ import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { RankedBars } from '@/components/data/RankedBars';
 import { useBscFilter } from '@/components/data/data-crab/BscFilterContext';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 
 /**
  * Komposisi tangkapan per spesies, tab Catch Composition.
@@ -22,6 +24,7 @@ import type { Locale } from '@/i18n/config';
  * dengan angka yang sama di tempat lain.
  */
 export function BscCatchChart({ locale }: { locale: Locale }) {
+  const t = getFisheriesDictionary(locale);
   const { catchChart, catchStatus, catchAppliedSummary } = useBscFilter();
 
   const loading = catchStatus === 'loading';
@@ -29,11 +32,8 @@ export function BscCatchChart({ locale }: { locale: Locale }) {
 
   if (!catchChart) {
     return (
-      <ChartCard title="Catch Composition">
-        <p className="text-sm leading-relaxed text-muted">
-          Grafik komposisi tangkapan gagal dimuat. Ubah filter lalu tekan Filter untuk mencoba
-          lagi.
-        </p>
+      <ChartCard title={t.catchTitle}>
+        <p className="text-sm leading-relaxed text-muted">{t.catchLoadFailed}</p>
       </ChartCard>
     );
   }
@@ -48,7 +48,7 @@ export function BscCatchChart({ locale }: { locale: Locale }) {
     <div aria-busy={loading} className="flex flex-col gap-5">
       {loading ? (
         <p aria-live="polite" className="text-xs text-muted">
-          Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+          {t.updating}
         </p>
       ) : null}
 
@@ -57,19 +57,21 @@ export function BscCatchChart({ locale }: { locale: Locale }) {
           role="alert"
           className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
         >
-          Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+          {t.updateFailed}
         </p>
       ) : null}
 
       <ChartCard
-        title="Catch Composition"
-        meta={`${totalBobot.toLocaleString(locale, { maximumFractionDigits: 0 })} ${unit} · ${perSpesies.length} spesies${filterSuffix}`}
-        note={`Bobot tangkapan per spesies dalam ${unit} (satuan dari sumber datanya, tidak dikonversi), diurutkan dari yang terbesar. Panjang batang dibandingkan terhadap spesies teratas, bukan terhadap total.`}
+        title={t.catchTitle}
+        meta={`${t.catchMeta(
+          formatNumber(totalBobot, locale, { maximumFractionDigits: 0 }),
+          unit,
+          formatNumber(perSpesies.length, locale),
+        )}${filterSuffix}`}
+        note={t.crabCatchNote(unit)}
       >
         {kosong ? (
-          <p className="text-sm leading-relaxed text-muted">
-            Tidak ada tangkapan yang tercatat untuk filter ini.
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t.catchEmpty}</p>
         ) : (
           <RankedBars
             items={perSpesies.map((row) => ({ label: row.spesies, value: row.totalBobot }))}
@@ -80,7 +82,7 @@ export function BscCatchChart({ locale }: { locale: Locale }) {
             // kartu di tabnya, jadi ruang tegaknya tidak diperebutkan siapa
             // pun.
             maxHeight="34rem"
-            emptyLabel="Tidak ada tangkapan yang tercatat untuk filter ini."
+            emptyLabel={t.catchEmpty}
           />
         )}
       </ChartCard>

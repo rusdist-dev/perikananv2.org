@@ -3,10 +3,12 @@
 import { useId } from 'react';
 
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import {
   HIUPARI_MATURITY_LEVELS,
   HIUPARI_SEXES,
-  HIUPARI_SIZE_LABEL,
   HIUPARI_SIZE_TYPES,
   type HiupariMaturity,
   type HiupariOption,
@@ -30,6 +32,7 @@ const CONTROL_CLASS =
  * datanya.
  */
 export function HiupariFilterPanel({
+  locale,
   species,
   selectedSpecies,
   sex,
@@ -46,6 +49,7 @@ export function HiupariFilterPanel({
   onSubmit,
   onReset,
 }: {
+  locale: Locale;
   species: HiupariOption[];
   selectedSpecies: string;
   sex: HiupariSex | null;
@@ -62,11 +66,12 @@ export function HiupariFilterPanel({
   onSubmit: () => void;
   onReset: () => void;
 }) {
+  const t = getFisheriesDictionary(locale);
   const baseId = useId();
   const speciesEmpty = species.length === 0;
 
   return (
-    <ChartCard title="Filter">
+    <ChartCard title={t.filterTitle}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -86,7 +91,7 @@ export function HiupariFilterPanel({
             itu harus terlihat SEBELUM tombolnya ditekan, bukan sesudah. */}
         <div className="flex flex-col gap-1">
           <label htmlFor={`${baseId}-species`} className={FIELD_LABEL}>
-            Species
+            {t.levels.spesies.label}
           </label>
           <select
             id={`${baseId}-species`}
@@ -96,11 +101,11 @@ export function HiupariFilterPanel({
             className={CONTROL_CLASS}
           >
             <option value="">
-              {speciesEmpty ? 'Daftar spesies tidak tersedia' : 'Semua spesies'}
+              {speciesEmpty ? t.speciesUnavailable : t.allSpecies}
             </option>
             {species.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.value} ({option.jumlahIndividu.toLocaleString('id')})
+                {option.value} ({formatNumber(option.jumlahIndividu, locale)})
               </option>
             ))}
           </select>
@@ -116,7 +121,7 @@ export function HiupariFilterPanel({
             mewajibkan satu nilai. */}
         <div className="flex flex-col gap-1">
           <label htmlFor={`${baseId}-size-type`} className={FIELD_LABEL}>
-            Jenis Ukuran
+            {t.sizeType}
           </label>
           <select
             id={`${baseId}-size-type`}
@@ -126,7 +131,7 @@ export function HiupariFilterPanel({
           >
             {HIUPARI_SIZE_TYPES.map((value) => (
               <option key={value} value={value}>
-                {HIUPARI_SIZE_LABEL[value]}
+                {t.sizeTypes[value] ?? value}
               </option>
             ))}
           </select>
@@ -142,7 +147,7 @@ export function HiupariFilterPanel({
             kedua jenis kelamin sama-sama tidak punya angkanya. Tanpa kalimat
             ini, Lm yang kosong terbaca sebagai data yang hilang. */}
         <fieldset className="flex flex-col gap-1">
-          <legend className={FIELD_LABEL}>Jenis Kelamin</legend>
+          <legend className={FIELD_LABEL}>{t.sex}</legend>
           <div className="mt-1 flex flex-wrap gap-4">
             <label className="flex items-center gap-2 text-sm text-fg">
               <input
@@ -151,7 +156,7 @@ export function HiupariFilterPanel({
                 checked={sex === null}
                 onChange={() => onSexChange(null)}
               />
-              Semua
+              {t.sexAll}
             </label>
             {HIUPARI_SEXES.map((value: HiupariSex) => (
               <label key={value} className="flex items-center gap-2 text-sm text-fg">
@@ -162,14 +167,13 @@ export function HiupariFilterPanel({
                   checked={sex === value}
                   onChange={() => onSexChange(value)}
                 />
-                {value === 'M' ? 'Jantan (M)' : 'Betina (F)'}
+                {t.sharkSexValues[value] ?? value}
               </label>
             ))}
           </div>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            Lm hanya terhitung untuk <strong className="font-bold">Jantan</strong>: kematangan
-            diukur dari klasper, yang tidak dimiliki betina. Linf tetap terhitung untuk ketiga
-            pilihan.
+            {t.sharkLmHintLead} <strong className="font-bold">{t.sharkLmHintMale}</strong>
+            {t.sharkLmHintRest}
           </p>
         </fieldset>
 
@@ -178,7 +182,7 @@ export function HiupariFilterPanel({
             menghitung persen matang DAN untuk menginterpolasi Lm. Pada spesies
             yang sama, ambang 1 menaruh Lm di 45 cm dan ambang 3 di 116 cm. */}
         <fieldset className="flex flex-col gap-1">
-          <legend className={FIELD_LABEL}>Ambang kematangan klasper</legend>
+          <legend className={FIELD_LABEL}>{t.clasperThreshold}</legend>
           <div className="mt-1 flex flex-wrap gap-4">
             {HIUPARI_MATURITY_LEVELS.map((value) => (
               <label key={value} className="flex items-center gap-2 text-sm text-fg">
@@ -189,7 +193,7 @@ export function HiupariFilterPanel({
                   checked={maturity === value}
                   onChange={() => onMaturityChange(value)}
                 />
-                ≥ {value}
+                ≥ {formatNumber(value, locale)}
               </label>
             ))}
           </div>
@@ -197,7 +201,7 @@ export function HiupariFilterPanel({
 
         <div className="flex flex-col gap-1">
           <label htmlFor={`${baseId}-class-interval`} className={FIELD_LABEL}>
-            Selang Kelas
+            {t.classInterval}
           </label>
           <div className="flex items-center gap-3">
             <input
@@ -214,7 +218,7 @@ export function HiupariFilterPanel({
               className="w-full"
             />
             <span className="shrink-0 font-mono text-sm whitespace-nowrap text-muted">
-              {classInterval} cm
+              {formatNumber(classInterval, locale)} cm
             </span>
           </div>
         </div>
@@ -225,21 +229,21 @@ export function HiupariFilterPanel({
             disabled={isPending}
             className="flex-1 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? 'Memuat…' : 'Show Chart'}
+            {loading ? t.loadingButton : t.showChart}
           </button>
           <button
             type="button"
             onClick={onReset}
             className="rounded-md border border-border px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:text-primary"
           >
-            Reset
+            {t.reset}
           </button>
         </div>
 
         {/* aria-live supaya hasil penekanan tombol juga TERDENGAR: grafiknya
             berubah di kolom sebelah, jauh dari fokus yang masih di tombol. */}
         <p aria-live="polite" className="text-xs leading-relaxed text-muted">
-          Tekan Show Chart untuk memperbarui grafik.
+          {t.sharkHelp(t.showChart)}
         </p>
       </form>
     </ChartCard>

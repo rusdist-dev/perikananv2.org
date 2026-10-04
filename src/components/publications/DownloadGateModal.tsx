@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { submitDownloadLead } from '@/app/[locale]/actions';
 import { Icon } from '@/components/ui/Icon';
 
 /**
@@ -12,12 +13,15 @@ import { Icon } from '@/components/ui/Icon';
  * -- popup ini menumpuk di atas halaman, bukan berpindah ke "halaman" lain
  * seperti PdfViewerModal/VideoModal.
  *
- * CMS penerima formulir ini belum siap (lihat AGENTS.md konteks proyek) --
- * submit di sini HANYA menjalankan unduhan berkasnya sendiri lewat <a
- * download> yang dibuat & diklik terprogram; nama/email TIDAK dikirim ke
- * mana pun. Begitu endpoint CMS-nya ada, handleSubmit ini satu-satunya
- * tempat yang perlu disambungkan ke pemanggilnya (fetch/POST), bukan
- * pemanggil modal (FeaturedPublicationActions/PublicationsSlider).
+ * Submit di sini melakukan DUA hal, dalam urutan yang tidak boleh dibalik:
+ * mengirim nama/email ke CMS lewat Server Action `submitDownloadLead`
+ * (`POST /api/v1/contact`, lihat lib/contact.ts), lalu menjalankan unduhan
+ * berkasnya lewat <a download> yang dibuat & diklik terprogram.
+ *
+ * Server Action, bukan fetch langsung, karena kunci API CMS tidak boleh
+ * sampai ke browser. Penyambungannya ada di sini, bukan di pemanggil modal
+ * (HomePublicationsGrid/PublicationsSlider/FeaturedPublicationActions) --
+ * ketiganya tidak perlu tahu apa pun soal pengiriman ini.
  */
 export function DownloadGateModal({
   isOpen,
@@ -45,6 +49,7 @@ export function DownloadGateModal({
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -57,6 +62,7 @@ export function DownloadGateModal({
     if (isOpen) {
       setName('');
       setEmail('');
+      setSending(false);
     }
   }, [isOpen]);
 
@@ -64,16 +70,41 @@ export function DownloadGateModal({
     if (!isOpen) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape' && !sending) onClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, sending]);
 
   if (!isOpen || !mounted || !pdfUrl) return null;
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function closeIfIdle() {
+    if (!sending) onClose();
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (sending) return;
+
+    setSending(true);
+
+    // Lead DIKIRIM DULU, unduhannya menyusul -- urutannya penting.
+    //
+    // `pdfUrl` menunjuk host CMS, jadi lintas-origin: atribut `download`
+    // diabaikan browser dan klik di bawah benar-benar membuat halaman
+    // berpindah. Server Action yang masih terbang saat itu ikut dibatalkan,
+    // sehingga "kirim lalu lupakan" akan kehilangan sebagian lead tanpa jejak.
+    // Menunggunya selesai satu-satunya cara gerbang ini benar-benar menangkap
+    // sesuatu.
+    //
+    // Kegagalannya sengaja TIDAK menghalangi unduhan: CMS yang sedang mati
+    // bukan alasan menahan berkas yang memang jadi hak pengunjung. Sebabnya
+    // sudah tercatat di log server oleh sendContactMessage.
+    try {
+      await submitDownloadLead({ name, email, title });
+    } catch (error) {
+      console.error('[gerbang unduhan] gagal mengirim data pengunjung:', error);
+    }
 
     // <a download> terprogram, bukan href statis di JSX -- tombol ini
     // sekaligus tombol submit form (validasi required nama/email jalan
@@ -94,7 +125,7 @@ export function DownloadGateModal({
       aria-modal="true"
       aria-label={`${downloadLabel} ${title}`}
       className="fixed inset-0 z-50 isolate flex items-center justify-center overflow-y-auto bg-fg/60 p-4 sm:p-10"
-      onClick={onClose}
+      onClick={closeIfIdle}
     >
       <div
         className="relative w-full max-w-md rounded-lg bg-bg p-6 shadow-2xl"
@@ -142,7 +173,9 @@ export function DownloadGateModal({
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-full bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary-fg hover:opacity-90"
+            disabled={sending}
+            aria-busy={sending}
+            className="mt-2 w-full rounded-full bg-primary px-6 py-3 text-xs font-bold uppercase tracking-wide text-primary-fg hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {downloadLabel}
           </button>
@@ -150,7 +183,8 @@ export function DownloadGateModal({
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={closeIfIdle}
+          disabled={sending}
           className="tap-target absolute end-3 top-3 z-10 flex items-center justify-center rounded-full bg-bg text-fg shadow-md hover:opacity-80"
         >
           <Icon id="close" />

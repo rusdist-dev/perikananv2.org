@@ -1,4 +1,6 @@
 import { SERIES_CLASSES, type SeriesColor } from '@/components/program/jogolaut/chart-theme';
+import type { Locale } from '@/i18n/config';
+import { formatNumber } from '@/lib/number';
 
 /**
  * Batang MENDATAR berurut nilai, untuk kategori bernama panjang.
@@ -30,7 +32,7 @@ export function RankedBars({
   items: { label: string; value: number }[];
   color: SeriesColor;
   unit: string;
-  locale: string;
+  locale: Locale;
   maxHeight?: string;
   emptyLabel: string;
 }) {
@@ -62,7 +64,7 @@ export function RankedBars({
               {item.label}
             </span>
             <span className="shrink-0 font-mono text-xs text-muted">
-              {item.value.toLocaleString(locale)} {unit}
+              {formatNumber(item.value, locale)} {unit}
             </span>
           </div>
           <div className="mt-1 h-2 w-full overflow-hidden rounded-sm bg-surface">

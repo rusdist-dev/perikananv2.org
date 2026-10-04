@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { Locale } from '@/i18n/config';
 import { SERIES_CLASSES, fmt, type SeriesColor } from './chart-theme';
 import { GRID_RATIOS, tickValues, type Domain } from './scale';
 
@@ -33,9 +34,12 @@ export function ChartFrame({
   height,
   left,
   right,
+  right2,
   labels,
   xTickCount = 5,
   xAxis,
+  tickColumnWidth,
+  locale = 'id',
   ariaLabel,
   children,
 }: {
@@ -45,12 +49,27 @@ export function ChartFrame({
   height: number;
   left: FrameAxis;
   right?: FrameAxis;
+  /** Sumbu kanan KEDUA, di luar `right`. Hanya untuk kartu yang memang harus
+   *  memuat tiga besaran bersatuan berbeda dalam satu area plot (mis. DO,
+   *  suhu air, dan curah hujan). Warna angkanya mengikuti garisnya, dan
+   *  legenda mencetak satuan tiap garis -- tanpa keduanya, dua kolom angka
+   *  di kanan tidak bisa dibedakan mana milik garis mana. */
+  right2?: FrameAxis;
   /** Label sumbu-x untuk grafik yang titik datanya duduk DI garis kisi
    *  (grafik garis). Grafik batang menempatkan datanya di TENGAH slot, bukan
    *  di garis -- ia mengirim barisan labelnya sendiri lewat `xAxis`. */
   labels?: string[];
   xTickCount?: number;
   xAxis?: ReactNode;
+  /** Lebar tetap kolom angka sumbu-y (mis. "3rem"). Hanya untuk grafik yang
+   *  DITUMPUK dengan sumbu-x bersama: tanpanya tiap panel melebarkan kolomnya
+   *  sesuai label tick terpanjangnya sendiri ("100" vs "0,5"), dan area plot
+   *  panel-panelnya bergeser beberapa piksel satu sama lain -- persis bagian
+   *  yang dipakai mencocokkan waktu antar-panel. */
+  tickColumnWidth?: string;
+  /** Format angka tick: id 1.234,5 / en 1,234.5. Default 'id' untuk pemakai
+   *  lama (grafik IKAN/BSC/STSC) yang belum mengirim locale. */
+  locale?: Locale;
   ariaLabel: string;
   children: ReactNode;
 }) {
@@ -60,12 +79,29 @@ export function ChartFrame({
     n > 1 ? Array.from({ length: tickCount }, (_, i) => Math.round((i / (tickCount - 1)) * (n - 1))) : [];
 
   return (
-    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-2">
+    <div
+      className="grid gap-x-2"
+      style={{
+        gridTemplateColumns: [
+          tickColumnWidth ?? 'auto',
+          'minmax(0,1fr)',
+          right && tickColumnWidth ? tickColumnWidth : 'auto',
+          ...(right2 ? [tickColumnWidth ?? 'auto'] : []),
+        ].join(' '),
+      }}
+    >
       <AxisUnit axis={left} side="left" />
       <div />
       {right ? <AxisUnit axis={right} side="right" /> : <div />}
+      {right2 ? <AxisUnit axis={right2} side="right" /> : null}
 
-      <AxisTicks domain={left.domain} height={height} side="left" />
+      <AxisTicks
+        domain={left.domain}
+        height={height}
+        side="left"
+        locale={locale}
+        color={right2 ? left.color : undefined}
+      />
 
       <div className="relative" style={{ height }} role="img" aria-label={ariaLabel}>
         <GridLines />
@@ -73,10 +109,25 @@ export function ChartFrame({
       </div>
 
       {right ? (
-        <AxisTicks domain={right.domain} height={height} side="right" />
+        <AxisTicks
+          domain={right.domain}
+          height={height}
+          side="right"
+          locale={locale}
+          color={right2 ? right.color : undefined}
+        />
       ) : (
         <div />
       )}
+      {right2 ? (
+        <AxisTicks
+          domain={right2.domain}
+          height={height}
+          side="right"
+          color={right2.color}
+          locale={locale}
+        />
+      ) : null}
 
       <div />
       {/* Label sumbu-x diposisikan absolut pada persentase indeksnya, bukan
@@ -106,6 +157,7 @@ export function ChartFrame({
         )}
       </div>
       <div />
+      {right2 ? <div /> : null}
     </div>
   );
 }
@@ -128,24 +180,56 @@ function AxisUnit({ axis, side }: { axis: FrameAxis; side: 'left' | 'right' }) {
   );
 }
 
+/** Desimal yang dibutuhkan langkah tick, dari angkanya sendiri -- bukan dari
+ *  pangkat sepuluhnya. Pangkat sepuluh dari 0,25 memberi satu desimal, dan
+ *  tick 0,25 / 0,75 lalu tercetak "0,3" / "0,8": dua label yang berbeda dari
+ *  garis kisinya. Dibatasi dua desimal; langkah yang lebih halus dari itu
+ *  tidak dihasilkan niceDomain untuk data dasbor ini. */
+function stepDigits(step: number): number {
+  for (let d = 0; d < 2; d += 1) {
+    const scaled = step * 10 ** d;
+    if (Math.abs(scaled - Math.round(scaled)) < 1e-9) return d;
+  }
+  return 2;
+}
+
 function AxisTicks({
   domain,
   height,
   side,
+  color,
+  locale,
 }: {
   domain: Domain;
   height: number;
   side: 'left' | 'right';
+  locale: Locale;
+  /** Warnai angka tick dengan warna garisnya. Hanya dipakai saat ada tiga
+   *  sumbu; dengan dua, kiri dan kanan sudah cukup dibedakan oleh posisinya
+   *  dan angkanya tetap abu-abu netral. */
+  color?: SeriesColor;
 }) {
   const ticks = tickValues(domain);
-  const digits = Math.min(2, Math.max(0, -Math.floor(Math.log10(domain.step))));
+  const digits = stepDigits(domain.step);
+  const longest = Math.max(...ticks.map((v) => fmt(v, digits, locale).length));
 
   return (
-    <div className="relative" style={{ height }}>
+    <div
+      // Label tick absolut tidak memberi lebar apa pun pada kolom grid-nya.
+      // Dengan satu sumbu per sisi itu tidak terlihat -- labelnya cuma
+      // meluber ke padding kartu. Dengan dua sumbu kanan (mode berwarna),
+      // kolomnya harus memesan lebar sendiri, atau angka kedua sumbu
+      // bertumpuk di tempat yang sama. `ch` dihitung dari font tick ini
+      // sendiri (font-mono text-xs), jadi lebarnya pas dengan labelnya.
+      className={color ? 'relative font-mono text-xs' : 'relative'}
+      style={{ height, minWidth: color ? `${longest}ch` : undefined }}
+    >
       {ticks.map((value, i) => (
         <span
           key={value}
-          className={`absolute font-mono text-xs text-muted ${side === 'right' ? 'start-0' : 'end-0'}`}
+          className={`absolute font-mono text-xs ${color ? SERIES_CLASSES[color].text : 'text-muted'} ${
+            side === 'right' ? 'start-0' : 'end-0'
+          }`}
           style={{
             top: `${(1 - i / (ticks.length - 1)) * 100}%`,
             // Tick paling bawah dan paling atas digeser ke DALAM, bukan
@@ -160,7 +244,7 @@ function AxisTicks({
                   : 'translateY(-50%)',
           }}
         >
-          {fmt(value, digits)}
+          {fmt(value, digits, locale)}
         </span>
       ))}
     </div>

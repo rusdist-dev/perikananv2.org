@@ -18,6 +18,7 @@ import {
   SAMPLE_LENGTH_FREQUENCY,
 } from '@/components/data/data-crab/sample-data';
 import { getDictionary } from '@/i18n/dictionary';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 import { buildMetadata } from '@/i18n/metadata';
 import { isLocale } from '@/i18n/config';
 
@@ -32,6 +33,7 @@ export default async function DataCrabPage({ params }: { params: Promise<{ local
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  const tf = getFisheriesDictionary(locale);
 
   // Opsi ketujuh tingkat TANPA penyaring, diambil di server: formnya sudah
   // terisi di HTML pertama, dan kunci API CMS tidak pernah ikut ke browser.
@@ -62,12 +64,14 @@ export default async function DataCrabPage({ params }: { params: Promise<{ local
 
   return (
     <BscFilterProvider
+      locale={locale}
       initialOptions={filterOptions}
       initialChart={initialChart}
       initialCatchChart={initialCatchChart}
       initialWidthChart={initialWidthChart}
     >
       <FisheriesDataDashboard
+        locale={locale}
         breadcrumb={[
           { label: t.home, href: '/' },
           // Belum ada halaman indeks /data -- "#" menyatakan itu apa adanya,
@@ -78,14 +82,8 @@ export default async function DataCrabPage({ params }: { params: Promise<{ local
         ]}
         datasetName={t.navDataCrab}
         description={t.dataCrabDescription}
-        note={
-          <>
-            seluruh filter dan grafik di halaman ini sudah tersambung ke data rajungan dan kepiting
-            di CMS. Dataset ini tidak dikelompokkan per WPPNRI, jadi filter wilayah dimulai dari
-            provinsi.
-          </>
-        }
-        filterPanel={<BscFilterPanel datasetName={t.navDataCrab} />}
+        note={tf.crabNote}
+        filterPanel={<BscFilterPanel datasetName={t.navDataCrab} locale={locale} />}
         summaryCharts={<BscTripCharts locale={locale} />}
         catchCharts={<BscCatchChart locale={locale} />}
         lengthCharts={<BscWidthChart locale={locale} />}

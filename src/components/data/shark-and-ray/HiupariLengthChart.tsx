@@ -4,11 +4,12 @@ import { ColumnChart, type ColumnMarker } from '@/components/program/jogolaut/Ba
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import type { Locale } from '@/i18n/config';
 import type { HiupariLengthChart as HiupariLengthChartData } from '@/lib/content';
-import { HIUPARI_SIZE_LABEL, isHiupariSizeType } from '@/lib/hiupari-filters';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 
 /** Angka panjang: dua desimal, dan koma desimalnya mengikuti locale pembaca. */
 function num(value: number | null, locale: Locale, decimals = 2): string {
-  return value === null ? '—' : value.toLocaleString(locale, { maximumFractionDigits: decimals });
+  return value === null ? '—' : formatNumber(value, locale, { maximumFractionDigits: decimals });
 }
 
 /** Berapa label sumbu-x yang dicetak. Sama alasannya dengan dua halaman data
@@ -18,12 +19,12 @@ function labelEveryFor(count: number): number {
   return Math.max(1, Math.ceil(count / 12));
 }
 
-/** Nama jenis ukuran yang bisa dibaca. Nilai asing dari API dikembalikan apa
- *  adanya alih-alih dipaksa jadi "Panjang Total": kalau CMS suatu saat
- *  menambah jenis keenam, yang tampil harus namanya sendiri, bukan nama jenis
- *  lain. */
-function sizeLabel(value: string): string {
-  return isHiupariSizeType(value) ? HIUPARI_SIZE_LABEL[value] : value;
+/** Nama jenis ukuran yang bisa dibaca, dari kamus. Nilai asing dari API
+ *  dikembalikan apa adanya alih-alih dipaksa jadi "Panjang Total": kalau CMS
+ *  suatu saat menambah jenis keenam, yang tampil harus namanya sendiri, bukan
+ *  nama jenis lain. */
+function sizeLabel(value: string, locale: Locale): string {
+  return getFisheriesDictionary(locale).sizeTypes[value] ?? value;
 }
 
 /** Satu angka ringkasan. <dl>, bukan tabel: pasangan label-nilai yang tidak
@@ -60,6 +61,7 @@ export function HiupariLengthChart({
   appliedSummary: string;
   locale: Locale;
 }) {
+  const t = getFisheriesDictionary(locale);
   const loading = status === 'loading';
   const failed = status === 'error';
 
@@ -67,11 +69,8 @@ export function HiupariLengthChart({
   // supaya form filter di sebelahnya tetap punya tempat untuk "coba lagi".
   if (!chart) {
     return (
-      <ChartCard title="Length Frequency">
-        <p className="text-sm leading-relaxed text-muted">
-          Grafik frekuensi panjang gagal dimuat. Ubah filter lalu tekan Show Chart untuk mencoba
-          lagi.
-        </p>
+      <ChartCard title={t.lengthTitle}>
+        <p className="text-sm leading-relaxed text-muted">{t.sharkLoadFailed(t.showChart)}</p>
       </ChartCard>
     );
   }
@@ -79,7 +78,7 @@ export function HiupariLengthChart({
   const { unit, selangKelas, kematanganMatang, ringkasan, indikator, ketersediaanUkuran, kelas } =
     chart;
   const kosong = ringkasan.jumlahIndividu === 0 || kelas.length === 0;
-  const judulUkuran = sizeLabel(chart.jenisUkuran);
+  const judulUkuran = sizeLabel(chart.jenisUkuran, locale);
 
   // Label sumbu HARUS angka mentah ("35", bukan "35,0"): ColumnMarker
   // menghitung posisi garis acuannya dengan Number(labels[i]), dan koma desimal
@@ -127,18 +126,16 @@ export function HiupariLengthChart({
    *  luar bingkai, bukan hilang karena grafiknya rusak. */
   const catatanLinf =
     indikator.linf !== null && !linfTerlukis
-      ? ` Garis Linf tidak tergambar karena ${num(indikator.linf, locale, 1)} ${unit} berada di luar rentang histogram ini -- panjang asimtotik memang bukan panjang yang pernah terukur. Angkanya ada di kartu di bawah.`
+      ? t.sharkLinfNote(`${num(indikator.linf, locale, 1)} ${unit}`)
       : '';
 
   /** Peringatan histogram lintas spesies. Hanya muncul saat spesiesnya memang
    *  belum dipilih: menumpuk Squalus 31 cm dengan Alopias 392 cm menghasilkan
    *  bentuk yang tidak menggambarkan satu populasi pun. */
-  const catatanSpesies = chart.spesies
-    ? ''
-    : ' SELURUH spesies digabung di sini karena belum ada yang dipilih -- yang terlihat adalah campuran hiu dan pari dengan ukuran dewasa yang sangat berbeda, bukan sebaran satu populasi.';
+  const catatanSpesies = chart.spesies ? '' : t.sharkAllSpeciesNote;
 
   const ketersediaan = ketersediaanUkuran
-    .map((row) => `${sizeLabel(row.jenisUkuran)} ${row.jumlahIndividu.toLocaleString(locale)}`)
+    .map((row) => `${sizeLabel(row.jenisUkuran, locale)} ${formatNumber(row.jumlahIndividu, locale)}`)
     .join(' · ');
 
   return (
@@ -149,7 +146,7 @@ export function HiupariLengthChart({
     <div aria-busy={loading} className="flex flex-col gap-5">
       {loading ? (
         <p aria-live="polite" className="text-xs text-muted">
-          Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+          {t.updating}
         </p>
       ) : null}
 
@@ -158,26 +155,33 @@ export function HiupariLengthChart({
           role="alert"
           className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
         >
-          Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+          {t.updateFailed}
         </p>
       ) : null}
 
       <ChartCard
-        title={`Length Frequency — ${chart.spesies ?? 'Semua spesies'}`}
-        meta={`${ringkasan.jumlahIndividu.toLocaleString(locale)} individu · ${judulUkuran} (${unit}) · selang ${num(selangKelas, locale, 1)} ${unit}${appliedSummary ? ` · ${appliedSummary}` : ''}`}
-        note={`Sebaran ${judulUkuran.toLowerCase()} yang diukur, dikelompokkan per ${num(selangKelas, locale, 1)} ${unit}. Sumbu datar adalah nilai tengah kelasnya.${catatanSpesies}${catatanLinf}`}
+        title={t.sharkTitle(chart.spesies ?? t.allSpecies)}
+        meta={`${t.sharkMeta(
+          formatNumber(ringkasan.jumlahIndividu, locale),
+          judulUkuran,
+          unit,
+          num(selangKelas, locale, 1),
+        )}${appliedSummary ? ` · ${appliedSummary}` : ''}`}
+        note={`${t.sharkNoteText(judulUkuran, num(selangKelas, locale, 1), unit)}${catatanSpesies}${catatanLinf}`}
       >
         {kosong ? (
-          <p className="text-sm leading-relaxed text-muted">
-            Tidak ada pengukuran {judulUkuran.toLowerCase()} yang tercatat untuk filter ini.
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t.sharkEmpty(judulUkuran)}</p>
         ) : (
           <ColumnChart
             labels={labels}
             values={values}
             color="series-2"
-            unit="individu"
-            seriesLabel="Jumlah Individu"
+            unit={t.individualUnit}
+            seriesLabel={t.individualSeries}
+            locale={locale}
+            // Labelnya angka mentah (lihat komentar `labels` di atas); yang
+            // dicetak di sumbu mengikuti pemisah desimal locale.
+            formatLabel={(label) => num(Number(label), locale, 2)}
             labelEvery={labelEveryFor(labels.length)}
             markers={markers}
             tooltip={(label, value) => {
@@ -185,56 +189,63 @@ export function HiupariLengthChart({
               const rentang = row
                 ? `${num(row.batasBawah, locale, 1)}–${num(row.batasAtas, locale, 1)} ${unit}`
                 : `${label} ${unit}`;
-              if (!row) return `${rentang} · ${value.toLocaleString(locale)} individu`;
+              if (!row) return t.widthTooltip(rentang, formatNumber(value, locale), null, null);
               // Persen matang DILEWATI saat null -- itu bukan nol melainkan
               // "tidak terdefinisi": kematangan cuma terhitung untuk jantan.
-              const matang =
-                row.persenMatang === null
-                  ? ''
-                  : `, matang ${num(row.persenMatang, locale, 1)}%`;
-              return `${rentang} · ${value.toLocaleString(locale)} individu (${num(row.persen, locale, 1)}%${matang})`;
+              return t.widthTooltip(
+                rentang,
+                formatNumber(value, locale),
+                num(row.persen, locale, 1),
+                row.persenMatang === null ? null : num(row.persenMatang, locale, 1),
+              );
             }}
             height={340}
-            ariaLabel={`Histogram sebaran ${judulUkuran.toLowerCase()} untuk ${chart.spesies ?? 'seluruh spesies hiu dan pari'}, ${ringkasan.jumlahIndividu.toLocaleString(locale)} pengukuran dalam kelas selebar ${num(selangKelas, locale, 1)} ${unit}`}
+            ariaLabel={t.sharkAria(
+              judulUkuran,
+              chart.spesies ?? t.allSharkSpecies,
+              formatNumber(ringkasan.jumlahIndividu, locale),
+              num(selangKelas, locale, 1),
+              unit,
+            )}
           />
         )}
       </ChartCard>
 
       <ChartCard
-        title="Ringkasan & Indikator"
+        title={t.summaryTitle}
         meta={ketersediaan || undefined}
         note={
           indikator.linfMetode || indikator.lmMetode
-            ? `Linf: ${indikator.linfMetode ?? '—'}. Lm: ${indikator.lmMetode ?? '—'}. Keduanya hitungan API, bukan angka yang diisi sendiri. Baris meta di atas menyebut berapa individu yang punya ukuran untuk TIAP jenis ukuran -- itu yang menjelaskan kenapa sampelnya menyusut saat jenis ukurannya diganti.`
+            ? t.sharkMethodNote(indikator.linfMetode ?? '—', indikator.lmMetode ?? '—')
             : undefined
         }
       >
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
           <StatItem
-            label="Jumlah individu"
-            value={ringkasan.jumlahIndividu.toLocaleString(locale)}
+            label={t.crabStats.count}
+            value={formatNumber(ringkasan.jumlahIndividu, locale)}
           />
           <StatItem
-            label="Rentang"
+            label={t.stats.range}
             value={
               ringkasan.panjangMin === null || ringkasan.panjangMaks === null
                 ? '—'
                 : `${num(ringkasan.panjangMin, locale, 1)}–${num(ringkasan.panjangMaks, locale, 1)} ${unit}`
             }
           />
-          <StatItem label="Rata-rata" value={`${num(ringkasan.rataRata, locale)} ${unit}`} />
-          <StatItem label="Median" value={`${num(ringkasan.median, locale)} ${unit}`} />
-          <StatItem label="Modus" value={`${num(ringkasan.modus, locale)} ${unit}`} />
+          <StatItem label={t.stats.mean} value={`${num(ringkasan.rataRata, locale)} ${unit}`} />
+          <StatItem label={t.stats.median} value={`${num(ringkasan.median, locale)} ${unit}`} />
+          <StatItem label={t.stats.mode} value={`${num(ringkasan.modus, locale)} ${unit}`} />
           <StatItem
-            label="Linf (asimtotik)"
+            label={t.sharkStats.linf}
             value={indikator.linf === null ? '—' : `${num(indikator.linf, locale)} ${unit}`}
           />
           <StatItem
-            label={`Lm (klasper ≥ ${kematanganMatang})`}
+            label={t.sharkStats.lm(formatNumber(kematanganMatang, locale))}
             value={indikator.lm === null ? '—' : `${num(indikator.lm, locale)} ${unit}`}
           />
           <StatItem
-            label="Matang"
+            label={t.sharkStats.mature}
             value={
               indikator.persenMatang === null ? '—' : `${num(indikator.persenMatang, locale, 1)}%`
             }
@@ -243,8 +254,8 @@ export function HiupariLengthChart({
               ada di dataset dan tidak ada di histogram, dan selisih itu harus
               terbaca. */}
           <StatItem
-            label={`Tanpa ${judulUkuran.toLowerCase()}`}
-            value={ringkasan.jumlahTanpaUkuran.toLocaleString(locale)}
+            label={t.sharkStats.without(judulUkuran)}
+            value={formatNumber(ringkasan.jumlahTanpaUkuran, locale)}
           />
         </dl>
 
@@ -254,10 +265,9 @@ export function HiupariLengthChart({
             kolom sebelah. */}
         {indikator.lm === null ? (
           <p className="mt-4 rounded-md border border-border bg-bg p-3 text-xs leading-relaxed text-muted">
-            <strong className="font-bold text-primary">Lm tidak terhitung</strong> untuk pilihan
-            ini. Kematangan hiu dan pari diukur dari klasper, organ yang hanya dimiliki jantan,
-            jadi angkanya hanya muncul saat jenis kelamin <strong>Jantan (M)</strong> dipilih.
-            Linf tidak terpengaruh.
+            <strong className="font-bold text-primary">{t.sharkLmMissingTitle}</strong>
+            {t.sharkLmMissingLead} <strong>{t.sharkLmMissingMale}</strong>
+            {t.sharkLmMissingRest}
           </p>
         ) : null}
       </ChartCard>

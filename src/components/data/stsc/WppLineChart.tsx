@@ -3,6 +3,8 @@
 import { ChartFrame, xPercent } from '@/components/program/jogolaut/ChartFrame';
 import { niceDomain } from '@/components/program/jogolaut/scale';
 import { wppColor } from '@/components/data/stsc/wpp-colors';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 
 /** Satu deret: satu WPP, satu nilai per tahun pada sumbu-x bersama.
  *
@@ -41,6 +43,7 @@ export function WppLineChart({
   unit,
   height = 300,
   ariaLabel,
+  locale,
 }: {
   /** Sumbu-x bersama seluruh deret. Datang dari API sebagai satu daftar, bukan
    *  diturunkan dari titik tiap deret: itulah yang menjamin kesebelas garis
@@ -50,14 +53,16 @@ export function WppLineChart({
   unit: string;
   height?: number;
   ariaLabel: string;
+  /** Bahasa legenda dan format angka tick sumbu-y. Label sumbu-x (tahun)
+   *  sengaja TIDAK diformat sebagai angka: 2024 bukan "2.024". */
+  locale: Locale;
 }) {
+  const t = getFisheriesDictionary(locale);
   const semua = series.flatMap((s) => s.nilai).filter((v): v is number => v !== null);
 
   if (years.length < 2 || semua.length === 0) {
     return (
-      <p className="text-sm leading-relaxed text-muted">
-        Tidak ada data yang bisa digambar untuk pilihan ini.
-      </p>
+      <p className="text-sm leading-relaxed text-muted">{t.noDrawable}</p>
     );
   }
 
@@ -110,7 +115,7 @@ export function WppLineChart({
                 style={{ backgroundColor: wppColor(s.wpp) }}
                 className="h-0.5 w-5 shrink-0 rounded-sm"
               />
-              <span className="text-fg">WPP {s.wpp}</span>
+              <span className="text-fg">{t.fmaCode(s.wpp)}</span>
             </li>
           ))}
         </ul>
@@ -123,6 +128,7 @@ export function WppLineChart({
         left={{ unit, color: 'series-1', domain }}
         labels={years.map(String)}
         xTickCount={Math.min(8, n)}
+        locale={locale}
         ariaLabel={ariaLabel}
       >
         <svg

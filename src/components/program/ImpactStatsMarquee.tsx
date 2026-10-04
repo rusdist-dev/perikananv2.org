@@ -4,7 +4,9 @@ import { Container } from '@/components/layout/Container';
 import { formatArticleDate } from '@/lib/date';
 import { formatMetricCell, metricLabel } from '@/lib/metrics';
 import type { Locale } from '@/i18n/config';
+import { getImpactDictionary } from '@/i18n/dictionaries/impact';
 import type { CoastStats, VillageMetric } from '@/lib/content';
+import { formatNumber } from '@/lib/number';
 
 import './ImpactStatsMarquee.css';
 
@@ -38,7 +40,7 @@ function StatCard({
 }) {
   return (
     <li className="flex w-56 shrink-0 flex-col border-s border-border px-4 py-3">
-      <p className="text-xs leading-snug font-bold text-primary">{metricLabel(metric)}</p>
+      <p className="text-xs leading-snug font-bold text-primary">{metricLabel(metric, locale)}</p>
 
       <dl className="mt-auto pt-3">
         <div className="mt-1 flex items-baseline justify-between gap-2 rounded-sm bg-surface px-2 py-1 text-primary">
@@ -77,12 +79,15 @@ function StatCard({
 export function ImpactStatsMarquee({
   stats,
   locale,
-  heading = 'Totalan seluruh desa',
+  heading: headingProp,
 }: {
   stats: CoastStats;
   locale: Locale;
   heading?: string;
 }) {
+  const t = getImpactDictionary(locale);
+  const heading = headingProp ?? t.statsHeading;
+
   // Tanpa metrik tidak ada yang bisa dijalankan -- dan pita kosong setinggi
   // 100px lebih membingungkan daripada tidak ada pita sama sekali.
   if (stats.metrik.length === 0) return null;
@@ -98,11 +103,9 @@ export function ImpactStatsMarquee({
   ));
 
   const sumber = [
-    `${stats.jumlahDesa.toLocaleString(locale)} desa`,
-    `${stats.jumlahForm.toLocaleString(locale)} formulir pendataan`,
-    stats.pendataanTerakhir
-      ? `terakhir ${formatArticleDate(stats.pendataanTerakhir, locale)}`
-      : null,
+    t.statsVillages(formatNumber(stats.jumlahDesa, locale)),
+    t.statsForms(formatNumber(stats.jumlahForm, locale)),
+    stats.pendataanTerakhir ? t.latest(formatArticleDate(stats.pendataanTerakhir, locale)) : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -136,7 +139,7 @@ export function ImpactStatsMarquee({
         }
         tabIndex={0}
         role="group"
-        aria-label={`${heading}: ${stats.metrik.length} metrik`}
+        aria-label={t.statsAria(heading, formatNumber(stats.metrik.length, locale))}
       >
         <div className="stats-marquee-track">
           <ul className="flex list-none p-0">{cards}</ul>

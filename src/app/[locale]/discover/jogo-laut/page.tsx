@@ -4,12 +4,14 @@ import { isLocale } from '@/i18n/config';
 import { JogoLautDashboard } from '@/components/program/jogolaut/JogoLautDashboard';
 import { ProgramHero } from '@/components/program/ProgramHero';
 import { getDictionary } from '@/i18n/dictionary';
+import { loadJogoLautMonitoring } from '@/lib/content/source';
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  const monitoring = await loadJogoLautMonitoring(locale);
   return (
     <>
       <ProgramHero
@@ -32,7 +34,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           diketik di page.tsx-nya, sementara yang ini merangkai dua puluh kartu
           yang datanya saling terkait. Menaruhnya di sini akan membuat berkas
           rute ini didominasi angka dan tata letak grafik. */}
-      <JogoLautDashboard />
+      <JogoLautDashboard data={monitoring} locale={locale} />
     </>
   );
 }

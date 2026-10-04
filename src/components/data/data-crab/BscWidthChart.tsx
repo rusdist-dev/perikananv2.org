@@ -4,11 +4,13 @@ import { ColumnChart, type ColumnMarker } from '@/components/program/jogolaut/Ba
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { useBscFilter } from '@/components/data/data-crab/BscFilterContext';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import type { BscWidthChart as BscWidthChartData } from '@/lib/content';
 
 /** Angka lebar: dua desimal, dan koma desimalnya mengikuti locale pembaca. */
 function num(value: number | null, locale: Locale, decimals = 2): string {
-  return value === null ? '—' : value.toLocaleString(locale, { maximumFractionDigits: decimals });
+  return value === null ? '—' : formatNumber(value, locale, { maximumFractionDigits: decimals });
 }
 
 /** Berapa label sumbu-x yang dicetak. Sama alasannya dengan grafik trip: jumlah
@@ -78,6 +80,7 @@ function StatItem({ label, value }: { label: string; value: string }) {
  * dari bentuk batangnya.
  */
 export function BscWidthChart({ locale }: { locale: Locale }) {
+  const t = getFisheriesDictionary(locale);
   const { widthChart, widthStatus, widthAppliedSummary } = useBscFilter();
 
   const loading = widthStatus === 'loading';
@@ -85,10 +88,8 @@ export function BscWidthChart({ locale }: { locale: Locale }) {
 
   if (!widthChart) {
     return (
-      <ChartCard title="Length Frequency">
-        <p className="text-sm leading-relaxed text-muted">
-          Grafik frekuensi lebar gagal dimuat. Ubah filter lalu tekan Generate untuk mencoba lagi.
-        </p>
+      <ChartCard title={t.lengthTitle}>
+        <p className="text-sm leading-relaxed text-muted">{t.widthLoadFailed}</p>
       </ChartCard>
     );
   }
@@ -105,14 +106,17 @@ export function BscWidthChart({ locale }: { locale: Locale }) {
   const values = kelas.map((row) => row.jumlah);
 
   const komposisi = komposisiJenisKelamin
-    .map((row) => `${row.jenisKelamin ?? 'tidak tercatat'} ${row.jumlah.toLocaleString(locale)}`)
+    .map(
+      (row) =>
+        `${row.jenisKelamin ? (t.sexValues[row.jenisKelamin] ?? row.jenisKelamin) : t.notRecorded} ${formatNumber(row.jumlah, locale)}`,
+    )
     .join(' · ');
 
   return (
     <div aria-busy={loading} className="flex flex-col gap-5">
       {loading ? (
         <p aria-live="polite" className="text-xs text-muted">
-          Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+          {t.updating}
         </p>
       ) : null}
 
@@ -121,30 +125,34 @@ export function BscWidthChart({ locale }: { locale: Locale }) {
           role="alert"
           className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
         >
-          Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+          {t.updateFailed}
         </p>
       ) : null}
 
       <ChartCard
-        title="Length Frequency"
-        meta={`${ringkasan.jumlahIndividu.toLocaleString(locale)} individu · selang ${num(selangKelas, locale, 1)} ${unit}${filterSuffix}`}
-        note={`Sebaran lebar karapas yang diukur, dikelompokkan per ${num(selangKelas, locale, 1)} ${unit}. Sumbu datar adalah nilai tengah kelasnya.${
-          widthChart.jenisKelamin
-            ? ''
-            : ' Jantan dan betina DIGABUNG di sini karena jenis kelamin belum dipilih -- keduanya matang pada lebar yang berbeda, jadi Lm di bawah adalah satu angka untuk dua sebaran.'
+        title={t.lengthTitle}
+        meta={`${t.widthMeta(
+          formatNumber(ringkasan.jumlahIndividu, locale),
+          num(selangKelas, locale, 1),
+          unit,
+        )}${filterSuffix}`}
+        note={`${t.widthNote(num(selangKelas, locale, 1), unit)}${
+          widthChart.jenisKelamin ? '' : t.sexCombinedNote
         }`}
       >
         {kosong ? (
-          <p className="text-sm leading-relaxed text-muted">
-            Tidak ada pengukuran lebar yang tercatat untuk filter ini.
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t.widthEmpty}</p>
         ) : (
           <ColumnChart
             labels={labels}
             values={values}
             color="series-3"
-            unit="individu"
-            seriesLabel="Jumlah Individu"
+            unit={t.individualUnit}
+            seriesLabel={t.individualSeries}
+            locale={locale}
+            // Labelnya angka mentah (lihat komentar `labels` di atas); yang
+            // dicetak di sumbu mengikuti pemisah desimal locale.
+            formatLabel={(label) => num(Number(label), locale, 2)}
             labelEvery={labelEveryFor(labels.length)}
             markers={buildMarkers(widthChart, locale)}
             tooltip={(label, value) => {
@@ -152,56 +160,61 @@ export function BscWidthChart({ locale }: { locale: Locale }) {
               const rentang = row
                 ? `${num(row.batasBawah, locale, 1)}–${num(row.batasAtas, locale, 1)} ${unit}`
                 : `${label} ${unit}`;
-              if (!row) return `${rentang} · ${value.toLocaleString(locale)} individu`;
+              if (!row) return t.widthTooltip(rentang, formatNumber(value, locale), null, null);
               // Persen matang DILEWATI saat null -- itu kelas kosong, dan
               // "matang 0,0%" di sana adalah angka yang tidak pernah dihitung.
-              const matang =
-                row.persenMatang === null
-                  ? ''
-                  : `, matang ${num(row.persenMatang, locale, 1)}%`;
-              return `${rentang} · ${value.toLocaleString(locale)} individu (${num(row.persen, locale, 1)}%${matang})`;
+              return t.widthTooltip(
+                rentang,
+                formatNumber(value, locale),
+                num(row.persen, locale, 1),
+                row.persenMatang === null ? null : num(row.persenMatang, locale, 1),
+              );
             }}
             height={320}
-            ariaLabel={`Histogram sebaran lebar karapas rajungan dan kepiting, ${ringkasan.jumlahIndividu.toLocaleString(locale)} pengukuran dalam kelas selebar ${num(selangKelas, locale, 1)} ${unit}`}
+            ariaLabel={t.widthAria(
+              formatNumber(ringkasan.jumlahIndividu, locale),
+              num(selangKelas, locale, 1),
+              unit,
+            )}
           />
         )}
       </ChartCard>
 
       <ChartCard
-        title="Ringkasan & Indikator"
+        title={t.summaryTitle}
         meta={komposisi || undefined}
         note={
           indikator.lcMetode || indikator.lmMetode
-            ? `Lc: ${indikator.lcMetode ?? '—'}. Lm: ${indikator.lmMetode ?? '—'}. Keduanya hitungan API, bukan angka yang diisi sendiri.`
+            ? t.crabMethodNote(indikator.lcMetode ?? '—', indikator.lmMetode ?? '—')
             : undefined
         }
       >
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
           <StatItem
-            label="Jumlah individu"
-            value={ringkasan.jumlahIndividu.toLocaleString(locale)}
+            label={t.crabStats.count}
+            value={formatNumber(ringkasan.jumlahIndividu, locale)}
           />
           <StatItem
-            label="Rentang"
+            label={t.stats.range}
             value={
               ringkasan.lebarMin === null || ringkasan.lebarMaks === null
                 ? '—'
                 : `${num(ringkasan.lebarMin, locale, 1)}–${num(ringkasan.lebarMaks, locale, 1)} ${unit}`
             }
           />
-          <StatItem label="Rata-rata" value={`${num(ringkasan.rataRata, locale)} ${unit}`} />
-          <StatItem label="Median" value={`${num(ringkasan.median, locale)} ${unit}`} />
-          <StatItem label="Modus" value={`${num(ringkasan.modus, locale)} ${unit}`} />
+          <StatItem label={t.stats.mean} value={`${num(ringkasan.rataRata, locale)} ${unit}`} />
+          <StatItem label={t.stats.median} value={`${num(ringkasan.median, locale)} ${unit}`} />
+          <StatItem label={t.stats.mode} value={`${num(ringkasan.modus, locale)} ${unit}`} />
           <StatItem
-            label="Lc (lebar tertangkap)"
+            label={t.crabStats.lc}
             value={indikator.lc === null ? '—' : `${num(indikator.lc, locale)} ${unit}`}
           />
           <StatItem
-            label={`Lm (TKG ≥ ${tkgMatang})`}
+            label={t.crabStats.lm(formatNumber(tkgMatang, locale))}
             value={indikator.lm === null ? '—' : `${num(indikator.lm, locale)} ${unit}`}
           />
           <StatItem
-            label="Matang gonad"
+            label={t.crabStats.mature}
             value={
               indikator.persenMatang === null ? '—' : `${num(indikator.persenMatang, locale, 1)}%`
             }
@@ -210,7 +223,7 @@ export function BscWidthChart({ locale }: { locale: Locale }) {
               masuk histogram tapi tidak bisa masuk hitungan persen matang, dan
               selisih itu harus terbaca -- kalau tidak, "65% matang" terbaca
               sebagai persentase dari seluruh batang di atas. */}
-          <StatItem label="Tanpa catatan TKG" value={ringkasan.tanpaTkg.toLocaleString(locale)} />
+          <StatItem label={t.crabStats.noTkg} value={formatNumber(ringkasan.tanpaTkg, locale)} />
         </dl>
       </ChartCard>
     </div>

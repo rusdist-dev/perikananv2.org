@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import type * as Leaflet from 'leaflet';
 import type { FeatureCollection, MultiPolygon } from 'geojson';
 
+import type { Locale } from '@/i18n/config';
+import { getImpactDictionary, type ImpactDictionary } from '@/i18n/dictionaries/impact';
+import { formatNumber } from '@/lib/number';
+
 import 'leaflet/dist/leaflet.css';
 // HANYA MarkerCluster.css (transisi animasi gerombol + kaki spiderfy).
 // MarkerCluster.Default.css sengaja TIDAK diimpor: isinya lingkaran hijau/
@@ -94,8 +98,9 @@ const DEFAULT_MAX_ZOOM = 9;
  *  DILEPAS: begitu basemap raster menyala, daratan Natural Earth disembunyikan
  *  (lihat IndonesiaMap.css), dan atribusi untuk sesuatu yang tidak digambar
  *  adalah keterangan yang keliru. */
-const NE_ATTRIBUTION =
-  'Batas wilayah: <a href="https://www.naturalearthdata.com/">Natural Earth</a>';
+function neAttribution(t: ImpactDictionary): string {
+  return `${t.mapBoundaries}: <a href="https://www.naturalearthdata.com/">Natural Earth</a>`;
+}
 
 export type BasemapId = 'imagery' | 'light';
 
@@ -116,15 +121,20 @@ export type BasemapId = 'imagery' | 'light';
  * terlihat kasar di atas citra yang tajam -- persis masalah yang basemap ini
  * datang untuk menyelesaikan.
  */
-const BASEMAPS: Record<BasemapId, { url: string; attribution: string; maxZoom: number }> = {
+const BASEMAPS: Record<
+  BasemapId,
+  { url: string; attribution: (t: ImpactDictionary) => string; maxZoom: number }
+> = {
   imagery: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Citra: <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics',
+    attribution: (t) =>
+      `${t.mapImagery}: <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics`,
     maxZoom: 16,
   },
   light: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Peta dasar: <a href="https://www.esri.com/">Esri</a>, HERE, Garmin',
+    attribution: (t) =>
+      `${t.mapBasemap}: <a href="https://www.esri.com/">Esri</a>, HERE, Garmin`,
     maxZoom: 16,
   },
 };
@@ -158,7 +168,11 @@ const PAN_LIMIT: Leaflet.LatLngBoundsLiteral = [
  * "apakah nama kawasan perlu di-escape" tidak pernah perlu dijawab -- termasuk
  * saat berkas datanya nanti diperbarui oleh orang lain.
  */
-function mpaTooltip({ name, wpp, ha }: MpaProperties, intervention: boolean): HTMLElement {
+function mpaTooltip(
+  { name, wpp, ha }: MpaProperties,
+  intervention: boolean,
+  locale: Locale,
+): HTMLElement {
   const root = document.createElement('div');
 
   const title = document.createElement('span');
@@ -172,15 +186,14 @@ function mpaTooltip({ name, wpp, ha }: MpaProperties, intervention: boolean): HT
   if (intervention) {
     const badge = document.createElement('span');
     badge.className = 'map-tooltip-badge';
-    badge.textContent = 'Kawasan intervensi';
+    badge.textContent = getImpactDictionary(locale).mapInterventionBadge;
     root.append(badge);
   }
 
-  // Luas diformat id-ID (856.649 ha) menyusul ariaLabel komponen yang juga
-  // berbahasa Indonesia. Kalau nanti tooltip ini harus ikut locale halaman,
-  // locale-nya diteruskan sebagai prop -- jangan dibaca dari navigator, itu
-  // membuat dua pengunjung di halaman /en melihat format berbeda.
-  const facts = [wpp, ha === null ? null : `${Math.round(ha).toLocaleString('id-ID')} ha`]
+  // Luas mengikuti locale HALAMAN (id 856.649 ha / en 856,649 ha), yang
+  // diteruskan sebagai prop -- bukan dibaca dari navigator: itu membuat dua
+  // pengunjung di halaman /en melihat format berbeda.
+  const facts = [wpp, ha === null ? null : `${formatNumber(Math.round(ha), locale)} ha`]
     .filter(Boolean)
     .join(' · ');
 
@@ -267,7 +280,8 @@ async function loadMarkerCluster(L: typeof Leaflet): Promise<boolean> {
 export function IndonesiaMap({
   theme = 'brand',
   className = 'h-[380px] md:h-[520px] lg:h-[620px]',
-  ariaLabel = 'Peta interaktif wilayah kerja di Indonesia',
+  ariaLabel,
+  locale = 'id',
   focus = null,
   shape = null,
   basemap = null,
@@ -284,6 +298,11 @@ export function IndonesiaMap({
    *  kontainer setinggi 0 menghasilkan peta kosong tanpa error. */
   className?: string;
   ariaLabel?: string;
+  /** Bahasa teks bawaan peta (tooltip, atribusi, tombol zoom) dan format angka
+   *  luas kawasan. DIBACA SEKALI saat peta dibuat, seperti `mpaNames`: berganti
+   *  locale berarti berpindah halaman, dan peta ikut dibuat ulang. Default 'id'
+   *  untuk pemakai yang belum mengirimnya. */
+  locale?: Locale;
   /** Titik yang disorot. Peta bergerak setiap kali NILAI ini berganti, jadi
    *  pemanggil sebaiknya menyusunnya di useMemo -- objek literal baru di tiap
    *  render akan membuat peta terbang ulang ke tempat yang sama terus. */
@@ -356,6 +375,10 @@ export function IndonesiaMap({
   onMarkerSelect?: (id: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const t = getImpactDictionary(locale);
+  // String yang SAMA persis harus dipakai saat atribusi dipasang dan dilepas
+  // -- AttributionControl mencocokkannya per teks.
+  const NE_ATTRIBUTION = neAttribution(t);
 
   // Instance Leaflet dibuat di dalam effect yang ASINKRON (modulnya di-import
   // dinamis), jadi effect sorot di bawah tidak bisa sekadar membacanya dari
@@ -476,7 +499,9 @@ export function IndonesiaMap({
         // Indonesia jadi SATU path bersubpath, total ~16 elemen untuk peta ini.
       });
 
-      L.control.zoom({ position: 'topright' }).addTo(map);
+      L.control
+        .zoom({ position: 'topright', zoomInTitle: t.mapZoomIn, zoomOutTitle: t.mapZoomOut })
+        .addTo(map);
 
       map.fitBounds(INDONESIA_BOUNDS);
 
@@ -564,7 +589,7 @@ export function IndonesiaMap({
                 : 'map-mpa',
           }),
           onEachFeature: (feature, layer) => {
-            layer.bindTooltip(mpaTooltip(feature.properties, isIntervention(interventionMpa, feature.properties)), {
+            layer.bindTooltip(mpaTooltip(feature.properties, isIntervention(interventionMpa, feature.properties), locale), {
               // Tanpa sticky, tooltip muncul di centroid poligon -- untuk
               // kawasan seluas 856.000 ha itu bisa jauh dari kursor, bahkan di
               // luar layar.
@@ -864,7 +889,7 @@ export function IndonesiaMap({
 
     const preset = BASEMAPS[basemap];
     basemapRef.current = L.tileLayer(preset.url, {
-      attribution: preset.attribution,
+      attribution: preset.attribution(t),
       maxZoom: preset.maxZoom,
     }).addTo(map);
 
@@ -892,7 +917,7 @@ export function IndonesiaMap({
       ref={containerRef}
       data-map-theme={theme}
       role="region"
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? t.mapDefaultAriaLabel}
       className={`isolate w-full ${className}`}
     />
   );

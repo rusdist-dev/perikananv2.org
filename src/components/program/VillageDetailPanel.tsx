@@ -7,6 +7,8 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { formatArticleDate } from '@/lib/date';
 import { formatMetricCell, metricLabel } from '@/lib/metrics';
+import { formatNumber } from '@/lib/number';
+import { getImpactDictionary } from '@/i18n/dictionaries/impact';
 import type { Locale } from '@/i18n/config';
 import type {
   ImpactVillage,
@@ -19,14 +21,9 @@ import type {
 /** Urutannya ikut urutan tab di layar, dan dipakai langsung oleh navigasi
  *  panah -- jadi mengubah urutan di sini sudah cukup, tidak ada indeks lain
  *  yang perlu ikut disesuaikan. */
-const TABS = [
-  { id: 'statistik', label: 'Statistik' },
-  { id: 'deskripsi', label: 'Deskripsi' },
-  { id: 'rehabilitasi', label: 'Rehabilitasi' },
-  { id: 'pelatihan', label: 'Pelatihan' },
-] as const;
+const TABS = ['statistik', 'deskripsi', 'rehabilitasi', 'pelatihan'] as const;
 
-type TabId = (typeof TABS)[number]['id'];
+type TabId = (typeof TABS)[number];
 
 /** Keadaan pemuatan detail, dipegang ImpactVillageMap dan diteruskan ke sini.
  *
@@ -48,11 +45,10 @@ type VillageDetailPanelProps = {
    *  punya detail -- `status` yang membedakan keduanya. */
   detail: VillageDetail | null;
   status: VillageDetailStatus;
-  /** Dipakai untuk memformat tanggal dan angka saja. Label tab dan judul baris
-   *  masih tetap bahasa Indonesia, sama seperti sebelum panel ini memakai CMS:
-   *  label metriknya sendiri (`VillageMetric.label`) datang dari CMS dan cuma
-   *  ada dalam bahasa Indonesia, jadi menerjemahkan bingkainya saja akan
-   *  menghasilkan panel setengah-Inggris yang lebih membingungkan. */
+  /** Bahasa bingkai panel (tab, judul baris, pesan) dan format tanggal serta
+   *  angkanya. Isi dari CMS -- label metrik, nama kegiatan, status lahan --
+   *  tetap tampil apa adanya karena CMS hanya menyediakannya dalam bahasa
+   *  Indonesia. */
   locale: Locale;
   className?: string;
   emptyTitle?: string;
@@ -63,7 +59,7 @@ type VillageDetailPanelProps = {
 /** Angka biasa di luar tabel statistik (jumlah bibit, jumlah peserta) -- selalu
  *  utuh, tidak pernah ringkas: nilainya tidak pernah sebesar metrik rupiah. */
 function formatCount(value: number, locale: Locale): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value);
+  return formatNumber(value, locale, { maximumFractionDigits: 2 });
 }
 
 /** Tanggal ISO -> "14 JUL 2026", memakai pemformat yang sama dengan tanggal
@@ -84,29 +80,31 @@ function joinFacts(parts: (string | null)[]): string | null {
 }
 
 function rehabilitationFacts(item: VillageRehabilitation, locale: Locale): string | null {
+  const t = getImpactDictionary(locale);
   return joinFacts([
-    item.luas === null ? null : `${formatCount(item.luas, locale)} ha`,
-    item.jumlahBibit === null ? null : `${formatCount(item.jumlahBibit, locale)} bibit`,
+    item.luas === null ? null : t.hectares(formatCount(item.luas, locale)),
+    item.jumlahBibit === null ? null : t.seedlings(formatCount(item.jumlahBibit, locale)),
     // Angka 0 ikut ditampilkan, tidak disembunyikan seperti selisih di atas:
     // tingkat hidup 0% adalah hasil pemantauan, bukan ketiadaan data.
-    item.survivalRate === null ? null : `tingkat hidup ${formatCount(item.survivalRate, locale)}%`,
-    item.statusLahan === null ? null : `lahan ${item.statusLahan.toLowerCase()}`,
+    item.survivalRate === null ? null : t.survivalRate(formatCount(item.survivalRate, locale)),
+    item.statusLahan === null ? null : t.landStatus(item.statusLahan),
     item.pelaksana,
-    item.kolaborator === null ? null : `bersama ${item.kolaborator}`,
+    item.kolaborator === null ? null : t.withCollaborator(item.kolaborator),
   ]);
 }
 
 function trainingFacts(item: VillageTraining, locale: Locale): string | null {
+  const t = getImpactDictionary(locale);
   const rincian = joinFacts([
-    item.pria === null ? null : `${formatCount(item.pria, locale)} pria`,
-    item.wanita === null ? null : `${formatCount(item.wanita, locale)} wanita`,
-    item.remaja === null ? null : `${formatCount(item.remaja, locale)} remaja`,
-    item.lansia === null ? null : `${formatCount(item.lansia, locale)} lansia`,
-    item.disabilitas === null ? null : `${formatCount(item.disabilitas, locale)} disabilitas`,
+    item.pria === null ? null : t.men(formatCount(item.pria, locale)),
+    item.wanita === null ? null : t.women(formatCount(item.wanita, locale)),
+    item.remaja === null ? null : t.youth(formatCount(item.remaja, locale)),
+    item.lansia === null ? null : t.elderly(formatCount(item.lansia, locale)),
+    item.disabilitas === null ? null : t.disability(formatCount(item.disabilitas, locale)),
   ]);
 
   return joinFacts([
-    item.peserta === null ? null : `${formatCount(item.peserta, locale)} peserta`,
+    item.peserta === null ? null : t.participants(formatCount(item.peserta, locale)),
     rincian === null ? null : `(${rincian})`,
   ]);
 }
@@ -167,7 +165,7 @@ function MetricRows({ metrics, depth, locale, openKeys, onToggle }: MetricRowsPr
         const hasChildren = metric.children.length > 0;
         const open = hasChildren && openKeys.has(metric.key);
         const indent = METRIC_INDENT[Math.min(depth, METRIC_INDENT.length - 1)];
-        const label = metricLabel(metric);
+        const label = metricLabel(metric, locale, depth > 0);
 
         return (
           <Fragment key={metric.key}>
@@ -209,7 +207,7 @@ function MetricRows({ metrics, depth, locale, openKeys, onToggle }: MetricRowsPr
                     berjalan yang diberi latar penanda. */}
                 {open && metric.childrenSumToTotal === false ? (
                   <span className="mt-1 block text-[0.6875rem] leading-snug font-normal text-muted">
-                    Rincian bisa tumpang tindih, tidak selalu menjumlah.
+                    {getImpactDictionary(locale).childrenOverlap}
                   </span>
                 ) : null}
               </th>
@@ -270,6 +268,7 @@ function MetricTable({
   locale: Locale;
   desa: string;
 }) {
+  const t = getImpactDictionary(locale);
   const [openKeys, setOpenKeys] = useState<ReadonlySet<string>>(() => new Set<string>());
 
   const toggle = (key: string) =>
@@ -287,10 +286,11 @@ function MetricTable({
     // keterangan yang tersisa tinggal beberapa huruf per baris.
     <table className="w-full table-fixed border-collapse">
       <caption className="sr-only">
-        Statistik Desa {desa}
-        {tahunBaru === null ? '' : `, angka tahun ${tahunBaru}`}
-        {tahunLama === null ? '' : ` dibandingkan tahun ${tahunLama}`}. Baris bertanda segitiga
-        bisa dibuka untuk melihat rinciannya.
+        {t.tableCaption(
+          desa,
+          tahunBaru === null ? null : String(tahunBaru),
+          tahunLama === null ? null : String(tahunLama),
+        )}
       </caption>
 
       {/* Kepala tabel melekat saat isinya digulung: begitu rincian dibuka,
@@ -307,7 +307,7 @@ function MetricTable({
             scope="col"
             className="sticky -top-5 z-10 border-b border-border bg-bg py-2 pe-2 text-start font-bold tracking-wide text-muted uppercase"
           >
-            Keterangan
+            {t.tableIndicator}
           </th>
           <th
             scope="col"
@@ -399,10 +399,12 @@ export function VillageDetailPanel({
   status,
   locale,
   className,
-  emptyTitle = 'Belum ada desa dipilih',
-  emptyHint = 'Pilih desa lewat pencarian di atas peta untuk melihat foto kegiatan, lokasi, dan capaian programnya.',
-  ariaLabel = 'Detail desa terpilih',
+  emptyTitle,
+  emptyHint,
+  ariaLabel,
 }: VillageDetailPanelProps) {
+  const t = getImpactDictionary(locale);
+  const panelLabel = ariaLabel ?? t.panelAriaLabel;
   const [activeTab, setActiveTab] = useState<TabId>('statistik');
   const baseId = useId();
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -427,7 +429,7 @@ export function VillageDetailPanel({
     if (next === null) return;
 
     event.preventDefault();
-    setActiveTab(TABS[next].id);
+    setActiveTab(TABS[next]);
     // Fokus dipindah manual: tab yang tidak terpilih ber-tabIndex -1, jadi
     // browser tidak akan memindahkannya sendiri.
     tabRefs.current[next]?.focus();
@@ -436,15 +438,17 @@ export function VillageDetailPanel({
   if (!village) {
     return (
       <aside
-        aria-label={ariaLabel}
+        aria-label={panelLabel}
         className={cn(
           'flex min-h-0 flex-col overflow-hidden border-t border-border bg-bg lg:border-t-0 lg:border-s',
           className,
         )}
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
-          <p className="text-sm font-bold text-primary">{emptyTitle}</p>
-          <p className="max-w-xs text-sm leading-relaxed text-muted">{emptyHint}</p>
+          <p className="text-sm font-bold text-primary">{emptyTitle ?? t.panelEmptyTitle}</p>
+          <p className="max-w-xs text-sm leading-relaxed text-muted">
+            {emptyHint ?? t.panelEmptyHint}
+          </p>
         </div>
       </aside>
     );
@@ -458,17 +462,13 @@ export function VillageDetailPanel({
   // Satu kalimat yang menggantikan SELURUH isi tab saat detailnya tidak ada.
   // Dihitung sekali di sini, bukan diulang di empat tab.
   const fallbackMessage =
-    status === 'loading'
-      ? 'Memuat data desa…'
-      : status === 'error'
-        ? 'Gagal memuat data desa. Pilih ulang desanya untuk mencoba lagi.'
-        : 'Data desa ini belum tersedia di sistem pendataan.';
+    status === 'loading' ? t.loading : status === 'error' ? t.loadError : t.notAvailable;
 
   const hasDetail = status === 'ready' && detail !== null;
 
   return (
     <aside
-      aria-label={ariaLabel}
+      aria-label={panelLabel}
       className={cn(
         'flex min-h-0 flex-col overflow-hidden border-t border-border bg-bg lg:border-t-0 lg:border-s',
         className,
@@ -487,7 +487,7 @@ export function VillageDetailPanel({
             // Keterangan CMS adalah paragraf profil desa (ia mengisi tab
             // Deskripsi), bukan deskripsi rupa fotonya -- memakainya sebagai
             // alt akan membacakan satu paragraf penuh sebagai nama gambar.
-            alt={`Foto Desa ${village.desa}`}
+            alt={t.photoAlt(village.desa)}
             fill
             // Panelnya selebar 22rem di >= lg dan selebar layar di bawahnya.
             // Tanpa ini Next menganggapnya selebar viewport dan mengunduh
@@ -504,20 +504,20 @@ export function VillageDetailPanel({
           sudah ada di klien sejak halaman dimuat, jadi kepala panel tidak
           perlu menunggu permintaan detail selesai. */}
       <div className="shrink-0 border-b border-border p-5">
-        <h2 className="text-xl leading-tight font-bold text-primary">Desa {village.desa}</h2>
+        <h2 className="text-xl leading-tight font-bold text-primary">{t.villageName(village.desa)}</h2>
 
         {/* <dl>, bukan tiga baris teks: hubungan label-nilai ("Kecamatan"
             -> "Kandeman") ikut terbaca pembaca layar. Labelnya juga yang
             membuat dua baris bernama sama tidak membingungkan -- ada
             kecamatan DAN kabupaten yang sama-sama bernama Brebes. */}
         <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
-          <dt className="text-muted">Kecamatan</dt>
+          <dt className="text-muted">{t.district}</dt>
           <dd className="font-bold text-fg">{village.kecamatan}</dd>
 
-          <dt className="text-muted">Kota/Kabupaten</dt>
+          <dt className="text-muted">{t.regency}</dt>
           <dd className="font-bold text-fg">{village.kabupaten}</dd>
 
-          <dt className="text-muted">Provinsi</dt>
+          <dt className="text-muted">{t.province}</dt>
           <dd className="font-bold text-fg">{village.provinsi}</dd>
         </dl>
 
@@ -526,9 +526,9 @@ export function VillageDetailPanel({
             pembaca berhak tahu berapa banyak dan sampai kapan. */}
         {village.jumlahForm > 0 ? (
           <p className="mt-3 text-xs text-muted">
-            {formatCount(village.jumlahForm, locale)} formulir pendataan
+            {t.formCount(formatCount(village.jumlahForm, locale))}
             {village.pendataanTerakhir
-              ? ` · terakhir ${formatDate(village.pendataanTerakhir, locale)}`
+              ? ` · ${t.latest(formatDate(village.pendataanTerakhir, locale))}`
               : ''}
           </p>
         ) : null}
@@ -537,24 +537,24 @@ export function VillageDetailPanel({
       {/* --- Bilah tab --- */}
       <div
         role="tablist"
-        aria-label="Kategori informasi desa"
+        aria-label={t.tablistLabel}
         className="flex shrink-0 overflow-x-auto border-b border-border"
       >
         {TABS.map((tab, index) => {
-          const selected = tab.id === activeTab;
+          const selected = tab === activeTab;
           return (
             <button
-              key={tab.id}
+              key={tab}
               ref={(node) => {
                 tabRefs.current[index] = node;
               }}
               type="button"
               role="tab"
-              id={tabId(tab.id)}
+              id={tabId(tab)}
               aria-selected={selected}
-              aria-controls={panelId(tab.id)}
+              aria-controls={panelId(tab)}
               tabIndex={selected ? 0 : -1}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => setActiveTab(tab)}
               onKeyDown={(event) => onTabKeyDown(event, index)}
               className={cn(
                 // -mb-px menaruh garis tab TEPAT di atas garis bawah bilah,
@@ -568,7 +568,7 @@ export function VillageDetailPanel({
                   : 'border-transparent text-muted hover:text-primary',
               )}
             >
-              {tab.label}
+              {t.tabs[tab]}
             </button>
           );
         })}
@@ -584,12 +584,12 @@ export function VillageDetailPanel({
           sedang berubah, bukan diam karena kosong. */}
       {TABS.map((tab) => (
         <div
-          key={tab.id}
+          key={tab}
           role="tabpanel"
-          id={panelId(tab.id)}
-          aria-labelledby={tabId(tab.id)}
+          id={panelId(tab)}
+          aria-labelledby={tabId(tab)}
           aria-busy={status === 'loading'}
-          hidden={tab.id !== activeTab}
+          hidden={tab !== activeTab}
           // Bisa difokus karena ia area scroll: pengguna keyboard butuh
           // perhentian di sini untuk menggulung isinya dengan panah.
           tabIndex={0}
@@ -599,9 +599,9 @@ export function VillageDetailPanel({
             <TabEmpty>{fallbackMessage}</TabEmpty>
           ) : (
             <>
-              {tab.id === 'statistik' &&
+              {tab === 'statistik' &&
                 (detail.metrik.length === 0 ? (
-                  <TabEmpty>Belum ada angka yang tercatat untuk desa ini.</TabEmpty>
+                  <TabEmpty>{t.emptyStats}</TabEmpty>
                 ) : (
                   <MetricTable
                     metrics={detail.metrik}
@@ -612,9 +612,9 @@ export function VillageDetailPanel({
                   />
                 ))}
 
-              {tab.id === 'deskripsi' &&
+              {tab === 'deskripsi' &&
                 (paragraphs.length === 0 ? (
-                  <TabEmpty>Profil desa ini belum ditulis di sistem pendataan.</TabEmpty>
+                  <TabEmpty>{t.emptyDescription}</TabEmpty>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {paragraphs.map((paragraph) => (
@@ -625,9 +625,9 @@ export function VillageDetailPanel({
                   </div>
                 ))}
 
-              {tab.id === 'rehabilitasi' &&
+              {tab === 'rehabilitasi' &&
                 (detail.rehabilitasi.length === 0 ? (
-                  <TabEmpty>Belum ada kegiatan rehabilitasi yang tercatat di desa ini.</TabEmpty>
+                  <TabEmpty>{t.emptyRehabilitation}</TabEmpty>
                 ) : (
                   <ActivityList
                     items={detail.rehabilitasi.map((item, index) => ({
@@ -636,21 +636,21 @@ export function VillageDetailPanel({
                       // untuk ekosistem berbeda.
                       key: `${item.tanggal ?? 'tanpa-tanggal'}-${index}`,
                       period: formatDate(item.tanggal, locale),
-                      title: item.ekosistem ?? 'Rehabilitasi',
+                      title: item.ekosistem ?? t.tabs.rehabilitasi,
                       detail: rehabilitationFacts(item, locale),
                     }))}
                   />
                 ))}
 
-              {tab.id === 'pelatihan' &&
+              {tab === 'pelatihan' &&
                 (detail.pelatihan.length === 0 ? (
-                  <TabEmpty>Belum ada pelatihan yang tercatat di desa ini.</TabEmpty>
+                  <TabEmpty>{t.emptyTraining}</TabEmpty>
                 ) : (
                   <ActivityList
                     items={detail.pelatihan.map((item, index) => ({
                       key: `${item.tanggal ?? 'tanpa-tanggal'}-${index}`,
                       period: formatDate(item.tanggal, locale),
-                      title: item.nama ?? 'Pelatihan',
+                      title: item.nama ?? t.tabs.pelatihan,
                       detail: trainingFacts(item, locale),
                     }))}
                   />

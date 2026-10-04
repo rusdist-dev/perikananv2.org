@@ -6,6 +6,8 @@ import { fetchHiupariLengthChart } from '@/app/[locale]/data/shark-and-ray/actio
 import { HiupariFilterPanel } from '@/components/data/shark-and-ray/HiupariFilterPanel';
 import { HiupariLengthChart } from '@/components/data/shark-and-ray/HiupariLengthChart';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import type { HiupariLengthChart as HiupariLengthChartData } from '@/lib/content';
 import {
   type HiupariMaturity,
@@ -27,9 +29,9 @@ const DEFAULT_CLASS_INTERVAL = 10;
  *  di judul dan di baris meta, dan menyebutnya dua kali di satu baris cuma
  *  menambah kata. Yang tersisa justru yang tidak terlihat di tempat lain --
  *  jenis kelamin dan ambang kematangannya. */
-function summarize(sex: HiupariSex | null, maturity: HiupariMaturity): string {
-  const jenisKelamin = sex === 'M' ? 'jantan' : sex === 'F' ? 'betina' : 'jantan + betina';
-  return `${jenisKelamin} · klasper ≥ ${maturity}`;
+function summarize(sex: HiupariSex | null, maturity: HiupariMaturity, locale: Locale): string {
+  const t = getFisheriesDictionary(locale);
+  return t.sharkSummary(t.sharkSexSummary[sex ?? 'all'], formatNumber(maturity, locale));
 }
 
 /**
@@ -97,7 +99,7 @@ export function HiupariExplorer({
 
       setChart(fresh);
       setStatus('ready');
-      setAppliedSummary(summarize(sex, maturity));
+      setAppliedSummary(summarize(sex, maturity, locale));
     });
   };
 
@@ -122,6 +124,7 @@ export function HiupariExplorer({
   return (
     <div className="mt-8 grid gap-5 lg:grid-cols-[20rem_1fr] lg:items-start">
       <HiupariFilterPanel
+        locale={locale}
         species={species}
         selectedSpecies={selectedSpecies}
         sex={sex}

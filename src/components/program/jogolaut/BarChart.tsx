@@ -1,3 +1,4 @@
+import type { Locale } from '@/i18n/config';
 import { ChartFrame, ChartLegend } from './ChartFrame';
 import { SERIES_CLASSES, type SeriesColor } from './chart-theme';
 import { niceDomain } from './scale';
@@ -19,7 +20,17 @@ import { niceDomain } from './scale';
 
 /** Baris label yang memakai flex + gap yang sama persis dengan barisan
  *  batangnya, jadi tiap label pasti duduk di tengah batangnya. */
-function BarLabels({ labels, every }: { labels: string[]; every: number }) {
+function BarLabels({
+  labels,
+  every,
+  format = (label) => label,
+}: {
+  labels: string[];
+  every: number;
+  /** Teks yang dicetak untuk label; `labels` tetap jadi key-nya. Dipakai
+   *  saat labelnya stempel waktu lengkap (unik) tapi sumbunya cukup jam. */
+  format?: (label: string) => string;
+}) {
   return (
     <div className="flex gap-1">
       {labels.map((label, i) => (
@@ -30,7 +41,7 @@ function BarLabels({ labels, every }: { labels: string[]; every: number }) {
           // Yang disembunyikan tetap ada di DOM sebagai slot kosong supaya
           // barisannya tidak bergeser -- bukan dihapus.
         >
-          {i % every === 0 ? label : ' '}
+          {i % every === 0 ? format(label) : ' '}
         </span>
       ))}
     </div>
@@ -115,11 +126,15 @@ export function ColumnChart({
   ariaLabel,
   markers,
   tooltip,
+  locale,
+  formatLabel,
+  errorLabel = '± 1 simpangan baku',
 }: {
   labels: string[];
-  values: number[];
+  /** null = slot kosong (tidak ada data pada kategori itu), bukan batang nol. */
+  values: (number | null)[];
   /** Panjang whisker ke atas DAN ke bawah dari ujung batang. */
-  errors?: number[];
+  errors?: (number | null)[];
   color: SeriesColor;
   unit: string;
   seriesLabel: string;
@@ -137,8 +152,16 @@ export function ColumnChart({
    *  apa adanya. Grafik trip IKAN memakai "2025-05" sebagai label sumbu yang
    *  ringkas, tapi "Mei 2025 -- 830 trip" sebagai kalimat tooltipnya. */
   tooltip?: (label: string, value: number) => string;
+  /** Format angka tick (lihat ChartFrame). */
+  locale?: Locale;
+  /** Teks label sumbu-x yang DICETAK; `labels` tetap jadi nilai mentahnya.
+   *  Dipakai histogram panjang: posisi marker dihitung dari Number(label),
+   *  jadi labelnya harus "23.5", tapi yang dibaca orang di locale id "23,5". */
+  formatLabel?: (label: string) => string;
+  /** Teks legenda whisker galat. */
+  errorLabel?: string;
 }) {
-  const upper = values.map((v, i) => v + (errors?.[i] ?? 0));
+  const upper = values.map((v, i) => (v ?? 0) + (errors?.[i] ?? 0));
   const domain = niceDomain(0, Math.max(...upper));
   const pct = (v: number) => (v / (domain.max - domain.min)) * 100;
 
@@ -152,7 +175,7 @@ export function ColumnChart({
         <ChartLegend
           items={[
             { label: seriesLabel, color, unit, shape: 'block' },
-            ...(errors ? [{ label: '± 1 simpangan baku', color: 'series-6' as SeriesColor }] : []),
+            ...(errors ? [{ label: errorLabel, color: 'series-6' as SeriesColor }] : []),
             ...(markers?.map((m) => ({ label: m.label, color: m.color })) ?? []),
           ]}
         />
@@ -161,12 +184,14 @@ export function ColumnChart({
       <ChartFrame
         height={height}
         left={{ unit, color, domain }}
+        locale={locale}
         ariaLabel={ariaLabel}
-        xAxis={<BarLabels labels={labels} every={labelEvery} />}
+        xAxis={<BarLabels labels={labels} every={labelEvery} format={formatLabel} />}
       >
         <div className="absolute inset-0 flex items-end gap-1">
-          {values.map((value, i) => {
-            const error = errors?.[i] ?? 0;
+          {values.map((raw, i) => {
+            const value = raw ?? 0;
+            const error = raw === null ? 0 : (errors?.[i] ?? 0);
             return (
               // `group` cuma berguna kalau ada tooltipnya; kelasnya tetap
               // dipasang tanpa syarat karena Tailwind memindai berkas ini
@@ -177,9 +202,9 @@ export function ColumnChart({
                   className={`absolute inset-x-0 bottom-0 rounded-t-sm ${SERIES_CLASSES[color].swatch}`}
                   style={{ height: `${pct(value)}%`, opacity: 0.75 }}
                 />
-                {tooltip ? (
+                {tooltip && raw !== null ? (
                   <BarTooltip
-                    text={tooltip(labels[i], value)}
+                    text={tooltip(labels[i], raw)}
                     bottom={pct(value)}
                     align={i < 2 ? 'start' : i > values.length - 3 ? 'end' : 'center'}
                   />
@@ -234,17 +259,27 @@ export function DivergingBars({
   height = 220,
   labelEvery = 3,
   ariaLabel,
+  tooltip,
+  formatLabel,
+  locale,
 }: {
   labels: string[];
-  values: number[];
+  values: (number | null)[];
   unit: string;
   positive: { label: string; color: SeriesColor };
   negative: { label: string; color: SeriesColor };
   height?: number;
   labelEvery?: number;
   ariaLabel: string;
+  /** Sama dengan `tooltip` pada ColumnChart. */
+  tooltip?: (label: string, value: number) => string;
+  /** Lihat BarLabels. */
+  formatLabel?: (label: string) => string;
+  /** Format angka tick (lihat ChartFrame). */
+  locale?: Locale;
 }) {
-  const domain = niceDomain(Math.min(0, ...values), Math.max(0, ...values));
+  const present = values.filter((v): v is number => v !== null);
+  const domain = niceDomain(Math.min(0, ...present), Math.max(0, ...present));
   const span = domain.max - domain.min;
   const zeroFromTop = ((domain.max - 0) / span) * 100;
 
@@ -262,8 +297,9 @@ export function DivergingBars({
       <ChartFrame
         height={height}
         left={{ unit, color: positive.color, domain }}
+        locale={locale}
         ariaLabel={ariaLabel}
-        xAxis={<BarLabels labels={labels} every={labelEvery} />}
+        xAxis={<BarLabels labels={labels} every={labelEvery} format={formatLabel} />}
       >
         {/* Garis nol lebih tegas dari garis kisi lain: ia batas antara emisi
             dan serapan, bukan sekadar salah satu tick. */}
@@ -275,19 +311,28 @@ export function DivergingBars({
 
         <div className="absolute inset-0 flex items-stretch gap-1">
           {values.map((value, i) => {
+            if (value === null) return <div key={labels[i]} className="min-w-0 flex-1" />;
             const color = value >= 0 ? positive.color : negative.color;
+            const top = ((domain.max - Math.max(value, 0)) / span) * 100;
             return (
-              <div key={labels[i]} className="relative min-w-0 flex-1">
+              <div key={labels[i]} className="group relative min-w-0 flex-1">
                 <div
                   className={`absolute inset-x-0 ${SERIES_CLASSES[color].swatch} ${
                     value >= 0 ? 'rounded-t-sm' : 'rounded-b-sm'
                   }`}
                   style={{
-                    top: `${((domain.max - Math.max(value, 0)) / span) * 100}%`,
+                    top: `${top}%`,
                     height: `${(Math.abs(value) / span) * 100}%`,
                     opacity: 0.75,
                   }}
                 />
+                {tooltip ? (
+                  <BarTooltip
+                    text={tooltip(labels[i], value)}
+                    bottom={100 - top}
+                    align={i < 2 ? 'start' : i > values.length - 3 ? 'end' : 'center'}
+                  />
+                ) : null}
               </div>
             );
           })}

@@ -39,6 +39,13 @@
   animation: stats-marquee-scroll var(--stats-marquee-duration, 60s) linear infinite;
 }
 
+/* Baris yang berjalan ke arah sebaliknya -- dipakai pita dua baris (KPI Jogo
+   Laut): dua baris yang bergerak searah dengan laju sama terbaca sebagai satu
+   blok yang bergeser, bukan dua pita. Durasinya tetap per baris. */
+.stats-marquee-track[data-direction='reverse'] {
+  animation-direction: reverse;
+}
+
 /* Berhenti saat disentuh pointer ATAU saat fokus keyboard masuk: kartu yang
    sedang dibaca tidak boleh kabur ke kiri. :focus-within yang membuat janji itu
    berlaku juga bagi yang menavigasi tanpa tetikus -- wadahnya tabbable (lihat

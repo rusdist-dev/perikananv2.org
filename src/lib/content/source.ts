@@ -83,6 +83,7 @@ import {
   type VillageDetail,
 } from './schema';
 import { getProgramNameByCmsSlug } from './program-taxonomy';
+import { parseJogoLautMonitoring, type JogoLautMonitoring } from './jogolaut';
 
 /**
  * Satu-satunya tempat yang tahu DARI MANA konten datang.
@@ -127,7 +128,8 @@ type LocalFixture =
   | 'stscWppOptions'
   | 'stscKomoditasOptions'
   | 'stscArmadaChart'
-  | 'stscProduksiChart';
+  | 'stscProduksiChart'
+  | 'jogoLautMonitoring';
 
 async function fetchLocal(name: LocalFixture): Promise<unknown> {
   const file = path.join(DATA_DIR, `${name}.json`);
@@ -749,6 +751,10 @@ function isRetryableStatus(status: number): boolean {
  * pembacaan cache -- harga yang jauh lebih murah daripada build yang
  * menggantung tanpa batas waktu.
  */
+/** Pengecualian batas waktu/percobaan untuk endpoint yang profilnya berbeda
+ *  dari endpoint konten biasa. Bawaannya REQUEST_TIMEOUT_MS dan MAX_ATTEMPTS. */
+type FetchLimits = { timeoutMs?: number; attempts?: number };
+
 async function fetchPage(
   url: URL,
   headers: HeadersInit,
@@ -756,15 +762,18 @@ async function fetchPage(
   /** null untuk resource yang tidak berhalaman -- supaya pesan galatnya tidak
    *  menyebut "page=1" untuk permintaan yang tidak pernah mengirim `page`. */
   page: number | null,
+  limits: FetchLimits = {},
 ): Promise<Response> {
+  const timeoutMs = limits.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const maxAttempts = limits.attempts ?? MAX_ATTEMPTS;
   let lastReason = 'sebab tidak diketahui';
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
       const res = await withRequestSlot(() =>
         fetch(url, {
           headers,
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          signal: AbortSignal.timeout(timeoutMs),
           // Caching fetch di Next 16 itu opt-in (default "auto no cache"), dan
           // "tidak di-cache" di sini TIDAK berarti selalu segar: halaman yang
           // memakainya tetap di-prerender sekali saat build, lalu isinya beku
@@ -793,18 +802,18 @@ async function fetchPage(
       lastReason = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
     }
 
-    if (attempt < MAX_ATTEMPTS) {
+    if (attempt < maxAttempts) {
       // Percobaan ulang yang berhasil tetap dicatat: CMS yang mulai goyah
       // akan terlihat di log jauh sebelum ia benar-benar menjatuhkan build.
       console.warn(
-        `[konten] "${url.pathname}"${page === null ? '' : ` (page=${page})`} gagal pada percobaan ${attempt}/${MAX_ATTEMPTS} -- ${lastReason}; mencoba lagi.`,
+        `[konten] "${url.pathname}"${page === null ? '' : ` (page=${page})`} gagal pada percobaan ${attempt}/${maxAttempts} -- ${lastReason}; mencoba lagi.`,
       );
       await delay(RETRY_BASE_DELAY_MS * attempt * (1 + Math.random() * 0.5));
     }
   }
 
   throw new Error(
-    `Gagal menghubungi "${url.pathname}"${page === null ? '' : ` (page=${page})`} setelah ${MAX_ATTEMPTS} percobaan: ${lastReason}`,
+    `Gagal menghubungi "${url.pathname}"${page === null ? '' : ` (page=${page})`} setelah ${maxAttempts} percobaan: ${lastReason}`,
   );
 }
 
@@ -825,8 +834,9 @@ async function fetchEnvelope(
    *  notFound(), bukan kegagalan konfigurasi. Untuk endpoint daftar, 404
    *  tetap galat (modul nonaktif). */
   allowNotFound = false,
+  limits: FetchLimits = {},
 ): Promise<ApiEnvelope | null> {
-  const res = await fetchPage(url, headers, tag, page);
+  const res = await fetchPage(url, headers, tag, page, limits);
 
   if (res.status === 404 && allowNotFound) return null;
 
@@ -2442,6 +2452,58 @@ export function loadCoastStats(): Promise<CoastStats | null> {
 
 export function loadVillageDetail(kode: string): Promise<VillageDetail | null> {
   return loadVillageDetailMemo(kode);
+}
+
+/**
+ * Dasbor stasiun Jogo Laut (`/ext/jogolaut/monitoring`): seluruh section dalam
+ * satu permintaan, dengan parameter bawaan API (7 hari, MA pasut 11, tabel 10
+ * baris terbaru).
+ *
+ * Revalidasinya memakai CACHE_TTL_SECONDS yang sama dengan konten lain, dan
+ * kebetulan itu juga lebar blok cache API-nya sendiri (5 menit): memperbarui
+ * lebih sering cuma akan menerima salinan yang sama dari cache CMS.
+ *
+ * null = dasbornya tidak bisa diambil: env CMS kosong, datasource belum
+ * dikonfigurasi di CMS (HTTP 503), kunci ditolak, atau bentuknya tidak
+ * dikenali. Pemanggil menampilkan pemberitahuan "data tidak tersedia" alih-
+ * alih menjatuhkan halaman -- hero dan teks halamannya tidak bergantung pada
+ * sensor. Section yang kosong satu per satu BUKAN kasus itu; lihat
+ * lib/content/jogolaut.ts.
+ */
+/** Endpoint ini menghitung 14 section dari tujuh tabel sensor. Dengan cache
+ *  CMS yang dingin, jawabannya terukur ~9 detik (kadang melewati 10 detik);
+ *  dengan cache hangat ~0,3 detik. Batas bawaan 10 detik x 5 percobaan
+ *  karena itu GAGAL tiap kali cache dingin: tiap percobaan diputus tepat
+ *  sebelum selesai, lalu diulang dari nol. Satu percobaan panjang lebih
+ *  berguna di sini daripada lima yang pendek. */
+const JOGOLAUT_LIMITS: FetchLimits = { timeoutMs: 30_000, attempts: 2 };
+
+const loadJogoLautMonitoringMemo = cache(
+  async (lang: Locale): Promise<JogoLautMonitoring | null> => {
+    if (mode !== 'api') {
+      const local = await fetchLocal('jogoLautMonitoring');
+      return parseJogoLautMonitoring((local as { data?: unknown }).data);
+    }
+
+    try {
+      const { base, headers } = cmsAccess();
+      const url = new URL(`${base}/ext/jogolaut/monitoring`);
+      // Hanya mengubah label (nama seri, tingkat, deskripsi), tidak pernah key.
+      url.searchParams.set('locale', lang);
+
+      const json = await fetchEnvelope(url, headers, 'jogoLaut', null, false, JOGOLAUT_LIMITS);
+      const parsed = parseJogoLautMonitoring(json?.data);
+      if (!parsed) console.error('[konten] respons Jogo Laut tidak dikenali bentuknya.');
+      return parsed;
+    } catch (error) {
+      console.error('[konten] dasbor Jogo Laut gagal diambil:', error);
+      return null;
+    }
+  },
+);
+
+export function loadJogoLautMonitoring(lang: Locale): Promise<JogoLautMonitoring | null> {
+  return loadJogoLautMonitoringMemo(lang);
 }
 
 /**

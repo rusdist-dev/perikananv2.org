@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import type { StscWppOption } from '@/lib/stsc-filters';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 
 const FIELD_LABEL = 'text-xs font-bold uppercase tracking-wide text-muted';
 const CONTROL_CLASS =
@@ -39,6 +41,7 @@ export function StscFilterPanel({
   onSubmit,
   onReset,
   children,
+  locale,
 }: {
   title: string;
   wppOptions: StscWppOption[];
@@ -62,7 +65,9 @@ export function StscFilterPanel({
   /** Field tambahan khas halaman ini -- dropdown komoditas di Production Data,
    *  tidak ada di Vessel Data. */
   children?: ReactNode;
+  locale: Locale;
 }) {
+  const t = getFisheriesDictionary(locale);
   const baseId = useId();
   const wppEmpty = wppOptions.length === 0;
 
@@ -77,7 +82,7 @@ export function StscFilterPanel({
       >
         <div className="flex flex-col gap-1">
           <label htmlFor={`${baseId}-wpp`} className={FIELD_LABEL}>
-            Fisheries Management Area
+            {t.levels.wppnri.label}
           </label>
           <select
             id={`${baseId}-wpp`}
@@ -87,11 +92,11 @@ export function StscFilterPanel({
             className={CONTROL_CLASS}
           >
             <option value="">
-              {wppEmpty ? 'Daftar WPP tidak tersedia' : 'All Fisheries Management Area'}
+              {wppEmpty ? t.fmaUnavailable : t.allFma}
             </option>
             {wppOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                FMA-RI {option.value}
+                {t.fmaCode(option.value)}
               </option>
             ))}
           </select>
@@ -106,11 +111,11 @@ export function StscFilterPanel({
             tombol naik-turun; pesan galat di bawah jaring pengaman untuk yang
             mengetik langsung. */}
         <fieldset className="flex flex-col gap-1">
-          <legend className={FIELD_LABEL}>Rentang Tahun</legend>
+          <legend className={FIELD_LABEL}>{t.yearRange}</legend>
           <div className="mt-1 grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label htmlFor={`${baseId}-year-from`} className="text-xs text-muted">
-                Dari
+                {t.dateFrom}
               </label>
               <input
                 id={`${baseId}-year-from`}
@@ -126,7 +131,7 @@ export function StscFilterPanel({
             </div>
             <div className="flex flex-col gap-1">
               <label htmlFor={`${baseId}-year-to`} className="text-xs text-muted">
-                Sampai
+                {t.dateTo}
               </label>
               <input
                 id={`${baseId}-year-to`}
@@ -142,14 +147,13 @@ export function StscFilterPanel({
             </div>
           </div>
           <p className="mt-1 text-xs text-muted">
-            Data tersedia {yearMin}–{yearMax}.
+            {t.yearsAvailable(String(yearMin), String(yearMax))}
           </p>
           {rangeInvalid ? (
             // role="alert" supaya pembaca layar mendengar koreksinya saat
             // muncul, bukan baru saat pengguna kebetulan melewatinya.
             <p role="alert" className="mt-1 text-xs font-bold text-(--color-series-6)">
-              Rentang tahun tidak sah. Isi antara {yearMin} dan {yearMax}, dengan tahun awal tidak
-              melewati tahun akhir.
+              {t.yearRangeInvalid(String(yearMin), String(yearMax))}
             </p>
           ) : null}
         </fieldset>
@@ -160,21 +164,21 @@ export function StscFilterPanel({
             disabled={rangeInvalid || isPending}
             className="flex-1 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? 'Memuat…' : 'Show Chart'}
+            {loading ? t.loadingButton : t.showChart}
           </button>
           <button
             type="button"
             onClick={onReset}
             className="rounded-md border border-border px-4 py-2 text-xs font-bold uppercase tracking-wide text-muted hover:text-primary"
           >
-            Reset
+            {t.reset}
           </button>
         </div>
 
         {/* aria-live supaya hasil penekanan tombol juga TERDENGAR: grafiknya
             berubah di kolom sebelah, jauh dari fokus yang masih di tombol. */}
         <p aria-live="polite" className="text-xs leading-relaxed text-muted">
-          Tekan Show Chart untuk memperbarui grafik.
+          {t.chartHelp(t.showChart)}
         </p>
       </form>
     </ChartCard>

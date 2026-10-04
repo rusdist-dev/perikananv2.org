@@ -1,4 +1,6 @@
 import { WPP_COLORS } from '@/components/data/stsc/wpp-colors';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 
 /**
  * Legenda kesebelas WPP-RI beserta warnanya.
@@ -14,11 +16,12 @@ import { WPP_COLORS } from '@/components/data/stsc/wpp-colors';
  * membaca kartu itu sendiri, dan kunci lengkap sebelas kode di puncak halaman
  * cuma menunda grafik pertamanya.
  */
-export function WppLegend() {
+export function WppLegend({ locale }: { locale: Locale }) {
+  const t = getFisheriesDictionary(locale);
   return (
     <div className="mt-8">
       <p className="mb-3 text-xs font-bold uppercase tracking-wider text-secondary">
-        Wilayah Pengelolaan Perikanan (WPP-RI)
+        {t.fmaLegendTitle}
       </p>
       <ul className="flex list-none flex-wrap gap-2 p-0">
         {WPP_COLORS.map(({ code, color }) => (
@@ -27,7 +30,7 @@ export function WppLegend() {
             style={{ backgroundColor: color }}
             className="rounded-md px-4 py-2 text-sm font-semibold text-white"
           >
-            FMA-RI {code}
+            {t.fmaCode(code)}
           </li>
         ))}
       </ul>

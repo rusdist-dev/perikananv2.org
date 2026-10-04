@@ -39,6 +39,8 @@ export default async function SharkAndRayPage({ params }: { params: Promise<{ lo
 
   return (
     <SharkAndRayDashboard
+      locale={locale}
+      title={t.navSharkAndRay}
       breadcrumb={[
         { label: t.home, href: '/' },
         // Belum ada halaman indeks /data -- "#" menyatakan itu apa adanya,

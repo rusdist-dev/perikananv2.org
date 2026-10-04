@@ -38,6 +38,8 @@ export default async function ProductionDataPage({ params }: { params: Promise<{
 
   return (
     <ProductionDataDashboard
+      locale={locale}
+      title={t.navProductionData}
       breadcrumb={[
         { label: t.home, href: '/' },
         // Belum ada halaman indeks /data -- "#" menyatakan itu apa adanya,
@@ -48,6 +50,7 @@ export default async function ProductionDataPage({ params }: { params: Promise<{
       ]}
     >
       <ProductionExplorer
+        title={t.navProductionData}
         wppOptions={wppOptions}
         initialKomoditasOptions={komoditasOptions}
         initialChart={initialChart}

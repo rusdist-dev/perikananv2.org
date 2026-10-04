@@ -5,6 +5,8 @@ import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { RankedBars } from '@/components/data/RankedBars';
 import { useIkanFilter } from '@/components/data/ikan/IkanFilterContext';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 
 /** Berapa label sumbu-x yang dicetak, dihitung dari jumlah batangnya.
  *
@@ -35,7 +37,7 @@ function formatPeriode(periode: string, locale: Locale): string {
   if (!cocok) return periode;
 
   const tanggal = new Date(Date.UTC(Number(cocok[1]), Number(cocok[2]) - 1, 1));
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat(locale === 'id' ? 'id-ID' : 'en-US', {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
@@ -54,6 +56,7 @@ function formatPeriode(periode: string, locale: Locale): string {
  * mendatar, urutannya nilai). Lihat komentar di RankedBars.
  */
 export function IkanTripCharts({ locale }: { locale: Locale }) {
+  const t = getFisheriesDictionary(locale);
   const { chart, chartStatus, appliedSummary } = useIkanFilter();
 
   const loading = chartStatus === 'loading';
@@ -64,10 +67,8 @@ export function IkanTripCharts({ locale }: { locale: Locale }) {
   if (!chart) {
     return (
       <div className="flex flex-col gap-5">
-        <ChartCard title="Number of Trips">
-          <p className="text-sm leading-relaxed text-muted">
-            Grafik trip gagal dimuat. Ubah filter lalu tekan Filter untuk mencoba lagi.
-          </p>
+        <ChartCard title={t.tripsTitle}>
+          <p className="text-sm leading-relaxed text-muted">{t.tripsLoadFailed}</p>
         </ChartCard>
       </div>
     );
@@ -75,8 +76,8 @@ export function IkanTripCharts({ locale }: { locale: Locale }) {
 
   const periodeLabels = chart.perPeriode.map((row) => row.periode);
   const periodeValues = chart.perPeriode.map((row) => row.jumlahTrip);
-  const total = chart.totalTrip.toLocaleString(locale);
-  const satuanPeriode = chart.tipeTanggal === 'monthly' ? 'per bulan' : 'per tahun';
+  const total = formatNumber(chart.totalTrip, locale);
+  const satuanPeriode = chart.tipeTanggal === 'monthly' ? t.perMonth : t.perYear;
   /** Ringkasan filter cuma disambung kalau memang ada isinya -- tanpa ini,
    *  kepala kartu berakhir dengan pemisah menggantung saat belum ada satu pun
    *  filter dipilih. */
@@ -96,10 +97,7 @@ export function IkanTripCharts({ locale }: { locale: Locale }) {
    *  mengirim periode yang punya catatan saja, jadi dua batang bersebelahan
    *  bisa terpisah bertahun-tahun. Dengan rentang tanggal, periode kosongnya
    *  ikut dikirim dan sumbunya rapat. */
-  const catatanSumbu =
-    chart.dari || chart.sampai
-      ? ''
-      : ' Sumbu datarnya hanya memuat periode yang PUNYA catatan -- dua batang bersebelahan tidak selalu berarti dua bulan berurutan.';
+  const catatanSumbu = chart.dari || chart.sampai ? '' : t.tripsAxisNote;
 
   return (
     // Angka yang sedang diganti tetap terlihat apa adanya, tidak diredupkan.
@@ -110,7 +108,7 @@ export function IkanTripCharts({ locale }: { locale: Locale }) {
     <div aria-busy={loading} className="flex flex-col gap-5">
       {loading ? (
         <p aria-live="polite" className="text-xs text-muted">
-          Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+          {t.updating}
         </p>
       ) : null}
 
@@ -119,47 +117,46 @@ export function IkanTripCharts({ locale }: { locale: Locale }) {
           role="alert"
           className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
         >
-          Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+          {t.updateFailed}
         </p>
       ) : null}
 
       <ChartCard
-        title="Number of Trips"
-        meta={`${total} trip · ${satuanPeriode}${filterSuffix}`}
-        note={`Jumlah trip pendataan per periode. Sumbu tegaknya mulai dari nol, jadi tinggi batang bisa dibandingkan apa adanya.${catatanSumbu}`}
+        title={t.tripsTitle}
+        meta={`${t.tripsMeta(total, satuanPeriode)}${filterSuffix}`}
+        note={`${t.tripsNote}${catatanSumbu}`}
       >
         {kosong ? (
-          <p className="text-sm leading-relaxed text-muted">
-            Tidak ada trip yang tercatat untuk filter ini.
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t.tripsEmpty}</p>
         ) : (
           <ColumnChart
             labels={periodeLabels}
             values={periodeValues}
             color="series-2"
-            unit="trip"
-            seriesLabel="Jumlah Trip"
+            unit={t.tripUnit}
+            seriesLabel={t.tripsSeries}
+            locale={locale}
             labelEvery={labelEveryFor(periodeLabels.length)}
             tooltip={(label, value) =>
-              `${formatPeriode(label, locale)} · ${value.toLocaleString(locale)} trip`
+              t.tripsTooltip(formatPeriode(label, locale), formatNumber(value, locale))
             }
             height={320}
-            ariaLabel={`Grafik batang jumlah trip IKAN ${satuanPeriode}, total ${total} trip`}
+            ariaLabel={t.tripsAria(satuanPeriode, total)}
           />
         )}
       </ChartCard>
 
       <ChartCard
-        title="Trips per Landing Site"
-        meta={`${chart.perLokasi.length} lokasi${filterSuffix}`}
-        note="Diurutkan dari lokasi dengan trip terbanyak. Panjang batang dibandingkan terhadap lokasi teratas, bukan terhadap total."
+        title={t.landingTitle}
+        meta={`${t.landingMeta(formatNumber(chart.perLokasi.length, locale))}${filterSuffix}`}
+        note={t.landingNote}
       >
         <RankedBars
           items={chart.perLokasi.map((row) => ({ label: row.lokasi, value: row.jumlahTrip }))}
           color="series-1"
-          unit="trip"
+          unit={t.tripUnit}
           locale={locale}
-          emptyLabel="Tidak ada lokasi pendaratan yang tercatat untuk filter ini."
+          emptyLabel={t.landingEmpty}
         />
       </ChartCard>
     </div>

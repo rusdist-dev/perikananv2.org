@@ -10,6 +10,8 @@ import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { StscFilterPanel } from '@/components/data/stsc/StscFilterPanel';
 import { WppLineChart, type WppSeries } from '@/components/data/stsc/WppLineChart';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import type { StscProduksiChart } from '@/lib/content';
 import type { StscKomoditasOption, StscSeries, StscWppOption } from '@/lib/stsc-filters';
 
@@ -49,6 +51,7 @@ function toSeries(raw: StscSeries[], years: number[]): WppSeries[] {
  * grafik jadi garis lurus di sumbu nol.
  */
 export function ProductionExplorer({
+  title,
   wppOptions,
   initialKomoditasOptions,
   initialChart,
@@ -56,6 +59,8 @@ export function ProductionExplorer({
   yearMax,
   locale,
 }: {
+  /** Judul kartu filter dan kartu keadaan gagal/kosong -- nama halamannya. */
+  title: string;
   wppOptions: StscWppOption[];
   initialKomoditasOptions: StscKomoditasOption[];
   initialChart: StscProduksiChart | null;
@@ -63,6 +68,7 @@ export function ProductionExplorer({
   yearMax: number;
   locale: Locale;
 }) {
+  const t = getFisheriesDictionary(locale);
   const [wpp, setWpp] = useState('');
   const [komoditas, setKomoditas] = useState('');
   const [komoditasOptions, setKomoditasOptions] =
@@ -129,7 +135,9 @@ export function ProductionExplorer({
 
       setChart(fresh);
       setStatus('ready');
-      setAppliedSummary(`${wpp ? `FMA-RI ${wpp}` : 'seluruh WPP'} · ${yearFrom}–${yearTo}`);
+      setAppliedSummary(
+        t.stscSummary(wpp ? t.fmaCode(wpp) : t.allFmaSummary, String(yearFrom), String(yearTo)),
+      );
     });
   };
 
@@ -157,7 +165,8 @@ export function ProductionExplorer({
   return (
     <div className="mt-8 grid gap-5 lg:grid-cols-[20rem_1fr] lg:items-start">
       <StscFilterPanel
-        title="Production Data"
+        title={title}
+        locale={locale}
         wppOptions={wppOptions}
         selectedWpp={wpp}
         yearFrom={yearFrom}
@@ -177,7 +186,7 @@ export function ProductionExplorer({
             Vessel Data tidak punya komoditas sama sekali. */}
         <div className="flex flex-col gap-1">
           <label htmlFor="production-komoditas" className={FIELD_LABEL}>
-            Komoditas
+            {t.commodity}
           </label>
           <select
             id="production-komoditas"
@@ -187,7 +196,7 @@ export function ProductionExplorer({
             className={CONTROL_CLASS}
           >
             <option value="">
-              {komoditasEmpty ? 'Daftar komoditas tidak tersedia' : 'Semua komoditas'}
+              {komoditasEmpty ? t.commodityUnavailable : t.allCommodities}
             </option>
             {komoditasOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -195,16 +204,14 @@ export function ProductionExplorer({
               </option>
             ))}
           </select>
-          <p className="text-xs leading-relaxed text-muted">
-            Dikosongkan berarti seluruh komoditas, masing-masing dengan grafiknya sendiri.
-          </p>
+          <p className="text-xs leading-relaxed text-muted">{t.commodityHint}</p>
         </div>
       </StscFilterPanel>
 
       <div aria-busy={loading} className="flex flex-col gap-5">
         {loading ? (
           <p aria-live="polite" className="text-xs text-muted">
-            Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+            {t.updating}
           </p>
         ) : null}
 
@@ -213,21 +220,19 @@ export function ProductionExplorer({
             role="alert"
             className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
           >
-            Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+            {t.updateFailed}
           </p>
         ) : null}
 
         {!chart ? (
-          <ChartCard title="Production Data">
+          <ChartCard title={title}>
             <p className="text-sm leading-relaxed text-muted">
-              Grafik produksi gagal dimuat. Ubah filter lalu tekan Show Chart untuk mencoba lagi.
+              {t.productionLoadFailed(t.showChart)}
             </p>
           </ChartCard>
         ) : chart.komoditas.length === 0 ? (
-          <ChartCard title="Production Data">
-            <p className="text-sm leading-relaxed text-muted">
-              Tidak ada produksi yang tercatat untuk filter ini.
-            </p>
+          <ChartCard title={title}>
+            <p className="text-sm leading-relaxed text-muted">{t.productionEmpty}</p>
           </ChartCard>
         ) : (
           <>
@@ -236,25 +241,38 @@ export function ProductionExplorer({
                 tiap kartu di bawah menjawab "bagaimana bentuknya per
                 komoditas". */}
             <p className="text-xs leading-relaxed text-muted">
-              Total {chart.totalProduksi.toLocaleString(locale, { maximumFractionDigits: 0 })}{' '}
-              {chart.unit} dari {chart.komoditas.length} komoditas{suffix}. Tiap komoditas punya
-              grafiknya sendiri: satuannya memang sama, tapi besarannya tidak sebanding, dan
-              menumpuknya di satu bingkai membuat komoditas kecil rata di sumbu nol.
+              {t.productionTotal(
+                formatNumber(chart.totalProduksi, locale, { maximumFractionDigits: 0 }),
+                chart.unit,
+                formatNumber(chart.komoditas.length, locale),
+              )}
+              {suffix}
+              {t.productionTotalRest}
             </p>
 
             {chart.komoditas.map((group) => (
               <ChartCard
                 key={group.komoditas}
                 title={group.komoditas}
-                meta={`${group.totalProduksi.toLocaleString(locale, { maximumFractionDigits: 0 })} ${chart.unit} · ${group.seri.length} WPP${suffix}`}
-                note={`Produksi ${group.komoditas} per tahun di tiap WPP-RI. Sumbu tegaknya mulai dari nol dan diskalakan terhadap komoditas INI saja -- tinggi garis tidak bisa dibandingkan antar-kartu. Tahun tanpa catatan membuat garisnya terputus, bukan turun ke nol.`}
+                meta={`${t.productionMeta(
+                  formatNumber(group.totalProduksi, locale, { maximumFractionDigits: 0 }),
+                  chart.unit,
+                  formatNumber(group.seri.length, locale),
+                )}${suffix}`}
+                note={t.productionCardNote(group.komoditas)}
               >
                 <WppLineChart
                   years={years}
                   series={toSeries(group.seri, years)}
                   unit={chart.unit}
                   height={260}
-                  ariaLabel={`Grafik garis produksi ${group.komoditas} per tahun untuk ${group.seri.length} WPP-RI, ${years[0]} sampai ${years[years.length - 1]}`}
+                  locale={locale}
+                  ariaLabel={t.productionAria(
+                    group.komoditas,
+                    formatNumber(group.seri.length, locale),
+                    String(years[0]),
+                    String(years[years.length - 1]),
+                  )}
                 />
               </ChartCard>
             ))}

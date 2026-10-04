@@ -1,5 +1,8 @@
 'use client';
 
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatArticleDate } from '@/lib/date';
 import { createContext, useContext, useRef, useState, useTransition } from 'react';
 import type { ReactNode } from 'react';
 
@@ -113,19 +116,32 @@ export function useIkanFilter(): IkanFilterState {
  *  bulan · bulanan") cuma menambah kata. String kosong berarti tidak ada
  *  penyaring sama sekali, dan pemanggilnya yang memutuskan cara
  *  menyambungnya. */
-function summarize(selection: IkanSelection, dateFrom: string, dateTo: string): string {
+function summarize(
+  selection: IkanSelection,
+  dateFrom: string,
+  dateTo: string,
+  locale: Locale,
+): string {
   const parts = Object.values(selection).filter(Boolean);
-  if (dateFrom || dateTo) parts.push(`${dateFrom || '…'} s.d. ${dateTo || '…'}`);
+  if (dateFrom || dateTo) {
+    // Tanggal ISO dari <input type="date"> dicetak seperti tanggal lain di
+    // situs ("01 JAN 2024"), bukan "2024-01-01" mentah.
+    const show = (value: string) => (value ? formatArticleDate(value, locale) : '…');
+    parts.push(getFisheriesDictionary(locale).dateSpan(show(dateFrom), show(dateTo)));
+  }
   return parts.join(' · ');
 }
 
 export function IkanFilterProvider({
+  locale,
   initialOptions,
   initialChart,
   initialCatchChart,
   initialLengthChart,
   children,
 }: {
+  /** Bahasa ringkasan filter di kepala kartu grafik. */
+  locale: Locale;
   /** Opsi kedelapan tingkat TANPA penyaring, diambil di server. */
   initialOptions: IkanOptionsByLevel;
   /** Grafik trip untuk filter bawaan (tanpa penyaring, bulanan, seluruh
@@ -239,7 +255,7 @@ export function IkanFilterProvider({
     // dimatikan: apply() bisa dipanggil dengan Enter dari dalam form.
     if (rangeInvalid) return;
 
-    const summary = summarize(selection, dateFrom, dateTo);
+    const summary = summarize(selection, dateFrom, dateTo, locale);
 
     if (scope === 'length-frequency') {
       const ticket = (lengthTicket.current += 1);

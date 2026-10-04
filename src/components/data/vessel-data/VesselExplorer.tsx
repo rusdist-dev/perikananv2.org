@@ -7,6 +7,8 @@ import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { StscFilterPanel } from '@/components/data/stsc/StscFilterPanel';
 import { WppLineChart, type WppSeries } from '@/components/data/stsc/WppLineChart';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import type { StscArmadaChart } from '@/lib/content';
 import type { StscSeries, StscWppOption } from '@/lib/stsc-filters';
 
@@ -44,18 +46,22 @@ function toSeries(raw: StscSeries[], years: number[]): WppSeries[] {
  * kartu berarti 22 garis di satu bingkai.
  */
 export function VesselExplorer({
+  title,
   wppOptions,
   initialChart,
   yearMin,
   yearMax,
   locale,
 }: {
+  /** Judul kartu filter -- nama halamannya. */
+  title: string;
   wppOptions: StscWppOption[];
   initialChart: StscArmadaChart | null;
   yearMin: number;
   yearMax: number;
   locale: Locale;
 }) {
+  const t = getFisheriesDictionary(locale);
   const [wpp, setWpp] = useState('');
   const [yearFrom, setYearFrom] = useState(yearMin);
   const [yearTo, setYearTo] = useState(yearMax);
@@ -106,7 +112,7 @@ export function VesselExplorer({
       setChart(fresh);
       setStatus('ready');
       setAppliedSummary(
-        `${wpp ? `FMA-RI ${wpp}` : 'seluruh WPP'} · ${yearFrom}–${yearTo}`,
+        t.stscSummary(wpp ? t.fmaCode(wpp) : t.allFmaSummary, String(yearFrom), String(yearTo)),
       );
     });
   };
@@ -133,7 +139,8 @@ export function VesselExplorer({
   return (
     <div className="mt-8 grid gap-5 lg:grid-cols-[20rem_1fr] lg:items-start">
       <StscFilterPanel
-        title="Vessel Data"
+        locale={locale}
+        title={title}
         wppOptions={wppOptions}
         selectedWpp={wpp}
         yearFrom={yearFrom}
@@ -153,7 +160,7 @@ export function VesselExplorer({
       <div aria-busy={loading} className="flex flex-col gap-5">
         {loading ? (
           <p aria-live="polite" className="text-xs text-muted">
-            Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+            {t.updating}
           </p>
         ) : null}
 
@@ -162,41 +169,49 @@ export function VesselExplorer({
             role="alert"
             className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
           >
-            Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+            {t.updateFailed}
           </p>
         ) : null}
 
         {!chart ? (
-          <ChartCard title="Number of Vessels">
-            <p className="text-sm leading-relaxed text-muted">
-              Grafik armada gagal dimuat. Ubah filter lalu tekan Show Chart untuk mencoba lagi.
-            </p>
+          <ChartCard title={t.vesselsTitle}>
+            <p className="text-sm leading-relaxed text-muted">{t.vesselLoadFailed(t.showChart)}</p>
           </ChartCard>
         ) : (
           <>
             <ChartCard
-              title="Number of Vessels"
-              meta={`${chart.armada.length} WPP · ${chart.unitArmada}${suffix}`}
-              note={`Jumlah armada penangkapan per tahun di tiap WPP-RI. Sumbu tegaknya mulai dari nol, jadi tinggi garis bisa dibandingkan apa adanya. Tahun tanpa catatan membuat garisnya TERPUTUS, bukan turun ke nol.`}
+              title={t.vesselsTitle}
+              meta={`${t.vesselMeta(formatNumber(chart.armada.length, locale), chart.unitArmada)}${suffix}`}
+              note={t.vesselsNote}
             >
               <WppLineChart
+                locale={locale}
                 years={years}
                 series={toSeries(chart.armada, years)}
                 unit={chart.unitArmada}
-                ariaLabel={`Grafik garis jumlah armada per tahun untuk ${chart.armada.length} WPP-RI, ${years[0]} sampai ${years[years.length - 1]}`}
+                ariaLabel={t.vesselsAria(
+                  formatNumber(chart.armada.length, locale),
+                  String(years[0]),
+                  String(years[years.length - 1]),
+                )}
               />
             </ChartCard>
 
             <ChartCard
-              title="Total Vessel Tonnage"
-              meta={`${chart.gt.length} WPP · ${chart.unitGt}${suffix}`}
-              note={`Total tonase kotor armada per tahun di tiap WPP-RI. Dipisah dari kartu di atas karena satuannya berbeda arti: ${chart.unitGt} mengukur kapasitas, ${chart.unitArmada} mengukur cacah kapal -- dan menumpuk keduanya di satu sumbu membuat kenaikan yang satu terlihat seperti kenaikan yang lain.`}
+              title={t.tonnageTitle}
+              meta={`${t.vesselMeta(formatNumber(chart.gt.length, locale), chart.unitGt)}${suffix}`}
+              note={t.tonnageNote(chart.unitGt, chart.unitArmada)}
             >
               <WppLineChart
+                locale={locale}
                 years={years}
                 series={toSeries(chart.gt, years)}
                 unit={chart.unitGt}
-                ariaLabel={`Grafik garis total tonase armada per tahun untuk ${chart.gt.length} WPP-RI, ${years[0]} sampai ${years[years.length - 1]}`}
+                ariaLabel={t.tonnageAria(
+                  formatNumber(chart.gt.length, locale),
+                  String(years[0]),
+                  String(years[years.length - 1]),
+                )}
               />
             </ChartCard>
           </>

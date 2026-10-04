@@ -267,28 +267,7 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
           </form>
         </div>
 
-        <div className="relative mt-10 flex flex-wrap items-center gap-3 border-b border-border pb-4">
-          <div className="relative pb-2">
-            <span className="text-sm font-bold uppercase tracking-wide text-primary">{t.allTab}</span>
-            <span aria-hidden className="absolute inset-x-0 -bottom-4 h-0.5 bg-secondary" />
-          </div>
-          {documentTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              disabled
-              aria-describedby="publications-document-type-note"
-              className="rounded-full border border-secondary px-4 py-1.5 text-sm font-medium text-secondary disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {type}
-            </button>
-          ))}
-          <p id="publications-document-type-note" className="sr-only">
-            {t.documentTypeNote}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 border-t border-border mt-6">
           {publicationStats.map((stat, index) => (
             <div key={stat.label} className="relative px-4 py-8 text-center">
               {index > 0 ? (

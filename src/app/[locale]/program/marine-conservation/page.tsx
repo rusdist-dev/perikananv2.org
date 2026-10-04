@@ -191,6 +191,7 @@ export default async function MarineConservationPage({
             data nasional, tapi section ini judulnya "Work Area". */}
         <IndonesiaMap
           theme="brand"
+          locale={locale}
           ariaLabel={t.marineConservationMapAriaLabel}
           mpaNames={FRCI_CONSERVATION_AREA_NAMES}
         />

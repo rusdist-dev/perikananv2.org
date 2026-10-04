@@ -1,3 +1,4 @@
+import type { Locale } from '@/i18n/config';
 import { SERIES_CLASSES, fmt, type SeriesColor } from './chart-theme';
 
 /* =========================================================================
@@ -48,12 +49,17 @@ export function WindRose({
   values,
   color = 'series-1',
   ariaLabel,
+  locale = 'id',
+  outerRingLabel = (pct) => `cincin terluar = ${pct}% kejadian`,
 }: {
   directions: readonly string[];
   /** Frekuensi tiap arah dalam persen. */
   values: number[];
   color?: SeriesColor;
   ariaLabel: string;
+  locale?: Locale;
+  /** Keterangan cincin terluar; menerima persen yang sudah diformat. */
+  outerRingLabel?: (pct: string) => string;
 }) {
   const max = Math.max(...values);
   const step = 22.5;
@@ -130,7 +136,7 @@ export function WindRose({
       </div>
 
       <p className="mt-2 text-center font-mono text-xs text-muted">
-        cincin terluar = {fmt(max, 1)}% kejadian
+        {outerRingLabel(fmt(max, 1, locale))}
       </p>
     </div>
   );

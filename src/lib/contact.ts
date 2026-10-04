@@ -63,6 +63,54 @@ export async function sendContactMessage(input: ContactMessage): Promise<Contact
   return { ok: false, reason: 'unavailable' };
 }
 
+/** Data yang benar-benar diisi pengunjung di gerbang unduhan publikasi.
+ *
+ *  Subjek dan isi pesannya TIDAK ikut dari browser -- keduanya disusun di
+ *  server oleh `sendDownloadLead`, supaya bentuknya seragam di dashboard CMS
+ *  dan tidak bisa dikarang dari sisi klien. */
+export type DownloadLead = {
+  name: string;
+  email: string;
+  /** Judul publikasi yang diunduh; dipakai menyusun subjek pesan. */
+  title: string;
+};
+
+/** Judul dipotong sebelum masuk subjek. `title` sampai ke sini sebagai props
+ *  komponen klien, jadi ia tetap masukan yang tidak tepercaya walau sumber
+ *  aslinya CMS sendiri. */
+const MAX_TITLE_LENGTH = 200;
+
+/**
+ * Lead dari gerbang unduhan publikasi.
+ *
+ * Dikirim lewat endpoint yang sama dengan form kontak (`POST /api/v1/contact`)
+ * karena CMS belum punya koleksi tersendiri untuk unduhan -- pesan kontak satu-
+ * satunya tempat tulis yang tersedia (lihat docs/api-public.md).
+ *
+ * Honeypot `website` sengaja dikirim kosong: gerbang unduhan tidak punya field
+ * itu di formnya, dan mengisinya dari sini justru membuat CMS membuang setiap
+ * lead diam-diam sambil tetap menjawab 201.
+ */
+export async function sendDownloadLead(input: DownloadLead): Promise<ContactResult> {
+  const title = input.title.slice(0, MAX_TITLE_LENGTH);
+
+  return sendContactMessage({
+    name: input.name,
+    email: input.email,
+    subject: `Unduhan publikasi: ${title}`,
+    message: [
+      'Pengunjung mengunduh publikasi lewat gerbang unduhan situs.',
+      '',
+      `Nama    : ${input.name}`,
+      `Email   : ${input.email}`,
+      `Dokumen : ${title}`,
+      '',
+      'Pesan ini dibuat otomatis -- pengunjung tidak menulis pesan apa pun.',
+    ].join('\n'),
+    website: '',
+  });
+}
+
 /** Hasil satu percobaan kirim, sebagaimana dibaca form.
  *
  *  Hidup di sini, bukan di berkas aksinya: modul `'use server'` hanya boleh

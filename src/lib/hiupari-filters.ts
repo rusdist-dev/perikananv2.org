@@ -50,16 +50,9 @@ export function isHiupariSizeType(value: unknown): value is HiupariSizeType {
   return typeof value === 'string' && (HIUPARI_SIZE_TYPES as readonly string[]).includes(value);
 }
 
-/** Label yang dibaca manusia untuk tiap jenis ukuran. Dipisah dari nilainya
- *  karena yang dikirim API snake_case, dan "panjang_total" bukan sesuatu yang
- *  pantas muncul di dropdown. */
-export const HIUPARI_SIZE_LABEL: Record<HiupariSizeType, string> = {
-  panjang_total: 'Panjang Total',
-  precaudal_length: 'Precaudal Length',
-  fork_length: 'Fork Length',
-  predorsal_length: 'Predorsal Length',
-  panjang_headless: 'Panjang Headless',
-};
+/* Label tampilan tiap jenis ukuran ada di kamus (i18n/dictionaries/
+   fisheries.ts, `sizeTypes`), per locale -- yang dikirim API snake_case, dan
+   "panjang_total" bukan sesuatu yang pantas muncul di dropdown. */
 
 /** Jenis kelamin. Huruf tunggal, mengikuti API -- bukan 'JANTAN'/'BETINA'
  *  seperti BSC.

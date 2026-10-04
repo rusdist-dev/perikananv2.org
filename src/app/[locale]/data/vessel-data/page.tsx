@@ -33,6 +33,8 @@ export default async function VesselDataPage({ params }: { params: Promise<{ loc
 
   return (
     <VesselDataDashboard
+      locale={locale}
+      title={t.navVesselData}
       breadcrumb={[
         { label: t.home, href: '/' },
         { label: t.navData, href: '#' },
@@ -40,6 +42,7 @@ export default async function VesselDataPage({ params }: { params: Promise<{ loc
       ]}
     >
       <VesselExplorer
+        title={t.navVesselData}
         wppOptions={wppOptions}
         initialChart={initialChart}
         yearMin={yearMin}

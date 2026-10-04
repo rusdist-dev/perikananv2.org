@@ -36,9 +36,17 @@ export function niceDomain(rawMin: number, rawMax: number): Domain {
   // Deret datar (semua nilainya sama) akan membuat pembagi nol di proyeksi.
   // Dibuka jadi rentang selebar 1 supaya garisnya jatuh di tengah kartu,
   // bukan hilang.
+  //
+  // Deret datar di NOL (curah hujan seminggu tanpa hujan) dibuka ke atas saja:
+  // dibuka simetris, sumbunya mencetak -0,5 mm -- nilai yang mustahil untuk
+  // besaran yang tidak bisa negatif.
   if (min === max) {
-    min -= 0.5;
-    max += 0.5;
+    if (min === 0) {
+      max = 1;
+    } else {
+      min -= 0.5;
+      max += 0.5;
+    }
   }
 
   const magnitude = Math.floor(Math.log10((max - min) / INTERVALS));

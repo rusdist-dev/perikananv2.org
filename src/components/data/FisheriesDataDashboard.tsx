@@ -7,6 +7,8 @@ import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { ColumnChart } from '@/components/program/jogolaut/BarChart';
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import type { SeriesColor } from '@/components/program/jogolaut/chart-theme';
+import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary, type FisheriesDictionary } from '@/i18n/dictionaries/fisheries';
 
 /**
  * Kerangka bersama tab Summary / Catch Composition / Length Frequency untuk
@@ -66,10 +68,10 @@ function SlidersIcon() {
   );
 }
 
-const TABS: { id: TabId; label: string; icon: () => ReactElement }[] = [
-  { id: 'summary', label: 'Summary', icon: GridIcon },
-  { id: 'catch-composition', label: 'Catch Composition', icon: SlidersIcon },
-  { id: 'length-frequency', label: 'Length Frequency', icon: SlidersIcon },
+const TABS: { id: TabId; icon: () => ReactElement }[] = [
+  { id: 'summary', icon: GridIcon },
+  { id: 'catch-composition', icon: SlidersIcon },
+  { id: 'length-frequency', icon: SlidersIcon },
 ];
 
 /** Satu opsi placeholder disabled -- sama seperti pola filter belum-tersambung
@@ -100,21 +102,26 @@ function StaticField({
   );
 }
 
-function CommonFields({ idPrefix, withFishingGear }: { idPrefix: string; withFishingGear: boolean }) {
+function CommonFields({
+  idPrefix,
+  withFishingGear,
+  t,
+}: {
+  idPrefix: string;
+  withFishingGear: boolean;
+  t: FisheriesDictionary;
+}) {
+  const field = (label: string) => (
+    <StaticField idPrefix={idPrefix} label={label} placeholder={t.choose(label)} />
+  );
   return (
     <>
-      <StaticField
-        idPrefix={idPrefix}
-        label="Fisheries Management Area"
-        placeholder="Choose Fisheries Management Area"
-      />
-      <StaticField idPrefix={idPrefix} label="Region" placeholder="Choose Province/Regency" />
-      <StaticField idPrefix={idPrefix} label="Landing Site" placeholder="Choose Landing Site" />
-      <StaticField idPrefix={idPrefix} label="Grouping Data" placeholder="Choose Data Type" />
-      {withFishingGear ? (
-        <StaticField idPrefix={idPrefix} label="Fishing Gears" placeholder="Choose Fishing Gear" />
-      ) : null}
-      <StaticField idPrefix={idPrefix} label="Period" placeholder="Choose Yearly/Monthly" />
+      {field(t.levels.wppnri.label)}
+      <StaticField idPrefix={idPrefix} label={t.staticRegion} placeholder={t.chooseRegion} />
+      {field(t.levels.lokasiPendaratan.label)}
+      {field(t.levels.jenisData.label)}
+      {withFishingGear ? field(t.levels.alatTangkap.label) : null}
+      <StaticField idPrefix={idPrefix} label={t.staticPeriod} placeholder={t.choosePeriod} />
     </>
   );
 }
@@ -131,6 +138,7 @@ export function FisheriesDataDashboard({
   catchCharts,
   lengthCharts,
   note,
+  locale,
 }: {
   breadcrumb: BreadcrumbItem[];
   /** Nama diri dataset (mis. "IKAN", "Data Crab") -- proper noun, ditulis apa
@@ -166,7 +174,9 @@ export function FisheriesDataDashboard({
    *  data contoh; halaman yang sebagian datanya sudah nyata mengganti
    *  kalimatnya supaya catatannya tidak jadi keliru. */
   note?: ReactNode;
+  locale: Locale;
 }) {
+  const t = getFisheriesDictionary(locale);
   const [tab, setTab] = useState<TabId>('summary');
   const idPrefix = datasetName.toLowerCase().replace(/\s+/g, '-');
 
@@ -181,24 +191,19 @@ export function FisheriesDataDashboard({
       <Container className="page-gutter pt-14 lg:pe-(--spacing-panel-gutter)">
         <Breadcrumb items={breadcrumb} />
 
-        <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">Data</p>
+        <p className="mt-4 text-xs font-bold uppercase tracking-wider text-secondary">{t.eyebrow}</p>
         <h1 className="mt-1 text-2xl font-semibold text-primary md:text-3xl">{datasetName}</h1>
         <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted md:text-base">{description}</p>
         <p className="mt-3 max-w-3xl rounded-md border border-border bg-bg p-3 text-xs leading-relaxed text-muted">
-          <strong className="font-bold text-primary">Catatan:</strong>{' '}
-          {note ?? (
-            <>
-              filter dan grafik di halaman ini masih data contoh untuk keperluan tampilan -- belum
-              tersambung ke sumber data {datasetName} sesungguhnya.
-            </>
-          )}
+          <strong className="font-bold text-primary">{t.noteLabel}</strong>{' '}
+          {note ?? t.sampleNote(datasetName)}
         </p>
 
       </Container>
 
       <Container className="page-gutter pb-14">
         <div className="mt-8 flex flex-wrap items-center gap-6 border-b border-border">
-          {TABS.map(({ id, label, icon: TabIcon }) => {
+          {TABS.map(({ id, icon: TabIcon }) => {
             const isActive = tab === id;
             return (
               <button
@@ -213,7 +218,7 @@ export function FisheriesDataDashboard({
                 }`}
               >
                 <TabIcon />
-                {label}
+                {t.tabs[id]}
               </button>
             );
           })}
@@ -225,44 +230,52 @@ export function FisheriesDataDashboard({
           ) : null}
 
           {!filterPanel && tab === 'summary' ? (
-            <ChartCard title="Filter">
+            <ChartCard title={t.filterTitle}>
               <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
-                <CommonFields idPrefix={idPrefix} withFishingGear={false} />
+                <CommonFields idPrefix={idPrefix} withFishingGear={false} t={t} />
                 <button
                   type="submit"
                   disabled
                   className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Filter
+                  {t.filter}
                 </button>
               </form>
             </ChartCard>
           ) : null}
 
           {!filterPanel && tab === 'catch-composition' ? (
-            <ChartCard title="Filter">
+            <ChartCard title={t.filterTitle}>
               <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
-                <CommonFields idPrefix={idPrefix} withFishingGear />
+                <CommonFields idPrefix={idPrefix} withFishingGear t={t} />
                 <button
                   type="submit"
                   disabled
                   className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Filter
+                  {t.filter}
                 </button>
               </form>
             </ChartCard>
           ) : null}
 
           {!filterPanel && tab === 'length-frequency' ? (
-            <ChartCard title="Filter">
+            <ChartCard title={t.filterTitle}>
               <form onSubmit={(event) => event.preventDefault()} className="flex flex-col gap-4">
-                <CommonFields idPrefix={idPrefix} withFishingGear />
-                <StaticField idPrefix={idPrefix} label="Family" placeholder="Choose Family" />
-                <StaticField idPrefix={idPrefix} label="Species" placeholder="Choose Species" />
+                <CommonFields idPrefix={idPrefix} withFishingGear t={t} />
+                <StaticField
+                  idPrefix={idPrefix}
+                  label={t.levels.family.label}
+                  placeholder={t.choose(t.levels.family.label)}
+                />
+                <StaticField
+                  idPrefix={idPrefix}
+                  label={t.levels.spesies.label}
+                  placeholder={t.choose(t.levels.spesies.label)}
+                />
                 <div className="flex flex-col gap-1">
                   <label htmlFor={`${idPrefix}-class-interval`} className={FIELD_LABEL}>
-                    Selang Kelas
+                    {t.classInterval}
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -282,7 +295,7 @@ export function FisheriesDataDashboard({
                   disabled
                   className="mt-2 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-primary-fg disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Generate
+                  {t.generate}
                 </button>
               </form>
             </ChartCard>
@@ -294,9 +307,9 @@ export function FisheriesDataDashboard({
 
           {!summaryCharts && tab === 'summary' ? (
             <ChartCard
-              title="Number of Trips"
-              meta="contoh · per bulan"
-              note={`Data contoh untuk pratinjau tampilan grafik. Grafik akan menampilkan jumlah trip sesungguhnya setelah halaman ini tersambung ke sumber data ${datasetName}.`}
+              title={t.tripsTitle}
+              meta={t.sampleMetaTrips}
+              note={t.sampleNoteTrips(datasetName)}
             >
               <ColumnChart
                 labels={trips.labels}
@@ -306,16 +319,17 @@ export function FisheriesDataDashboard({
                 seriesLabel={trips.seriesLabel}
                 labelEvery={trips.labelEvery ?? 3}
                 height={320}
-                ariaLabel={`Grafik batang contoh jumlah trip per bulan untuk ${datasetName}`}
+                locale={locale}
+                ariaLabel={t.sampleAriaTrips(datasetName)}
               />
             </ChartCard>
           ) : null}
 
           {!catchCharts && tab === 'catch-composition' ? (
             <ChartCard
-              title="Catch Composition"
-              meta="contoh · per spesies"
-              note={`Data contoh untuk pratinjau tampilan grafik. Grafik akan menampilkan komposisi tangkapan sesungguhnya setelah halaman ini tersambung ke sumber data ${datasetName}.`}
+              title={t.catchTitle}
+              meta={t.sampleMetaCatch}
+              note={t.sampleNoteCatch(datasetName)}
             >
               <ColumnChart
                 labels={catchComposition.labels}
@@ -325,16 +339,17 @@ export function FisheriesDataDashboard({
                 seriesLabel={catchComposition.seriesLabel}
                 labelEvery={catchComposition.labelEvery ?? 1}
                 height={320}
-                ariaLabel={`Grafik batang contoh komposisi tangkapan per spesies untuk ${datasetName}`}
+                locale={locale}
+                ariaLabel={t.sampleAriaCatch(datasetName)}
               />
             </ChartCard>
           ) : null}
 
           {!lengthCharts && tab === 'length-frequency' ? (
             <ChartCard
-              title="Length Frequency"
-              meta="contoh · sebaran panjang"
-              note={`Data contoh untuk pratinjau tampilan grafik. Grafik akan menampilkan sebaran panjang sesungguhnya setelah halaman ini tersambung ke sumber data ${datasetName}.`}
+              title={t.lengthTitle}
+              meta={t.sampleMetaLength}
+              note={t.sampleNoteLength(datasetName)}
             >
               <ColumnChart
                 labels={lengthFrequency.labels}
@@ -344,7 +359,8 @@ export function FisheriesDataDashboard({
                 seriesLabel={lengthFrequency.seriesLabel}
                 labelEvery={lengthFrequency.labelEvery ?? 1}
                 height={320}
-                ariaLabel={`Grafik batang contoh frekuensi panjang per kelas ukuran untuk ${datasetName}`}
+                locale={locale}
+                ariaLabel={t.sampleAriaLength(datasetName)}
               />
             </ChartCard>
           ) : null}

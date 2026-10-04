@@ -4,13 +4,15 @@ import { ColumnChart, type ColumnMarker } from '@/components/program/jogolaut/Ba
 import { ChartCard } from '@/components/program/jogolaut/ChartCard';
 import { useIkanFilter } from '@/components/data/ikan/IkanFilterContext';
 import type { Locale } from '@/i18n/config';
+import { getFisheriesDictionary } from '@/i18n/dictionaries/fisheries';
+import { formatNumber } from '@/lib/number';
 import type { IkanLengthChart as IkanLengthChartData } from '@/lib/content';
 
 /** Angka panjang: dua desimal, dan koma desimalnya mengikuti locale pembaca. */
 function num(value: number | null, locale: Locale, decimals = 2): string {
   return value === null
     ? '—'
-    : value.toLocaleString(locale, { maximumFractionDigits: decimals });
+    : formatNumber(value, locale, { maximumFractionDigits: decimals });
 }
 
 /** Berapa label sumbu-x yang dicetak. Sama alasannya dengan grafik trip: jumlah
@@ -76,6 +78,7 @@ function StatItem({ label, value }: { label: string; value: string }) {
  * dibaca dari bentuk batangnya.
  */
 export function IkanLengthChart({ locale }: { locale: Locale }) {
+  const t = getFisheriesDictionary(locale);
   const { lengthChart, lengthStatus, lengthAppliedSummary } = useIkanFilter();
 
   const loading = lengthStatus === 'loading';
@@ -83,11 +86,8 @@ export function IkanLengthChart({ locale }: { locale: Locale }) {
 
   if (!lengthChart) {
     return (
-      <ChartCard title="Length Frequency">
-        <p className="text-sm leading-relaxed text-muted">
-          Grafik frekuensi panjang gagal dimuat. Ubah filter lalu tekan Generate untuk mencoba
-          lagi.
-        </p>
+      <ChartCard title={t.lengthTitle}>
+        <p className="text-sm leading-relaxed text-muted">{t.lengthLoadFailed}</p>
       </ChartCard>
     );
   }
@@ -103,14 +103,14 @@ export function IkanLengthChart({ locale }: { locale: Locale }) {
   const values = kelas.map((row) => row.jumlah);
 
   const komposisi = komposisiTipePanjang
-    .map((row) => `${row.tipe ?? 'tidak tercatat'} ${row.jumlah.toLocaleString(locale)}`)
+    .map((row) => `${row.tipe ?? t.notRecorded} ${formatNumber(row.jumlah, locale)}`)
     .join(' · ');
 
   return (
     <div aria-busy={loading} className="flex flex-col gap-5">
       {loading ? (
         <p aria-live="polite" className="text-xs text-muted">
-          Memperbarui grafik… angka di bawah masih hasil filter sebelumnya.
+          {t.updating}
         </p>
       ) : null}
 
@@ -119,30 +119,34 @@ export function IkanLengthChart({ locale }: { locale: Locale }) {
           role="alert"
           className="rounded-md border border-border bg-bg p-3 text-xs font-bold text-(--color-series-6)"
         >
-          Grafik gagal diperbarui. Yang tampil di bawah masih hasil filter sebelumnya.
+          {t.updateFailed}
         </p>
       ) : null}
 
       <ChartCard
-        title="Length Frequency"
-        meta={`${ringkasan.jumlahIkan.toLocaleString(locale)} ikan · selang ${num(selangKelas, locale, 1)} ${unit}${filterSuffix}`}
-        note={`Sebaran panjang ikan yang diukur, dikelompokkan per ${num(selangKelas, locale, 1)} ${unit}. Sumbu datar adalah nilai tengah kelasnya.${
-          lengthChart.tipePanjang
-            ? ''
-            : ' TL dan FL DIGABUNG di sini karena cara ukur belum dipilih -- keduanya mengukur ikan yang sama dengan ujung akhir yang berbeda, jadi sebarannya melebar sedikit oleh perbedaan itu sendiri.'
+        title={t.lengthTitle}
+        meta={`${t.lengthMeta(
+          formatNumber(ringkasan.jumlahIkan, locale),
+          num(selangKelas, locale, 1),
+          unit,
+        )}${filterSuffix}`}
+        note={`${t.lengthNote(num(selangKelas, locale, 1), unit)}${
+          lengthChart.tipePanjang ? '' : t.lengthCombinedNote
         }`}
       >
         {kosong ? (
-          <p className="text-sm leading-relaxed text-muted">
-            Tidak ada pengukuran panjang yang tercatat untuk filter ini.
-          </p>
+          <p className="text-sm leading-relaxed text-muted">{t.lengthEmpty}</p>
         ) : (
           <ColumnChart
             labels={labels}
             values={values}
             color="series-3"
-            unit="ikan"
-            seriesLabel="Jumlah Ikan"
+            unit={t.fishUnit}
+            seriesLabel={t.fishSeries}
+            locale={locale}
+            // Labelnya angka mentah (lihat komentar `labels` di atas); yang
+            // dicetak di sumbu mengikuti pemisah desimal locale.
+            formatLabel={(label) => num(Number(label), locale, 2)}
             labelEvery={labelEveryFor(labels.length)}
             markers={buildMarkers(lengthChart, locale)}
             tooltip={(label, value) => {
@@ -150,48 +154,52 @@ export function IkanLengthChart({ locale }: { locale: Locale }) {
               const rentang = row
                 ? `${num(row.batasBawah, locale, 1)}–${num(row.batasAtas, locale, 1)} ${unit}`
                 : `${label} ${unit}`;
-              return `${rentang} · ${value.toLocaleString(locale)} ikan${
-                row ? ` (${num(row.persen, locale, 1)}%)` : ''
-              }`;
+              return t.lengthTooltip(
+                rentang,
+                formatNumber(value, locale),
+                row ? num(row.persen, locale, 1) : null,
+              );
             }}
             height={320}
-            ariaLabel={`Histogram sebaran panjang ikan IKAN, ${ringkasan.jumlahIkan.toLocaleString(locale)} pengukuran dalam kelas selebar ${num(selangKelas, locale, 1)} ${unit}`}
+            ariaLabel={t.lengthAria(
+              formatNumber(ringkasan.jumlahIkan, locale),
+              num(selangKelas, locale, 1),
+              unit,
+            )}
           />
         )}
       </ChartCard>
 
       <ChartCard
-        title="Ringkasan & Indikator"
+        title={t.summaryTitle}
         meta={komposisi || undefined}
         note={
-          indikator.lcMetode
-            ? `Lc dihitung dengan ${indikator.lcMetode}. Lm bukan hitungan API -- ia angka acuan yang Anda isi sendiri di filter, dan persentase di bawahnya dihitung terhadapnya.`
-            : undefined
+          indikator.lcMetode ? t.lcNote(indikator.lcMetode) : undefined
         }
       >
         <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
-          <StatItem label="Jumlah ikan" value={ringkasan.jumlahIkan.toLocaleString(locale)} />
+          <StatItem label={t.stats.count} value={formatNumber(ringkasan.jumlahIkan, locale)} />
           <StatItem
-            label="Rentang"
+            label={t.stats.range}
             value={
               ringkasan.panjangMin === null || ringkasan.panjangMaks === null
                 ? '—'
                 : `${num(ringkasan.panjangMin, locale, 1)}–${num(ringkasan.panjangMaks, locale, 1)} ${unit}`
             }
           />
-          <StatItem label="Rata-rata" value={`${num(ringkasan.rataRata, locale)} ${unit}`} />
-          <StatItem label="Median" value={`${num(ringkasan.median, locale)} ${unit}`} />
-          <StatItem label="Modus" value={`${num(ringkasan.modus, locale)} ${unit}`} />
+          <StatItem label={t.stats.mean} value={`${num(ringkasan.rataRata, locale)} ${unit}`} />
+          <StatItem label={t.stats.median} value={`${num(ringkasan.median, locale)} ${unit}`} />
+          <StatItem label={t.stats.mode} value={`${num(ringkasan.modus, locale)} ${unit}`} />
           <StatItem
-            label={`Lc (panjang tertangkap)`}
+            label={t.stats.lc}
             value={indikator.lc === null ? '—' : `${num(indikator.lc, locale)} ${unit}`}
           />
           <StatItem
-            label="Lm (matang gonad)"
+            label={t.stats.lm}
             value={indikator.lm === null ? '—' : `${num(indikator.lm, locale)} ${unit}`}
           />
           <StatItem
-            label="Di bawah Lm"
+            label={t.stats.belowLm}
             value={
               indikator.persenDiBawahLm === null ? '—' : `${num(indikator.persenDiBawahLm, locale, 1)}%`
             }
