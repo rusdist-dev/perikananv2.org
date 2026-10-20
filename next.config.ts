@@ -49,6 +49,10 @@ const coastImagePattern = {
 const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
+    // Next 16 hanya mengizinkan kualitas yang terdaftar di sini (default
+    // [75]). 90 dipakai foto profil di TeamProfileModal, yang tampil besar
+    // sehingga artefak kompresi di 75 kelihatan jelas.
+    qualities: [75, 90],
     remotePatterns: cmsImagePattern ? [cmsImagePattern, coastImagePattern] : [coastImagePattern],
   },
 
