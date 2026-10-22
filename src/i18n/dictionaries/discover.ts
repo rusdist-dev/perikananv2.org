@@ -103,7 +103,6 @@ export type DiscoverDictionary = {
   // --- our-team ---
   ourTeamHeroBody: string;
   ourTeamHeroStatMembers: string;
-  ourTeamHeroStatFieldOfficers: string;
   ourTeamHeroStatYearsFieldwork: string;
   ourTeamAdvisorLabel: string;
   ourTeamAdvisorHeading: string;
@@ -241,7 +240,6 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     ourTeamHeroBody:
       'terdiri dari peneliti dan aktivis konservasi perikanan dan kelautan dengan lebih dari dua dekade pengalaman bekerja bersama masyarakat, pemerintah, dan sektor swasta, melalui pengelolaan data, pengembangan pengetahuan dan kapasitas, serta advokasi kebijakan di bidang kelautan dan perikanan.',
     ourTeamHeroStatMembers: 'Anggota tim',
-    ourTeamHeroStatFieldOfficers: 'Petugas lapangan',
     ourTeamHeroStatYearsFieldwork: 'Tahun kerja lapangan',
     ourTeamAdvisorLabel: 'Penasihat',
     ourTeamAdvisorHeading: 'Para ahli di balik kerja kami',
@@ -380,7 +378,6 @@ export const discoverDictionary: Record<Locale, DiscoverDictionary> = {
     ourTeamHeroBody:
       'comprises marine conservation fisheries researchers and activists with over two decades of experience working with communities, governments, and private sector, through data management, knowledge and capacity building, and policy advocacy in the marine and fisheries subject.',
     ourTeamHeroStatMembers: 'Team members',
-    ourTeamHeroStatFieldOfficers: 'Field officers',
     ourTeamHeroStatYearsFieldwork: 'Years of fieldwork',
     ourTeamAdvisorLabel: 'Advisor',
     ourTeamAdvisorHeading: 'The experts behind our work',

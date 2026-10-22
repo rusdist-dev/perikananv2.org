@@ -15,13 +15,12 @@ import { isLocale } from '@/i18n/config';
 /** "Team Members" dihitung dari jumlah anggota yang benar-benar tampil di
  *  halaman ini (`team.length` -- Advisor + Manager + Officer dari CMS),
  *  bukan angka tetap yang bisa menyimpang dari isi grid di bawahnya.
- *  "Field Officers" dan "Years of Fieldwork" masih angka tetap -- belum ada
- *  sumber data untuk keduanya (diminta dibiarkan dulu). */
+ *  "Years of Fieldwork" masih angka tetap -- belum ada sumber data untuknya
+ *  (diminta dibiarkan dulu). */
 function getHeroStats(t: Dictionary, memberCount: number) {
   return [
     { value: String(memberCount), label: t.ourTeamHeroStatMembers },
-    { value: '7', label: t.ourTeamHeroStatFieldOfficers },
-    { value: '15', label: t.ourTeamHeroStatYearsFieldwork },
+    { value: '25', label: t.ourTeamHeroStatYearsFieldwork },
   ];
 }
 
@@ -167,7 +166,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
           ]}
         />
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-12">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_16rem] lg:items-start lg:gap-12">
           <div>
             <span className="inline-block rounded-full border border-secondary px-5 py-1.5 text-xs font-bold uppercase tracking-wider text-secondary">
               {t.navDiscover}
@@ -180,7 +179,7 @@ export default async function OurTeamPage({ params }: { params: Promise<{ locale
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 rounded-md bg-primary p-6 text-primary-fg lg:mt-1">
+          <div className="grid grid-cols-2 gap-4 rounded-md bg-primary p-6 text-primary-fg lg:mt-1">
             {getHeroStats(t, team.length).map((stat, index) => (
               <div key={stat.label} className="relative text-center">
                 {index > 0 ? (
