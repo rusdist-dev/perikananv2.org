@@ -16,6 +16,11 @@ import type { Locale } from '@/i18n/config';
  */
 const FOOTER_SECTION_IDS = new Set(['nav-program', 'nav-discover', 'nav-data']);
 
+/** Situs induk Rekam Nusantara Foundation. Ditulis di sini, bukan site.ts:
+ *  site.ts menyimpan fakta yang dipakai lebih dari satu tempat, dan tautan ini
+ *  cuma muncul di footer. */
+const PARENT_ORG_URL = 'https://rekam.org';
+
 function FooterNavColumn({
   heading,
   items,
@@ -74,31 +79,34 @@ export function SiteFooter({ locale }: { locale: Locale }) {
       />
 
       <Container className="page-gutter relative z-10 flex flex-col gap-10 py-12 lg:flex-row lg:justify-between">
-        <div className="flex flex-col gap-4 lg:max-w-sm">
+        <div className="flex flex-col gap-4 lg:max-w-3xs">
           <AppLink href="/" className="flex w-fit items-center gap-2">
             {/* Logo aslinya biru; brightness-0 invert mengubahnya jadi siluet
                 putih tanpa perlu aset kedua khusus latar gelap. */}
             <Image src={logoFrci} alt="FRCI" className="h-14 w-auto brightness-0 invert" />
           </AppLink>
-          {/* whitespace-pre-line menghormati '\n' yang sudah ditulis di
-              kamus (dictionary.ts) -- baris patah persis di titik yang
-              dirancang ("...oleh" / "Rekam Nusantara Foundation."), bukan
-              menunggu lebar kolom kebetulan memutusnya di situ. Lebar kolom
-              sendiri sekarang ditentukan oleh baris copyright, jadi patahan
-              berbasis lebar tidak lagi bisa diandalkan untuk baris ini. */}
-          <p className="text-sm whitespace-pre-line text-primary-fg/90">{t.footerTagline}</p>
-          {/* whitespace-nowrap sengaja dipasang, dan kolom ini diperlebar dari
-              3xs ke sm supaya baris ini benar-benar MUAT dalam satu baris --
-              bukan cuma dibiarkan meluber keluar kotaknya, yang akan
-              menindih kolom "Program" di sebelahnya. */}
-          <p className="text-xs whitespace-nowrap text-primary-fg/70 italic">{t.footerCopyright}</p>
+          {/* Nama induknya ditulis "REKAM" dan ditautkan ke rekam.org: satu
+              baris pendek yang muat tanpa patahan, jadi kamusnya cukup
+              menyimpan kata pengantarnya saja. Nama organisasinya sendiri
+              tidak lewat kamus -- ia sama di semua bahasa. */}
+          <p className="text-sm text-primary-fg/90">
+            {t.footerTaglinePrefix}{' '}
+            <AppLink
+              href={PARENT_ORG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-2 hover:opacity-80"
+            >
+              REKAM
+            </AppLink>
+          </p>
         </div>
 
         {sections.map((section) => (
           <FooterNavColumn key={section.id} heading={section.heading} items={section.items} />
         ))}
 
-        <div className="flex flex-col gap-3 lg:max-w-3xs">
+        <div className="flex flex-col gap-3 lg:max-w-xs">
           <h2 className="text-sm font-bold uppercase tracking-wide">{t.stayUpdated}</h2>
 
           {/* §4j: kalau alamat belum diisi di site.ts, kolom ini menyatakan
@@ -113,10 +121,17 @@ export function SiteFooter({ locale }: { locale: Locale }) {
 
           <AppLink
             href="/kontak"
-            className="mt-1 inline-flex w-fit items-center rounded-md bg-secondary px-6 py-2 text-xs font-bold uppercase tracking-wide text-secondary-fg hover:opacity-90"
+            className="mt-1 inline-flex w-full items-center justify-center rounded-md bg-secondary px-6 py-3 text-xs font-bold uppercase tracking-wide text-secondary-fg hover:opacity-90"
           >
-            {t.contact}
+            {t.footerContactCta}
           </AppLink>
+
+          {/* Copyright duduk di kolom ini, di bawah tombolnya -- bukan lagi di
+              kolom logo. Kolom logo kini cuma setinggi logo + satu baris
+              tagline, dan barisnya yang panjang ini akan memaksanya melebar
+              jauh melampaui isinya sendiri. Lebar kolom ini (max-w-xs) dipilih
+              supaya baris copyright muat tanpa patah. */}
+          <p className="mt-2 text-xs text-primary-fg/70 italic">{t.footerCopyright}</p>
         </div>
       </Container>
     </footer>

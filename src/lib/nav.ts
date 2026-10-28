@@ -51,6 +51,7 @@ export const panelNav: NavSection[] = [
       { href: '/discover/our-impact', labelKey: 'navOurImpact' },    
       { href: '/discover/publications', labelKey: 'navPublications' }, 
       { href: '/discover/jogo-laut', label: 'Jogo Laut' },                    
+      { href: '/berita', labelKey: 'navNewsAndActivity' },
     ],
   },
   {
@@ -68,7 +69,6 @@ export const panelNav: NavSection[] = [
     id: 'nav-connect',
     headingKey: 'navConnect',
     items: [
-      { href: '/berita', labelKey: 'navNewsAndActivity' },
       { href: '/kontak', labelKey: 'navContact' },
     ],
   },

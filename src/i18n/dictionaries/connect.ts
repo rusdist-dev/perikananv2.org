@@ -1,8 +1,9 @@
 import type { Locale } from '../config';
 
-/** Kosakata untuk seksi menu CONNECT: label nav plus semua UI di halaman
- *  Berita (/berita, /berita/[slug]) dan Kontak (/kontak) -- dua-duanya
- *  satu-satunya isi seksi ini di panelNav (lib/nav.ts). */
+/** Kosakata halaman Berita (/berita, /berita/[slug]) dan Kontak (/kontak),
+ *  plus label navnya. Di panelNav (lib/nav.ts) Berita kini duduk di seksi
+ *  DISCOVER; CONNECT tinggal Kontak. Teks Berita tetap di file ini supaya
+ *  satu halaman tidak terpecah ke dua kamus. */
 export type ConnectDictionary = {
   navConnect: string;
   navNewsAndActivity: string;

@@ -18,7 +18,7 @@ export type CommonDictionary = {
   home: string;
   news: string;
   about: string;
-  contact: string;
+  footerContactCta: string;
   allRightsReserved: string;
   notFoundTitle: string;
   notFoundBody: string;
@@ -26,7 +26,7 @@ export type CommonDictionary = {
   readMore: string;
   noArticles: string;
   configMissing: string;
-  footerTagline: string;
+  footerTaglinePrefix: string;
   footerCopyright: string;
   stayUpdated: string;
   learnMore: string;
@@ -96,7 +96,7 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     home: 'Beranda',
     news: 'Berita',
     about: 'Tentang',
-    contact: 'Kontak',
+    footerContactCta: 'Hubungi Kami',
     allRightsReserved: 'Hak cipta dilindungi.',
     notFoundTitle: 'Halaman tidak ditemukan',
     notFoundBody: 'Alamat yang Anda buka tidak ada atau sudah dipindahkan.',
@@ -104,7 +104,7 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     readMore: 'Baca selengkapnya',
     noArticles: 'Belum ada artikel dalam bahasa ini.',
     configMissing: 'Belum dikonfigurasi',
-    footerTagline: 'Program kelautan oleh\nRekam Nusantara Foundation',
+    footerTaglinePrefix: 'Program kelautan oleh',
     footerCopyright: 'Hak Cipta © Rekam Nusantara Foundation | Unit FRCI',
     stayUpdated: 'Tetap Terhubung',
     learnMore: 'Pelajari Lebih Lanjut',
@@ -176,7 +176,7 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     home: 'Home',
     news: 'News',
     about: 'About',
-    contact: 'Contact',
+    footerContactCta: 'Contact Us',
     allRightsReserved: 'All rights reserved.',
     notFoundTitle: 'Page not found',
     notFoundBody: 'The address you opened does not exist or has been moved.',
@@ -184,7 +184,7 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     readMore: 'Read more',
     noArticles: 'No articles in this language yet.',
     configMissing: 'Not configured yet',
-    footerTagline: 'Ocean program by\nRekam Nusantara Foundation',
+    footerTaglinePrefix: 'Ocean program by',
     footerCopyright: 'Copyright © Rekam Nusantara Foundation | Unit FRCI',
     stayUpdated: 'Stay Updated',
     learnMore: 'Learn More',

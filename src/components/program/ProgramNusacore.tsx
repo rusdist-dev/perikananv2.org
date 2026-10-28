@@ -72,7 +72,7 @@ export function ProgramNusacore({ locale }: { locale: Locale }) {
             src={banner}
             alt={t.nusacoreBannerAlt}
             sizes="(min-width: 1024px) 320px, 100vw"
-            className="h-full w-full rounded-2xl"
+            className="h-full w-full"
           />
 
           <div className="pt-12 lg:pt-16">
@@ -133,7 +133,7 @@ export function ProgramNusacore({ locale }: { locale: Locale }) {
               ))}
             </div>
 
-            <div className="mt-8 rounded-xl bg-primary p-5 text-sm leading-relaxed text-primary-fg">
+            <div className="mt-8 bg-primary p-5 text-sm leading-relaxed text-primary-fg">
               <span className="font-bold">{t.nusacoreCreditName}</span>
               {t.nusacoreCreditText}
             </div>
