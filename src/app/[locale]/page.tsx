@@ -179,7 +179,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             kolomnya memang tidak cukup, dan flex-wrap di sini yang menangani
             -- itu sebabnya setiap item membawa garisnya sendiri (lihat
             komentar di bawah), bukan divide-x di induknya. */}
-        <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit lg:max-w-[calc(var(--hero-col)+2rem)]">
+        {/* lg:w-fit: max-w- di bawah ini cuma BATAS, bukan lebar. Di lg nilainya
+            ikut --hero-col yang hampir selalu lebih lebar dari kelima
+            tautannya, dan karena item-itemnya sm:grow-0, sisa ruang itu
+            tampil sebagai blok biru kosong di kanan "Blue Carbon" -- jarak
+            kanannya jadi jauh lebih besar dari kiri "Ocean Accounts".
+            w-fit membuat strip ini selebar isinya, sementara max-w tetap
+            memaksa barisnya patah kalau kolomnya tidak cukup. */}
+        <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit lg:w-fit lg:max-w-[calc(var(--hero-col)+2rem)]">
           <AppLink href={'/program/ocean-accounts'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 lg:text-[clamp(0.875rem,0.97vw,1.15rem)] hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Ocean Accounts
           </AppLink>
