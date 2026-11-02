@@ -10,7 +10,10 @@ import { Icon } from '@/components/ui/Icon';
 import 'swiper/css';
 import 'swiper/css/navigation';
 
-export type GalleryImage = { src: StaticImageData; alt: string };
+/** `string` ikut diterima karena foto galeri sekarang bisa datang dari CMS
+ *  (cover_url, URL absolut) lewat lib/program-gallery, bukan cuma import
+ *  statis -- next/image menerima keduanya. */
+export type GalleryImage = { src: StaticImageData | string; alt: string };
 
 /**
  * Slider dokumentasi penuh lebar viewport. Tiga gambar terlihat sekaligus di
@@ -45,7 +48,11 @@ export function ProgramGallery({
     <div className="relative">
       <Swiper
         modules={[Navigation]}
-        loop
+        // Swiper mematikan loop (sambil memuntahkan warning di console) kalau
+        // jumlah slide tidak melebihi slidesPerView terbesar, yaitu 3 pada
+        // breakpoint 1024 di bawah. Sejak isi galeri ikut jumlah berita
+        // program, jumlahnya tidak lagi dijamin empat seperti dulu.
+        loop={images.length > 3}
         spaceBetween={2}
         slidesPerView={1}
         breakpoints={{

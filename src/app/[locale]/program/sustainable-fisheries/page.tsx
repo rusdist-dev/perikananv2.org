@@ -18,6 +18,7 @@ import { ProgramRelatedStories, type RelatedStory } from '@/components/program/P
 import { ProgramSupportCta } from '@/components/program/ProgramSupportCta';
 import { resolveArticleImage } from '@/data/article-images';
 import { getArticlesByProgram, type ArticleListItem } from '@/lib/content';
+import { toProgramGallery } from '@/lib/program-gallery';
 import { getProgramsLabel } from '@/lib/content/program-taxonomy';
 import { formatArticleDate } from '@/lib/date';
 import { getDictionary, type Dictionary } from '@/i18n/dictionary';
@@ -53,6 +54,9 @@ function getObjectives(t: Dictionary) {
   ];
 }
 
+// Foto kurasi penambal galeri: foto berita program ini mengisi slot
+// terdepan, sisanya ditambal dari sini sampai genap lima (lihat
+// toProgramGallery di lib/program-gallery).
 const GALLERY_IMAGES = [
   { src: slider1, alt: '' },
   { src: slider2, alt: '' },
@@ -96,6 +100,7 @@ export default async function SustainableFisheriesPage({
   const programLabel = NAV_ITEM.labelKey ? t[NAV_ITEM.labelKey] : NAV_ITEM.label;
   const programArticles = await getArticlesByProgram(locale, FRONTEND_PROGRAM_SLUG);
   const relatedStories = toRelatedStories(programArticles, locale, t);
+  const galleryImages = toProgramGallery(programArticles, GALLERY_IMAGES);
 
   return (
     <>
@@ -126,7 +131,7 @@ export default async function SustainableFisheriesPage({
         objectives={getObjectives(t)}
       >
         <ProgramGallery
-          images={GALLERY_IMAGES}
+          images={galleryImages}
           aspectClassName="aspect-square"
           fit="cover"
           previousLabel={t.galleryPrevious}

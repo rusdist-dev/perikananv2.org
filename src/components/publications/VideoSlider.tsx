@@ -59,7 +59,10 @@ export function VideoSlider({
     <div className="relative px-9 sm:px-12">
       <Swiper
         modules={[Navigation]}
-        loop
+        // Dibatasi dengan alasan yang sama seperti di PublicationsSlider:
+        // slide <= slidesPerView terbesar (4 di breakpoint 1024) bikin
+        // Swiper menonaktifkan loop sambil memuntahkan warning di console.
+        loop={videos.length > 4}
         spaceBetween={24}
         slidesPerView={1}
         breakpoints={{

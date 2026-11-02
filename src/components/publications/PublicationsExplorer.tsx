@@ -98,7 +98,6 @@ type Labels = {
   downloadGateDescription: string;
   downloadGateNameLabel: string;
   downloadGateEmailLabel: string;
-  read: string;
   watch: string;
   pdfUnavailable: string;
   videoUnavailable: string;
@@ -357,10 +356,8 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
             <PublicationsSlider
               publications={filtered}
               downloadLabel={t.download}
-              readLabel={t.read}
               previousLabel={t.galleryPrevious}
               nextLabel={t.galleryNext}
-              pdfUnavailableLabel={t.pdfUnavailable}
               closeLabel={t.close}
               downloadGateDescription={t.downloadGateDescription}
               downloadGateNameLabel={t.downloadGateNameLabel}
@@ -385,10 +382,8 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
             <PublicationsSlider
               publications={knowledgeProducts}
               downloadLabel={t.download}
-              readLabel={t.read}
               previousLabel={t.galleryPrevious}
               nextLabel={t.galleryNext}
-              pdfUnavailableLabel={t.pdfUnavailable}
               closeLabel={t.close}
               downloadGateDescription={t.downloadGateDescription}
               downloadGateNameLabel={t.downloadGateNameLabel}
@@ -413,10 +408,8 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
             <PublicationsSlider
               publications={bbnjPublications}
               downloadLabel={t.download}
-              readLabel={t.read}
               previousLabel={t.galleryPrevious}
               nextLabel={t.galleryNext}
-              pdfUnavailableLabel={t.pdfUnavailable}
               closeLabel={t.close}
               downloadGateDescription={t.downloadGateDescription}
               downloadGateNameLabel={t.downloadGateNameLabel}

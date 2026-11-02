@@ -4,7 +4,6 @@ import Image, { type StaticImageData } from 'next/image';
 import { useState } from 'react';
 import { AppLink } from '@/components/ui/AppLink';
 import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
-import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 type Publication = {
   // Sama seperti PublicationSlide di PublicationsSlider.tsx.
@@ -15,16 +14,14 @@ type Publication = {
 };
 
 /**
- * Sama seperti PublicationsSlider di /discover/publications: tombol "Read"
- * membuka PdfViewerModal, dan "Download" membuka DownloadGateModal -- nama/
- * email wajib diisi dulu sebelum <a download> yang sesungguhnya dijalankan
- * di sana (lihat komentar di modalnya).
+ * Sama seperti PublicationsSlider di /discover/publications: "Download"
+ * membuka DownloadGateModal -- nama/email wajib diisi dulu sebelum
+ * <a download> yang sesungguhnya dijalankan di sana (lihat komentar di
+ * modalnya).
  */
 export function HomePublicationsGrid({
   publications,
   downloadLabel,
-  readLabel,
-  pdfUnavailableLabel,
   closeLabel,
   downloadGateDescription,
   downloadGateNameLabel,
@@ -32,28 +29,16 @@ export function HomePublicationsGrid({
 }: {
   publications: Publication[];
   downloadLabel: string;
-  readLabel: string;
-  pdfUnavailableLabel: string;
   closeLabel: string;
   downloadGateDescription: string;
   downloadGateNameLabel: string;
   downloadGateEmailLabel: string;
 }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const openPublication = openIndex !== null ? publications[openIndex] : null;
   const [downloadIndex, setDownloadIndex] = useState<number | null>(null);
   const downloadPublication = downloadIndex !== null ? publications[downloadIndex] : null;
 
   return (
     <>
-      <PdfViewerModal
-        isOpen={openPublication !== null}
-        pdfUrl={openPublication?.pdfUrl ?? null}
-        title={openPublication?.title ?? ''}
-        unavailableLabel={pdfUnavailableLabel}
-        closeLabel={closeLabel}
-        onClose={() => setOpenIndex(null)}
-      />
       <DownloadGateModal
         isOpen={downloadPublication !== null}
         pdfUrl={downloadPublication?.pdfUrl ?? null}
@@ -105,13 +90,6 @@ export function HomePublicationsGrid({
                     {downloadLabel}
                   </AppLink>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setOpenIndex(index)}
-                  className="min-w-0 flex-1 truncate rounded-md border border-primary px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-fg"
-                >
-                  {readLabel}
-                </button>
               </div>
             </div>
           </article>

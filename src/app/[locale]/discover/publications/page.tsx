@@ -45,7 +45,6 @@ export default async function PublicationsPage({ params }: { params: Promise<{ l
         downloadGateDescription: t.downloadGateDescription,
         downloadGateNameLabel: t.downloadGateNameLabel,
         downloadGateEmailLabel: t.downloadGateEmailLabel,
-        read: t.read,
         watch: t.watch,
         pdfUnavailable: t.pdfUnavailable,
         videoUnavailable: t.videoUnavailable,

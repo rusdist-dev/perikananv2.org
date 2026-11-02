@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import contohPeta from '@/assets/our_impact1.png';
 import ornamentBg from '@/assets/banner/ornament1.png';
@@ -100,21 +101,49 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           (lihat komentar panjang di atas), jadi satu layar penuh berisi tiga
           baris teks dan sisanya kosong -- pengunjung harus menggulir melewati
           ~440px ruang hampa sebelum isi halaman dimulai. */}
-      <Container as="div" className="page-gutter relative isolate pt-16 pb-0 min-h-[60vh] lg:min-h-screen">
-        {/* Bungkus terpisah dari <Image fill> supaya jarak ke tepi kanan bisa
-            diatur: `fill` menulis inset:0 lewat inline style, yang tidak bisa
-            dikalahkan className manapun. Div ini yang diberi jarak (end-20)
-            lewat posisinya sendiri, lalu Image mengisi persis kotak yang
-            sudah menyempit itu. */}
-        <div className="pointer-events-none absolute inset-y-0 start-0 end-0 -z-10 hidden lg:block">
+      {/* Empat angka hero diturunkan dari SATU sumber, bukan ditulis sendiri-
+          sendiri. Sebelumnya lebar ornamen dan ukuran judul sama-sama memakai
+          vw tapi tidak saling tahu, jadi di lebar tertentu keduanya mendarat di
+          titik yang sama: "OCEAN" menimpa ilustrasi dan strip program menabrak
+          garis ombaknya.
+
+          Sekarang --hero-col (ruang yang TERSISA untuk teks setelah panel nav,
+          ornamen, dan jaraknya) yang jadi penentu, dan ukuran judul dibatasi
+          olehnya. Pembagi 3.6 adalah lebar "OCEAN" relatif terhadap font-size-
+          nya pada Montserrat ExtraBold (terukur 3.575, dibulatkan ke atas
+          sebagai margin aman) -- kata ini ditulis langsung di markup, jadi
+          angkanya tetap selama katanya tetap.
+
+          60vw-24rem untuk lebar ornamen, bukan 44vw: ornamen harus menyusut
+          lebih cepat daripada layarnya supaya di laptop 1024-1280px masih ada
+          kolom yang layak buat judul, sementara di layar lebar ia tetap tumbuh. */}
+      <Container
+        as="div"
+        className="page-gutter relative isolate pt-16 pb-0 min-h-[60vh] lg:min-h-screen"
+        style={{
+          '--hero-art-gap': 'clamp(0.75rem, 4vw, 7rem)',
+          '--hero-art-w': 'clamp(20rem, 60vw - 24rem, 62rem)',
+          '--hero-col':
+            'calc(100vw - var(--hero-art-gap) - var(--hero-art-w) - var(--spacing-panel-gutter) - 2rem)',
+          '--hero-title': 'min(11vw, 17.5rem, calc(var(--hero-col) / 3.6))',
+        } as CSSProperties}
+      >
+        {/* Lebarnya --hero-art-w, tingginya SELALU setinggi hero (inset-y-0)
+            dengan object-cover. Versi contain sebelumnya mengunci lebar tampil
+            ke tinggi jendela x 0,696 -- 626px entah layarnya 1440px atau
+            2560px -- sehingga ornamen tidak bisa diberi lebar sendiri tanpa
+            meninggalkan pita putih di atas atau di bawahnya. Dengan cover,
+            lebar kotak ini yang menentukan, dan gambarnya tetap memenuhi hero
+            dari tepi atas sampai tepi bawah di rasio jendela manapun. */}
+        <div className="pointer-events-none absolute inset-y-0 end-[var(--hero-art-gap)] -z-10 hidden w-[var(--hero-art-w)] overflow-hidden lg:block">
           <Image
             src={ornamentBg}
             alt=""
             aria-hidden
             fill
             priority
-            sizes="70vw"
-            className="object-contain object-right select-none -translate-x-32"
+            sizes="(min-width: 1024px) 60vw, 0px"
+            className="object-cover object-center select-none"
           />
         </div>
         {/* Ukuran teks hero WAJIB ikut lebar layar, bukan tetap: 12em = 192px,
@@ -127,11 +156,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             dijaga adalah hubungannya dengan lebar viewport (20vw), bukan
             nilainya di tiga titik tertentu; batas atasnya tetap 12em supaya
             tampilan desktop sama persis seperti sebelumnya. */}
-        <div className="max-w-content py-8 lg:py-12">
-          <h1 className="text-[clamp(4rem,20vw,12em)]/[0.85] font-extrabold text-primary lg:text-[10em]/40">
+        {/* max-w-content (46rem) diganti --hero-col di lg: yang membatasi teks
+            di desktop bukan lagi angka tetap, tapi sisa ruang di sebelah kiri
+            ornamen. Subjudul ikut judul (0,33 x, rasio 52,8/160 yang lama)
+            supaya keduanya mengecil dan membesar bersamaan. */}
+        <div className="max-w-content py-8 lg:max-w-[var(--hero-col)] lg:py-12">
+          <h1 className="text-[clamp(4rem,20vw,12em)]/[0.85] font-extrabold text-primary lg:text-[length:var(--hero-title)] lg:leading-[1]">
             OCEAN
           </h1>
-          <p className="mt-4 text-[clamp(1.75rem,9vw,3.3em)]/[1.15] tracking-tighter text-primary lg:text-[3.3em]/14">
+          <p className="mt-4 text-[clamp(1.75rem,9vw,3.3em)]/[1.15] tracking-tighter text-primary lg:text-[length:calc(var(--hero-title)*0.33)] lg:leading-[1.06]">
             PROGRAM of REKAM{' '}
           </p>
         </div>
@@ -140,20 +173,26 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             hanya memasang garis kiri pada saudara ke-2 dst -- begitu barisnya
             patah, garisnya mendarat di awal baris kedua alih-alih di antara dua
             item yang bersebelahan. */}
-        <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit">
-          <AppLink href={'/program/ocean-accounts'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
+        {/* +2rem: strip ini memakai balik jarak napas yang sudah disisihkan
+            --hero-col, supaya pada 1440px kelima tautannya tetap muat satu
+            baris seperti rancangan aslinya. Di laptop yang lebih sempit
+            kolomnya memang tidak cukup, dan flex-wrap di sini yang menangani
+            -- itu sebabnya setiap item membawa garisnya sendiri (lihat
+            komentar di bawah), bukan divide-x di induknya. */}
+        <div className="mt-10 flex flex-wrap bg-primary uppercase text-white sm:max-w-fit lg:max-w-[calc(var(--hero-col)+2rem)]">
+          <AppLink href={'/program/ocean-accounts'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 lg:text-[clamp(0.875rem,0.97vw,1.15rem)] hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Ocean Accounts
           </AppLink>
-          <AppLink href={'/program/sustainable-fisheries'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
+          <AppLink href={'/program/sustainable-fisheries'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 lg:text-[clamp(0.875rem,0.97vw,1.15rem)] hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Fisheries
           </AppLink>
-          <AppLink href={'/program/marine-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
+          <AppLink href={'/program/marine-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 lg:text-[clamp(0.875rem,0.97vw,1.15rem)] hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Ecosystem
           </AppLink>
-          <AppLink href={'/program/species-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
+          <AppLink href={'/program/species-conservation'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 lg:text-[clamp(0.875rem,0.97vw,1.15rem)] hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Species
           </AppLink>
-          <AppLink href={'/program/blue-carbon'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
+          <AppLink href={'/program/blue-carbon'} className="grow border-e border-b border-white/70 px-4 py-3 text-center text-sm last:border-e-0 lg:text-[clamp(0.875rem,0.97vw,1.15rem)] hover:underline hover:underline-offset-4 hover:[text-decoration-color:#52c0e1] sm:grow-0 sm:border-b-0 sm:py-2 hover:decoration-2">
             Blue Carbon
           </AppLink>
         </div>
@@ -342,8 +381,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <HomePublicationsGrid
           publications={publications}
           downloadLabel={t.download}
-          readLabel={t.read}
-          pdfUnavailableLabel={t.pdfUnavailable}
           closeLabel={t.close}
           downloadGateDescription={t.downloadGateDescription}
           downloadGateNameLabel={t.downloadGateNameLabel}

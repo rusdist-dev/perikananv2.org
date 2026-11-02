@@ -8,7 +8,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
 import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
-import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -37,10 +36,8 @@ export type PublicationSlide = {
 export function PublicationsSlider({
   publications,
   downloadLabel,
-  readLabel,
   previousLabel,
   nextLabel,
-  pdfUnavailableLabel,
   closeLabel,
   downloadGateDescription,
   downloadGateNameLabel,
@@ -48,31 +45,19 @@ export function PublicationsSlider({
 }: {
   publications: PublicationSlide[];
   downloadLabel: string;
-  readLabel: string;
   previousLabel: string;
   nextLabel: string;
-  pdfUnavailableLabel: string;
   closeLabel: string;
   downloadGateDescription: string;
   downloadGateNameLabel: string;
   downloadGateEmailLabel: string;
 }) {
   const swiperRef = useRef<SwiperInstance | null>(null);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const openPublication = openIndex !== null ? publications[openIndex] : null;
   const [downloadIndex, setDownloadIndex] = useState<number | null>(null);
   const downloadPublication = downloadIndex !== null ? publications[downloadIndex] : null;
 
   return (
     <>
-      <PdfViewerModal
-        isOpen={openPublication !== null}
-        pdfUrl={openPublication?.pdfUrl ?? null}
-        title={openPublication?.title ?? ''}
-        unavailableLabel={pdfUnavailableLabel}
-        closeLabel={closeLabel}
-        onClose={() => setOpenIndex(null)}
-      />
       <DownloadGateModal
         isOpen={downloadPublication !== null}
         pdfUrl={downloadPublication?.pdfUrl ?? null}
@@ -87,7 +72,11 @@ export function PublicationsSlider({
     <div className="relative px-9 sm:px-12">
       <Swiper
         modules={[Navigation]}
-        loop
+        // Swiper menolak loop (dan memuntahkan warning di console) kalau
+        // jumlah slide tidak melebihi slidesPerView terbesar -- breakpoint
+        // 1024 di bawah memakai 4, jadi kategori yang isinya cuma 3
+        // publikasi jalan tanpa loop, bukan loop yang rusak diam-diam.
+        loop={publications.length > 4}
         spaceBetween={24}
         slidesPerView={1}
         breakpoints={{
@@ -130,9 +119,7 @@ export function PublicationsSlider({
                     diisi dulu -- <a download> sesungguhnya dijalankan di
                     sana, lihat komentar di modalnya), BUKAN <a> langsung ke
                     pdfUrl seperti sebelumnya. §4j: publikasi yang
-                    `pdfUrl`-nya masih null tetap href="#" apa adanya; Read
-                    sudah tersambung ke PdfViewerModal, yang menampilkan pesan
-                    "belum tersedia" untuk kasus itu. */}
+                    `pdfUrl`-nya masih null tetap href="#" apa adanya. */}
                 <div className="mt-auto flex gap-1 pt-2">
                   {publication.pdfUrl ? (
                     <button
@@ -150,13 +137,6 @@ export function PublicationsSlider({
                       {downloadLabel}
                     </AppLink>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setOpenIndex(index)}
-                    className="min-w-0 flex-1 truncate rounded-md border border-primary px-1 py-2.5 text-center text-xs font-bold uppercase text-primary lg:py-1.5 lg:text-[0.6rem] hover:bg-primary hover:text-primary-fg"
-                  >
-                    {readLabel}
-                  </button>
                 </div>
               </div>
             </article>

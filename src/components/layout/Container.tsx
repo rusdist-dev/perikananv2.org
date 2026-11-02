@@ -1,10 +1,13 @@
-import type { ElementType, ReactNode } from 'react';
+import type { CSSProperties, ElementType, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 type ContainerProps = {
   as?: ElementType;
   width?: 'content' | 'wide';
   className?: string;
+  /** Untuk custom property CSS yang dibaca anak-anaknya (lihat hero beranda);
+   *  bukan pintu belakang buat styling yang semestinya lewat className. */
+  style?: CSSProperties;
   children: ReactNode;
 };
 
@@ -18,6 +21,7 @@ export function Container({
   as: Tag = 'div',
   width = 'wide',
   className,
+  style,
   children,
 }: ContainerProps) {
   return (
@@ -27,6 +31,7 @@ export function Container({
         width === 'content' ? 'max-w-content' : 'w-full',
         className,
       )}
+      style={style}
     >
       {children}
     </Tag>
