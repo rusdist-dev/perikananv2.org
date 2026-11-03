@@ -297,6 +297,7 @@ function mapPublicationItem(raw: Record<string, unknown>): unknown {
     pdfUrl: raw.file_url,
     image: typeof raw.cover_url === 'string' && raw.cover_url ? raw.cover_url : null,
     isFeatured: raw.is_featured === true,
+    cmsId: typeof raw.id === 'number' ? raw.id : null,
   };
 }
 

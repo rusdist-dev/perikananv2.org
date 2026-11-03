@@ -1,11 +1,10 @@
 import { cmsAccess } from '@/lib/cms';
 
 /**
- * Pengiriman pesan kontak ke CMS (`POST /api/v1/contact`, docs/api-public.md).
- *
- * Satu-satunya endpoint TULIS yang dipakai situs ini, dan karena itu ia hidup
- * di berkasnya sendiri alih-alih menumpang lib/content -- yang seluruhnya
- * tentang membaca koleksi.
+ * Pengiriman ke endpoint TULIS CMS: pesan kontak (`POST /api/v1/contact`,
+ * docs/api-public.md) dan permintaan unduhan publikasi
+ * (`POST /api/v1/publications/download`). Hidup di berkasnya sendiri
+ * alih-alih menumpang lib/content -- yang seluruhnya tentang membaca koleksi.
  *
  * Wajib berjalan di server: kunci API tidak boleh pernah sampai ke browser.
  * Pemanggilnya adalah Server Action di app/[locale]/kontak/actions.ts.
@@ -33,21 +32,31 @@ export type ContactResult = { ok: true } | { ok: false; reason: ContactFailure }
  *  yang benar-benar menunggu di depan layar. */
 const REQUEST_TIMEOUT_MS = 8_000;
 
-export async function sendContactMessage(input: ContactMessage): Promise<ContactResult> {
+/** POST JSON ke CMS dan petakan jawabannya ke ContactResult. Dipakai bersama
+ *  oleh form kontak dan gerbang unduhan publikasi -- keduanya endpoint tulis
+ *  dengan kode status yang sama (201/422/429/selebihnya).
+ *
+ *  `Accept: application/json` dari cmsAccess() WAJIB ikut di sini: tanpanya
+ *  CMS menjawab galat validasi dengan redirect ke halaman login CMS, bukan
+ *  422. */
+async function postToCms(path: string, body: unknown, logTag: string): Promise<ContactResult> {
   const { base, headers } = cmsAccess();
 
   let res: Response;
   try {
-    res = await fetch(`${base}/contact`, {
+    res = await fetch(`${base}${path}`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
+      body: JSON.stringify(body),
       // Tanpa cache: ini permintaan tulis, dan menyimpannya tidak masuk akal.
       cache: 'no-store',
+      // Redirect apa pun dari endpoint tulis berarti ada yang salah (lihat
+      // catatan Accept di atas) -- jangan diikuti diam-diam lalu dibaca 200.
+      redirect: 'manual',
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch (error) {
-    console.error('[kontak] gagal menghubungi CMS:', error);
+    console.error(`[${logTag}] gagal menghubungi CMS:`, error);
     return { ok: false, reason: 'unavailable' };
   }
 
@@ -59,8 +68,45 @@ export async function sendContactMessage(input: ContactMessage): Promise<Contact
   if (res.status === 429) return { ok: false, reason: 'rate-limit' };
   if (res.status === 422) return { ok: false, reason: 'invalid' };
 
-  console.error(`[kontak] CMS menjawab HTTP ${res.status}`);
+  console.error(`[${logTag}] CMS menjawab HTTP ${res.status}`);
   return { ok: false, reason: 'unavailable' };
+}
+
+export async function sendContactMessage(input: ContactMessage): Promise<ContactResult> {
+  return postToCms('/contact', input, 'kontak');
+}
+
+/** Permintaan tautan unduhan publikasi (`POST /api/v1/publications/download`).
+ *
+ *  CMS mencatatnya di publication_downloads lalu MENGIRIM tautan berkasnya ke
+ *  email pengunjung -- tautannya tidak pernah ada di response. Jadi sukses di
+ *  sini berarti "cek email", bukan "unduhan dimulai". */
+export type PublicationDownloadRequest = {
+  publicationId: number;
+  name: string;
+  email: string;
+  /** Honeypot, sama seperti ContactMessage.website: terisi -> CMS tetap 201
+   *  tapi tidak mencatat dan tidak mengirim apa pun. */
+  website: string;
+};
+
+/**
+ * 503 di endpoint ini berarti email-nya gagal terkirim (permintaan tetap
+ * tercatat) -- jatuh ke 'unavailable', yang memang meminta pengunjung mencoba
+ * lagi. 404 (modul publikasi tidak aktif untuk tenant) juga 'unavailable':
+ * dari sisi pengunjung keduanya sama-sama "belum bisa sekarang".
+ */
+export async function sendPublicationDownload(input: PublicationDownloadRequest): Promise<ContactResult> {
+  return postToCms(
+    '/publications/download',
+    {
+      publication_id: input.publicationId,
+      name: input.name,
+      email: input.email,
+      website: input.website,
+    },
+    'unduhan publikasi',
+  );
 }
 
 /** Data yang benar-benar diisi pengunjung di gerbang unduhan publikasi.
@@ -81,11 +127,10 @@ export type DownloadLead = {
 const MAX_TITLE_LENGTH = 200;
 
 /**
- * Lead dari gerbang unduhan publikasi.
- *
- * Dikirim lewat endpoint yang sama dengan form kontak (`POST /api/v1/contact`)
- * karena CMS belum punya koleksi tersendiri untuk unduhan -- pesan kontak satu-
- * satunya tempat tulis yang tersedia (lihat docs/api-public.md).
+ * Lead dari gerbang unduhan untuk dokumen yang TIDAK ada di koleksi
+ * publications CMS (Featured Publication statis, dan semua publikasi di mode
+ * lokal) -- tanpa `publication_id`, sendPublicationDownload tidak bisa
+ * dipakai, jadi lead-nya dicatat sebagai pesan kontak (`POST /api/v1/contact`).
  *
  * Honeypot `website` sengaja dikirim kosong: gerbang unduhan tidak punya field
  * itu di formnya, dan mengisinya dari sini justru membuat CMS membuang setiap

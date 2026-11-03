@@ -41,6 +41,10 @@ export type CommonDictionary = {
   downloadGateDescription: string;
   downloadGateNameLabel: string;
   downloadGateEmailLabel: string;
+  downloadGateSuccess: string;
+  downloadGateErrorInvalid: string;
+  downloadGateErrorRateLimit: string;
+  downloadGateErrorUnavailable: string;
   galleryPrevious: string;
   galleryNext: string;
   homeHeroEyebrow: string;
@@ -116,9 +120,13 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     videoUnavailable: 'Video ini belum tersedia.',
     close: 'Tutup',
     download: 'Unduh',
-    downloadGateDescription: 'Isi nama dan email untuk mengunduh dokumen ini.',
+    downloadGateDescription: 'Isi nama dan email Anda untuk mendapatkan dokumen ini.',
     downloadGateNameLabel: 'Nama',
     downloadGateEmailLabel: 'Email',
+    downloadGateSuccess: 'Tautan unduhan sudah kami kirim ke email Anda. Periksa kotak masuk (atau folder spam).',
+    downloadGateErrorInvalid: 'Periksa kembali isian Anda: nama 2–100 karakter tanpa tautan, dan alamat email yang valid.',
+    downloadGateErrorRateLimit: 'Terlalu banyak permintaan dalam waktu singkat. Coba lagi beberapa menit lagi.',
+    downloadGateErrorUnavailable: 'Tautan unduhan belum bisa dikirim saat ini. Silakan coba lagi.',
     galleryPrevious: 'Gambar sebelumnya',
     galleryNext: 'Gambar berikutnya',
     homeHeroEyebrow: 'Tempat Data Laut Bertemu Aksi Lokal',
@@ -196,9 +204,13 @@ export const commonDictionary: Record<Locale, CommonDictionary> = {
     videoUnavailable: 'This video is not available yet.',
     close: 'Close',
     download: 'Download',
-    downloadGateDescription: 'Enter your name and email to download this document.',
+    downloadGateDescription: 'Enter your name and email to get this document.',
     downloadGateNameLabel: 'Name',
     downloadGateEmailLabel: 'Email',
+    downloadGateSuccess: 'We have sent the download link to your email. Please check your inbox (or spam folder).',
+    downloadGateErrorInvalid: 'Please check your entries: a name of 2–100 characters without links, and a valid email address.',
+    downloadGateErrorRateLimit: 'Too many requests in a short time. Please try again in a few minutes.',
+    downloadGateErrorUnavailable: 'The download link could not be sent right now. Please try again.',
     galleryPrevious: 'Previous image',
     galleryNext: 'Next image',
     homeHeroEyebrow: 'Where Ocean Data Meets Local Action',

@@ -389,9 +389,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           publications={publications}
           downloadLabel={t.download}
           closeLabel={t.close}
-          downloadGateDescription={t.downloadGateDescription}
-          downloadGateNameLabel={t.downloadGateNameLabel}
-          downloadGateEmailLabel={t.downloadGateEmailLabel}
+          downloadGateLabels={{
+            description: t.downloadGateDescription,
+            name: t.downloadGateNameLabel,
+            email: t.downloadGateEmailLabel,
+            success: t.downloadGateSuccess,
+            errorInvalid: t.downloadGateErrorInvalid,
+            errorRateLimit: t.downloadGateErrorRateLimit,
+            errorUnavailable: t.downloadGateErrorUnavailable,
+          }}
         />
       </Container>
 

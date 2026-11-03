@@ -1,6 +1,12 @@
 'use server';
 
-import { sendDownloadLead, type ContactResult, type DownloadLead } from '@/lib/contact';
+import {
+  sendDownloadLead,
+  sendPublicationDownload,
+  type ContactResult,
+  type DownloadLead,
+  type PublicationDownloadRequest,
+} from '@/lib/contact';
 
 /**
  * Server Action gerbang unduhan publikasi.
@@ -31,4 +37,30 @@ export async function submitDownloadLead(input: DownloadLead): Promise<ContactRe
   if (!name || !email) return { ok: false, reason: 'invalid' };
 
   return sendDownloadLead({ name, email, title });
+}
+
+/**
+ * Meminta CMS mengirim tautan unduhan publikasi ke email pengunjung. Dipakai
+ * gerbang unduhan untuk publikasi yang punya ID CMS; yang tidak punya
+ * (dokumen statis, mode lokal) tetap lewat submitDownloadLead di atas.
+ */
+export async function submitPublicationDownload(
+  input: PublicationDownloadRequest,
+): Promise<ContactResult> {
+  const name = input.name.trim();
+  const email = input.email.trim();
+
+  // Batas nama 2–100 karakter sama dengan validasi CMS. Aturan lainnya
+  // (tanpa link/< >, format email) dibiarkan ke CMS, yang menjawab 422.
+  if (!Number.isInteger(input.publicationId) || input.publicationId <= 0) {
+    return { ok: false, reason: 'invalid' };
+  }
+  if (name.length < 2 || name.length > 100 || !email) return { ok: false, reason: 'invalid' };
+
+  return sendPublicationDownload({
+    publicationId: input.publicationId,
+    name,
+    email,
+    website: typeof input.website === 'string' ? input.website : '',
+  });
 }

@@ -3,7 +3,7 @@
 import Image, { type StaticImageData } from 'next/image';
 import { useState } from 'react';
 import { AppLink } from '@/components/ui/AppLink';
-import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
+import { DownloadGateModal, type DownloadGateLabels } from '@/components/publications/DownloadGateModal';
 
 type Publication = {
   // Sama seperti PublicationSlide di PublicationsSlider.tsx.
@@ -11,28 +11,24 @@ type Publication = {
   category: string | null;
   title: string;
   pdfUrl: string | null;
+  cmsId: number | null;
 };
 
 /**
  * Sama seperti PublicationsSlider di /discover/publications: "Download"
- * membuka DownloadGateModal -- nama/email wajib diisi dulu sebelum
- * <a download> yang sesungguhnya dijalankan di sana (lihat komentar di
- * modalnya).
+ * membuka DownloadGateModal -- nama/email wajib diisi dulu, lalu CMS mengirim
+ * tautan unduhannya ke email pengunjung (lihat komentar di modalnya).
  */
 export function HomePublicationsGrid({
   publications,
   downloadLabel,
   closeLabel,
-  downloadGateDescription,
-  downloadGateNameLabel,
-  downloadGateEmailLabel,
+  downloadGateLabels,
 }: {
   publications: Publication[];
   downloadLabel: string;
   closeLabel: string;
-  downloadGateDescription: string;
-  downloadGateNameLabel: string;
-  downloadGateEmailLabel: string;
+  downloadGateLabels: DownloadGateLabels;
 }) {
   const [downloadIndex, setDownloadIndex] = useState<number | null>(null);
   const downloadPublication = downloadIndex !== null ? publications[downloadIndex] : null;
@@ -41,12 +37,11 @@ export function HomePublicationsGrid({
     <>
       <DownloadGateModal
         isOpen={downloadPublication !== null}
+        publicationId={downloadPublication?.cmsId ?? null}
         pdfUrl={downloadPublication?.pdfUrl ?? null}
         title={downloadPublication?.title ?? ''}
         downloadLabel={downloadLabel}
-        description={downloadGateDescription}
-        nameLabel={downloadGateNameLabel}
-        emailLabel={downloadGateEmailLabel}
+        labels={downloadGateLabels}
         closeLabel={closeLabel}
         onClose={() => setDownloadIndex(null)}
       />
@@ -69,8 +64,8 @@ export function HomePublicationsGrid({
               <p className="text-xs font-bold uppercase tracking-wide text-secondary">{publication.category}</p>
               <h3 className="text-base font-semibold text-primary">{publication.title}</h3>
               {/* Download membuka DownloadGateModal (nama/email wajib diisi
-                  dulu -- <a download> sesungguhnya dijalankan di sana, lihat
-                  komentar di modalnya), BUKAN <a> langsung ke pdfUrl seperti
+                  dulu, tautannya dikirim CMS lewat email -- lihat komentar di
+                  modalnya), BUKAN <a> langsung ke pdfUrl seperti
                   sebelumnya. §4j: publikasi yang `pdfUrl`-nya masih null
                   tetap href="#" apa adanya. */}
               <div className="mt-auto flex gap-2 pt-2">

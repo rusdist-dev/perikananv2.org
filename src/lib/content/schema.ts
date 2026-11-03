@@ -135,9 +135,14 @@ export const publicationSchema = z.object({
   /** Sama seperti Article.image mode CMS: URL absolut (`cover_url`). */
   image: z.string().nullable().default(null),
   isFeatured: z.boolean().default(false),
+  /** ID numerik CMS (`id`), dikirim sebagai `publication_id` ke
+   *  `POST /api/v1/publications/download` (lib/contact.ts). null di mode
+   *  lokal -- gerbang unduhan lalu jatuh balik ke unduhan langsung, lihat
+   *  DownloadGateModal. */
+  cmsId: z.number().int().positive().nullable().default(null),
 });
 
-export type Publication = z.output<typeof publicationSchema>;
+export type Publication =z.output<typeof publicationSchema>;
 
 export const publicationsSchema = z.array(publicationSchema);
 

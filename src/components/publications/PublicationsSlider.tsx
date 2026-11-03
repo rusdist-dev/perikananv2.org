@@ -7,7 +7,7 @@ import { Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { AppLink } from '@/components/ui/AppLink';
 import { Icon } from '@/components/ui/Icon';
-import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
+import { DownloadGateModal, type DownloadGateLabels } from '@/components/publications/DownloadGateModal';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -22,6 +22,8 @@ export type PublicationSlide = {
   category: string | null;
   title: string;
   pdfUrl: string | null;
+  /** ID CMS untuk `POST /publications/download`; null di mode lokal. */
+  cmsId: number | null;
 };
 
 /**
@@ -39,18 +41,14 @@ export function PublicationsSlider({
   previousLabel,
   nextLabel,
   closeLabel,
-  downloadGateDescription,
-  downloadGateNameLabel,
-  downloadGateEmailLabel,
+  downloadGateLabels,
 }: {
   publications: PublicationSlide[];
   downloadLabel: string;
   previousLabel: string;
   nextLabel: string;
   closeLabel: string;
-  downloadGateDescription: string;
-  downloadGateNameLabel: string;
-  downloadGateEmailLabel: string;
+  downloadGateLabels: DownloadGateLabels;
 }) {
   const swiperRef = useRef<SwiperInstance | null>(null);
   const [downloadIndex, setDownloadIndex] = useState<number | null>(null);
@@ -60,12 +58,11 @@ export function PublicationsSlider({
     <>
       <DownloadGateModal
         isOpen={downloadPublication !== null}
+        publicationId={downloadPublication?.cmsId ?? null}
         pdfUrl={downloadPublication?.pdfUrl ?? null}
         title={downloadPublication?.title ?? ''}
         downloadLabel={downloadLabel}
-        description={downloadGateDescription}
-        nameLabel={downloadGateNameLabel}
-        emailLabel={downloadGateEmailLabel}
+        labels={downloadGateLabels}
         closeLabel={closeLabel}
         onClose={() => setDownloadIndex(null)}
       />
@@ -116,8 +113,8 @@ export function PublicationsSlider({
                   {publication.title}
                 </h3>
                 {/* Download membuka DownloadGateModal (nama/email wajib
-                    diisi dulu -- <a download> sesungguhnya dijalankan di
-                    sana, lihat komentar di modalnya), BUKAN <a> langsung ke
+                    diisi dulu, tautannya dikirim CMS lewat email -- lihat
+                    komentar di modalnya), BUKAN <a> langsung ke
                     pdfUrl seperti sebelumnya. §4j: publikasi yang
                     `pdfUrl`-nya masih null tetap href="#" apa adanya. */}
                 <div className="mt-auto flex gap-1 pt-2">

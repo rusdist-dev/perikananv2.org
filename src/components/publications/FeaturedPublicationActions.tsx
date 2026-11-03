@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DownloadGateModal } from '@/components/publications/DownloadGateModal';
+import { DownloadGateModal, type DownloadGateLabels } from '@/components/publications/DownloadGateModal';
 import { PdfViewerModal } from '@/components/publications/PdfViewerModal';
 
 /**
@@ -18,9 +18,7 @@ export function FeaturedPublicationActions({
   readLabel,
   unavailableLabel,
   closeLabel,
-  downloadGateDescription,
-  downloadGateNameLabel,
-  downloadGateEmailLabel,
+  downloadGateLabels,
 }: {
   pdfUrl: string;
   title: string;
@@ -29,9 +27,7 @@ export function FeaturedPublicationActions({
   readLabel: string;
   unavailableLabel: string;
   closeLabel: string;
-  downloadGateDescription: string;
-  downloadGateNameLabel: string;
-  downloadGateEmailLabel: string;
+  downloadGateLabels: DownloadGateLabels;
 }) {
   const [isReadOpen, setIsReadOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
@@ -48,13 +44,14 @@ export function FeaturedPublicationActions({
       />
       <DownloadGateModal
         isOpen={isDownloadOpen}
+        // Dokumen statis, tidak ada di koleksi publications CMS -- tanpa ID,
+        // modal memakai jalur unduhan langsung (lihat DownloadGateModal).
+        publicationId={null}
         pdfUrl={pdfUrl}
         downloadFileName={downloadFileName}
         title={title}
         downloadLabel={downloadLabel}
-        description={downloadGateDescription}
-        nameLabel={downloadGateNameLabel}
-        emailLabel={downloadGateEmailLabel}
+        labels={downloadGateLabels}
         closeLabel={closeLabel}
         onClose={() => setIsDownloadOpen(false)}
       />

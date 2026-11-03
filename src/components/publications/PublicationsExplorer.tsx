@@ -14,6 +14,7 @@ import { Breadcrumb, type BreadcrumbItem } from '@/components/ui/Breadcrumb';
 import { PublicationsSlider, type PublicationSlide } from '@/components/publications/PublicationsSlider';
 import { VideoSlider } from '@/components/publications/VideoSlider';
 import { FeaturedPublicationActions } from '@/components/publications/FeaturedPublicationActions';
+import type { DownloadGateLabels } from '@/components/publications/DownloadGateModal';
 
 /** 8 kode WPP (Wilayah Pengelolaan Perikanan / Fisheries Management Area)
  *  ini yang membuat stat "8 FMAs Covered" di bawah punya arti -- 572, 712,
@@ -95,9 +96,7 @@ type Labels = {
   navDiscover: string;
   navPublications: string;
   download: string;
-  downloadGateDescription: string;
-  downloadGateNameLabel: string;
-  downloadGateEmailLabel: string;
+  downloadGateLabels: DownloadGateLabels;
   watch: string;
   pdfUnavailable: string;
   videoUnavailable: string;
@@ -332,9 +331,7 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
                 readLabel={t.featuredReadCta}
                 unavailableLabel={t.pdfUnavailable}
                 closeLabel={t.close}
-                downloadGateDescription={t.downloadGateDescription}
-                downloadGateNameLabel={t.downloadGateNameLabel}
-                downloadGateEmailLabel={t.downloadGateEmailLabel}
+                downloadGateLabels={t.downloadGateLabels}
               />
             </div>
           </div>
@@ -359,9 +356,7 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
               previousLabel={t.galleryPrevious}
               nextLabel={t.galleryNext}
               closeLabel={t.close}
-              downloadGateDescription={t.downloadGateDescription}
-              downloadGateNameLabel={t.downloadGateNameLabel}
-              downloadGateEmailLabel={t.downloadGateEmailLabel}
+              downloadGateLabels={t.downloadGateLabels}
             />
           )}
         </Container>
@@ -385,9 +380,7 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
               previousLabel={t.galleryPrevious}
               nextLabel={t.galleryNext}
               closeLabel={t.close}
-              downloadGateDescription={t.downloadGateDescription}
-              downloadGateNameLabel={t.downloadGateNameLabel}
-              downloadGateEmailLabel={t.downloadGateEmailLabel}
+              downloadGateLabels={t.downloadGateLabels}
             />
           )}
         </Container>
@@ -411,9 +404,7 @@ export function PublicationsExplorer({ publications, knowledgeProducts, bbnjPubl
               previousLabel={t.galleryPrevious}
               nextLabel={t.galleryNext}
               closeLabel={t.close}
-              downloadGateDescription={t.downloadGateDescription}
-              downloadGateNameLabel={t.downloadGateNameLabel}
-              downloadGateEmailLabel={t.downloadGateEmailLabel}
+              downloadGateLabels={t.downloadGateLabels}
             />
           )}
         </Container>
