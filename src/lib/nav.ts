@@ -63,6 +63,7 @@ export const panelNav: NavSection[] = [
       { href: '/data/shark-and-ray', labelKey: 'navSharkAndRay' },
       { href: '/data/production-data', labelKey: 'navProductionData' },
       { href: '/data/vessel-data', labelKey: 'navVesselData' },
+      { href: '/data/osgap-dashboard', label: 'OSGAP Dashboard' },
     ],
   },
   {
@@ -97,4 +98,5 @@ export const staticRoutes: string[] = [
   '/data/shark-and-ray',
   '/data/production-data',
   '/data/vessel-data',
+  '/data/osgap-dashboard',
 ];

@@ -121,6 +121,38 @@
   --color-level-warn: var(--color-series-4);
   --color-level-alert: var(--color-series-6);
 
+  /* --- OSGAP (/data/osgap-dashboard) -----------------------------------
+     Diambil apa adanya dari laporan OSGAP Teluk Saleh supaya kartu rapor di
+     situs terbaca sama dengan versi cetaknya. Dipakai HANYA oleh dasbor itu.
+
+     sesi-0..4: lima pita skor SESI (0-20 ... 80-100). Pita 0-1 memakai teks
+     putih, pita 2-4 teks --color-fg -- warna TIDAK pernah jadi satu-satunya
+     penanda, angka skornya selalu tertulis di dalam kotaknya.
+     trend-*: panah SESPI / arah perubahan; setiap panah punya label teks.
+     env/soc/gov: latar, garis, dan teks tiga kolom gap (lingkungan, sosial-
+     ekonomi, tata kelola). */
+  --color-osgap-sesi-0: #8c2a2a;
+  --color-osgap-sesi-1: #d0582d;
+  --color-osgap-sesi-2: #e9a03d;
+  --color-osgap-sesi-3: #bfd36e;
+  --color-osgap-sesi-4: #58ac8a;
+  --color-osgap-trend-up: #2f6eb4;
+  --color-osgap-trend-diag: #3e9ac6;
+  --color-osgap-trend-flat: #c99a1c;
+  --color-osgap-trend-down: #c8372d;
+  --color-osgap-trend-good: #2e9455;
+  --color-osgap-env: #e2edf7;
+  --color-osgap-env-line: #9dbcdb;
+  --color-osgap-env-ink: #1e4e7a;
+  --color-osgap-soc: #fbf0d8;
+  --color-osgap-soc-line: #ddbd78;
+  --color-osgap-soc-ink: #7a5714;
+  --color-osgap-gov: #e0efe1;
+  --color-osgap-gov-line: #9bc59e;
+  --color-osgap-gov-ink: #2d6334;
+  --color-osgap-neutral: #e4eaec;
+  --color-osgap-neutral-ink: #3b5059;
+
   /* Focus ring memakai primary: 9.98:1 terhadap bg, jauh di atas syarat 3:1
      untuk indikator non-teks (WCAG 1.4.11). */
   --color-focus: var(--color-primary);
