@@ -41,7 +41,7 @@ export default async function OsgapDashboardPage({ params }: { params: Promise<{
 
   const t = getDictionary(locale);
   const o = getOsgapDictionary(locale);
-  const salehBay: MapFocus = { lat: -8.6, lng: 117.75, label: o.mapLabel, zoom: 9 };
+  const salehBay: MapFocus = { lat: -8.55, lng: 117.88, label: o.mapLabel, zoom: 9 };
 
   const partnerLogos = (height: string) =>
     PARTNERS.map((logo) => (
