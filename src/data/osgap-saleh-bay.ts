@@ -68,8 +68,8 @@ export const OSGAP_INDICATORS: Record<OsgapIndicatorId, OsgapIndicator> = {
   evika: { year: 2025, sesi: 78.3, sespi: 100, targetYear: 2040, institutions: ['blud'], source: SIDAKO },
   liang: { year: 2025, sesi: 79.8, sespi: 100, targetYear: 2040, institutions: ['blud'], source: SIDAKO },
   rakit: { year: 2025, sesi: 76.8, sespi: 100, targetYear: 2040, institutions: ['blud'], source: SIDAKO },
-  bomb: { year: 2024, sesi: 0, sespi: 0, targetYear: 2031, institutions: ['dkp', 'law', 'village'], source: FIP },
-  comp: { year: 2024, sesi: 1.5, sespi: 50.4, targetYear: 2031, institutions: ['dkp', 'law', 'village'], source: FIP },
+  bomb: { year: 2024, sesi: 58.3, sespi: 100, targetYear: 2031, institutions: ['dkp', 'law', 'village'], source: FIP },
+  comp: { year: 2024, sesi: 1.5, sespi: 50.9, targetYear: 2031, institutions: ['dkp', 'law', 'village'], source: FIP },
   plastic: { year: 2025, sesi: 9.3, sespi: 80.7, targetYear: 2031, institutions: ['village', 'dlhk'], source: OA_SURVEY },
 };
 
@@ -112,7 +112,7 @@ export const OSGAP_ECON: Record<OsgapEconId, { sesi: number | null; trend: Osgap
   mangrove: { sesi: 40.9, trend: 'down', projected: true },
   sst: { sesi: 35.6, trend: 'down', projected: true },
   comp: { sesi: 3.1, trend: 'right', projected: true },
-  bomb: { sesi: 0, trend: 'down', projected: true },
+  bomb: { sesi: 54.2, trend: 'down', projected: true },
   plastic: { sesi: 9.3, trend: 'gup', projected: false },
   evika: { sesi: 78.3, trend: 'gup', projected: false },
   grouper: { sesi: 50.6, trend: 'down', projected: true },
